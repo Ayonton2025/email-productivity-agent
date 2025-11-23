@@ -1,0 +1,106 @@
+[
+  {
+    "id": "1",
+    "sender": "project.manager@company.com",
+    "subject": "Q4 Project Review Meeting",
+    "body": "Hi team,\n\nWe need to schedule the Q4 project review meeting for next week. Please review the attached project report and come prepared to discuss:\n\n1. Project milestones achieved\n2. Budget utilization\n3. Resource allocation for Q1\n4. Risk assessment\n\nLet me know your availability for Tuesday or Wednesday.\n\nBest regards,\nSarah Chen\nProject Manager",
+    "timestamp": "2024-01-08T10:30:00Z",
+    "metadata": {
+      "priority": "high",
+      "attachments": 1
+    }
+  },
+  {
+    "id": "2", 
+    "sender": "newsletter@techdaily.com",
+    "subject": "Tech Daily: AI Trends in 2024",
+    "body": "Welcome to this week's Tech Daily newsletter!\n\nFeatured Articles:\n- The Rise of Multimodal AI Systems\n- Quantum Computing Breakthroughs\n- Sustainable Tech Innovations\n- Developer Tools of the Year\n\nRead more: https://techdaily.com/ai-trends-2024\n\nUnsubscribe: https://techdaily.com/unsubscribe",
+    "timestamp": "2024-01-08T08:15:00Z",
+    "metadata": {
+      "type": "newsletter"
+    }
+  },
+  {
+    "id": "3",
+    "sender": "hr@company.com", 
+    "subject": "ACTION REQUIRED: Benefits Enrollment Deadline",
+    "body": "Dear Employee,\n\nThis is a reminder that the benefits enrollment period closes this Friday, January 12th, 2024 at 5:00 PM.\n\nYou must:\n1. Review your benefit selections\n2. Update dependent information if needed\n3. Submit your enrollment form\n\nPlease complete this by the deadline to avoid interruption in your benefits coverage.\n\nHR Department",
+    "timestamp": "2024-01-08T09:45:00Z",
+    "metadata": {
+      "priority": "high",
+      "action_required": true
+    }
+  },
+  {
+    "id": "4",
+    "sender": "noreply@security-alert.com",
+    "subject": "URGENT: Your Account Has Been Compromised",
+    "body": "SECURITY ALERT: We detected suspicious activity on your account.\n\nClick here immediately to verify your identity and secure your account:\nhttp://fake-security-site.com/verify\n\nIf you don't act within 24 hours, your account will be suspended.\n\nThis is an automated message. Do not reply.",
+    "timestamp": "2024-01-08T07:20:00Z",
+    "metadata": {
+      "suspicious": true
+    }
+  },
+  {
+    "id": "5",
+    "sender": "colleague@company.com",
+    "subject": "Lunch Meeting Tomorrow?",
+    "body": "Hey!\n\nAre you free for lunch tomorrow around 12:30? I wanted to discuss the new marketing campaign and get your thoughts on the creative direction.\n\nThere's that new Italian place that just opened near the office - want to try it?\n\nLet me know!\n\nCheers,\nMike",
+    "timestamp": "2024-01-08T11:10:00Z",
+    "metadata": {
+      "informal": true
+    }
+  },
+  {
+    "id": "6",
+    "sender": "client.success@software.com",
+    "subject": "Your Premium Trial Ends in 3 Days",
+    "body": "Hi there,\n\nYour premium trial for SuperSoftware ends in 3 days. Here's what you'll lose access to:\n\n- Advanced analytics dashboard\n- Custom reporting features\n- Priority support\n- Team collaboration tools\n\nUpgrade now to maintain access: https://supersoftware.com/upgrade\n\nQuestions? Reply to this email!\n\nBest,\nThe SuperSoftware Team",
+    "timestamp": "2024-01-08T06:30:00Z",
+    "metadata": {
+      "commercial": true
+    }
+  },
+  {
+    "id": "7",
+    "sender": "ceo@company.com",
+    "subject": "Company All-Hands Meeting This Friday",
+    "body": "Team,\n\nWe'll be holding our quarterly all-hands meeting this Friday at 2:00 PM in the main auditorium.\n\nAgenda:\n- 2023 Year in Review\n- 2024 Strategic Direction\n- New Product Announcements\n- Q&A Session\n\nAttendance is mandatory for all employees. Please arrive 10 minutes early.\n\nLooking forward to seeing everyone there!\n\nJohn Smith\nCEO",
+    "timestamp": "2024-01-07T16:45:00Z",
+    "metadata": {
+      "company_wide": true,
+      "priority": "high"
+    }
+  },
+  {
+    "id": "8",
+    "sender": "dev-team@project.com",
+    "subject": "Code Review Request: Feature/Auth-Integration",
+    "body": "Hello team,\n\nI've completed work on the authentication integration feature and have opened a pull request.\n\nKey changes:\n- Implemented OAuth2 flow\n- Added multi-factor authentication\n- Updated user session management\n- Enhanced security middleware\n\nPlease review the PR: https://github.com/company/repo/pull/142\n\nI need this reviewed by EOD tomorrow for the sprint deadline.\n\nThanks,\nAlex Rodriguez\nSenior Developer",
+    "timestamp": "2024-01-07T14:20:00Z",
+    "metadata": {
+      "technical": true,
+      "deadline": "2024-01-09"
+    }
+  },
+  {
+    "id": "9",
+    "sender": "invoice@supplier.com",
+    "subject": "Invoice #INV-2024-001 - Payment Due",
+    "body": "INVOICE\n\nInvoice Number: INV-2024-001\nDate: January 5, 2024\nDue Date: January 19, 2024\nAmount Due: $4,250.00\n\nServices Rendered:\n- Monthly software license: $3,500.00\n- Technical support: $750.00\n\nPayment Methods:\n- Bank Transfer (details attached)\n- Credit Card (link in portal)\n\nPlease process payment by the due date.\n\nThank you for your business!\n\nAccounting Department\nGlobal Supplier Inc.",
+    "timestamp": "2024-01-07T11:15:00Z",
+    "metadata": {
+      "financial": true
+    }
+  },
+  {
+    "id": "10",
+    "sender": "conference@ai-summit.org",
+    "subject": "You're Invited: Global AI Summit 2024",
+    "body": "Dear AI Enthusiast,\n\nYou are invited to attend the Global AI Summit 2024 in San Francisco, March 15-17.\n\nFeatured Speakers:\n- Dr. Jane Smith, AI Research Director\n- Mark Johnson, CTO of Tech Innovations\n- Sarah Lee, Ethics in AI Expert\n\nEarly bird registration ends January 31st.\nRegister now: https://ai-summit.org/register-2024\n\nWe hope to see you there!\n\nConference Team\nGlobal AI Summit",
+    "timestamp": "2024-01-07T09:30:00Z",
+    "metadata": {
+      "event": true
+    }
+  }
+]

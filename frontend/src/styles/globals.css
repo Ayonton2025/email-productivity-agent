@@ -1,0 +1,308 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #1f2937; /* Changed from white to dark gray for better readability */
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Loading container - properly centered */
+.loading-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white; /* Explicitly set white text for loading screen */
+}
+
+.logo-loader {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  font-size: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+.loading-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #fff, #e0e7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loading-subtext {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  color: white; /* Ensure loading text is visible */
+}
+
+.loading-features {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.feature-pill {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white; /* Ensure feature text is visible */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Main app styling */
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Form and input styling to ensure text is visible */
+input, textarea, select {
+  color: #1f2937 !important; /* Dark gray text for inputs */
+  background-color: white !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6b7280 !important; /* Gray placeholder text */
+}
+
+/* Ensure buttons and interactive elements have proper contrast */
+button {
+  color: inherit; /* Inherit color from parent */
+}
+
+/* Card and container styling for light backgrounds */
+.card, .container, .panel {
+  background-color: white;
+  color: #1f2937; /* Dark text for light backgrounds */
+  border-radius: 0.5rem;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #f9fafb; /* Light text for dark mode */
+  }
+  
+  .card, .container, .panel {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  input, textarea, select {
+    color: #1f2937 !important; /* Keep dark text in inputs even in dark mode */
+    background-color: white !important;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .loading-container {
+    padding: 2rem 1rem;
+    margin: 1rem;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-top: 2rem;
+  }
+
+  .loading-text {
+    font-size: 2rem;
+  }
+
+  .loading-features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-pill {
+    width: 200px;
+  }
+}
+
+/* Provider Connection Styles */
+.provider-connection {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  padding: var(--space-6);
+  color: #1f2937; /* Ensure dark text on white background */
+}
+
+.connection-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.connection-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.connection-header p {
+  color: var(--gray-600);
+}
+
+.providers-grid {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.provider-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all 0.2s;
+  color: #1f2937; /* Ensure dark text */
+}
+
+.provider-card:hover {
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.provider-icon {
+  font-size: 1.5rem;
+}
+
+.provider-info {
+  flex: 1;
+}
+
+.provider-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-1);
+}
+
+.provider-info p {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-connected {
+  background: var(--success-50);
+  color: var(--success-700);
+  border: 1px solid var(--success-200);
+}
+
+.status-disconnected {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+
+.provider-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.connection-info {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  color: #1f2937; /* Ensure dark text */
+}
+
+.connection-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.connection-info ul {
+  list-style-type: disc;
+  margin-left: var(--space-4);
+  color: var(--gray-600);
+}
+
+.connection-info li {
+  margin-bottom: var(--space-1);
+}
+
+/* Additional utility classes for text visibility */
+.text-dark {
+  color: #1f2937 !important;
+}
+
+.text-light {
+  color: #f9fafb !important;
+}
+
+.bg-light {
+  background-color: white !important;
+  color: #1f2937 !important;
+}

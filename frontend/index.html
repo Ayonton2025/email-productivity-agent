@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/mail.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="InboxAI - Revolutionize email management with AI-powered automation, smart categorization, and intelligent assistance" />
+    <meta name="keywords" content="AI email, productivity, inbox management, email automation, smart assistant, email categorization, AI assistant" />
+    <meta name="author" content="InboxAI Team" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <title>InboxAI - AI-Powered Email Productivity Suite | Smart Inbox Management</title>
+    
+    <style>
+      /* Loading screen styles */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-family: 'Inter', sans-serif;
+        padding: 2rem;
+        text-align: center;
+      }
+      
+      .logo-loader {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        animation: bounce 2s infinite;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1.5rem;
+      }
+      
+      .loading-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .loading-subtext {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        max-width: 400px;
+      }
+      
+      .loading-features {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 1rem;
+      }
+      
+      .feature-pill {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root">
+      <div class="loading-container">
+        <div class="logo-loader">✉️</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">InboxAI</div>
+        <div class="loading-subtext">Your AI-powered email workspace is loading...</div>
+        <div class="loading-features">
+          <div class="feature-pill">🤖 Smart AI Assistant</div>
+          <div class="feature-pill">⚡ Instant Processing</div>
+          <div class="feature-pill">🎯 Intelligent Organization</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- React entry -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

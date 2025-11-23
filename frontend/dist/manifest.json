@@ -1,0 +1,55 @@
+{
+  "name": "Email Productivity Agent",
+  "short_name": "EmailAgent",
+  "description": "AI-powered email management and productivity tool",
+  "version": "1.0.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["productivity", "business", "utilities"],
+  
+  "icons": [
+    {
+      "src": "/mail.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTk2IDY0TDEyOCA5NkMxMjggOTYgMTQ0IDgwIDE0NCA4MEMxNDQgODAgMTYwIDk2IDE2MCA5NkwxMjggMTI4QzEyOCAxMjggMTEyIDE0NCAxMTIgMTQ0QzExMiAxNDQgOTYgMTI4IDk2IDEyOEw2NCA5NkM2NCA5NiA4MCA4MCA4MCA4MEM4MCA4MCA5NiA5NiA5NiA5Nkw5NiA2NFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTI1NiAxNjBMMzQxLjMzMyAyNDUuMzMzQzM0MS4zMzMgMjQ1LjMzMyAzODQgMjAyLjY2NyAzODQgMjAyLjY2N0MzODQgMjAyLjY2NyA0MjYuNjY3IDI0NS4zMzMgNDI2LjY2NyAyNDUuMzMzTDM0MS4zMzMgMzMwLjY2N0MzNDEuMzMzIDMzMC42NjcgMjk4LjY2NyAzNzMuMzMzIDI5OC42NjcgMzczLjMzM0MyOTguNjY3IDM3My4zMzMgMjU2IDMzMC42NjcgMjU2IDMzMC42NjdMMTcwLjY2NyAyNDUuMzMzQzE3MC42NjcgMjQ1LjMzMyAyMTMuMzMzIDIwMi42NjcgMjEzLjMzMyAyMDIuNjY3QzIxMy4zMzMgMjAyLjY2NyAyNTYgMjQ1LjMzMyAyNTYgMjQ1LjMzM0wyNTYgMTYwWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  
+  "screenshots": [],
+  
+  "shortcuts": [
+    {
+      "name": "Open Inbox",
+      "short_name": "Inbox",
+      "description": "View and manage your emails",
+      "url": "/#inbox"
+    },
+    {
+      "name": "Email Agent",
+      "short_name": "Agent",
+      "description": "Chat with your email assistant",
+      "url": "/#agent"
+    }
+  ],
+  
+  "related_applications": [],
+  "prefer_related_applications": false
+}

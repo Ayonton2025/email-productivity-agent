@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/mail.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="InboxAI - Revolutionize email management with AI-powered automation, smart categorization, and intelligent assistance" />
+    <meta name="keywords" content="AI email, productivity, inbox management, email automation, smart assistant, email categorization, AI assistant" />
+    <meta name="author" content="InboxAI Team" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <title>InboxAI - AI-Powered Email Productivity Suite | Smart Inbox Management</title>
+    
+    <!-- Add legacy browser detection -->
+    <script>
+      // Check for ES6 module support
+      try {
+        new Function('import("")');
+      } catch (e) {
+        document.getElementById('root').innerHTML = `
+          <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-family: 'Inter', sans-serif;">
+            <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 1rem; backdrop-filter: blur(10px); max-width: 500px;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+              <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Browser Update Required</h1>
+              <p style="margin-bottom: 1.5rem; opacity: 0.9;">
+                InboxAI requires modern browser features. Please update your browser or try:
+              </p>
+              <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="https://www.google.com/chrome/" style="padding: 0.75rem 1.5rem; background: white; color: #667eea; border-radius: 0.5rem; text-decoration: none; font-weight: 600;">Chrome</a>
+                <a href="https://www.mozilla.org/firefox/" style="padding: 0.75rem 1.5rem; background: white; color: #667eea; border-radius: 0.5rem; text-decoration: none; font-weight: 600;">Firefox</a>
+                <a href="https://www.apple.com/safari/" style="padding: 0.75rem 1.5rem; background: white; color: #667eea; border-radius: 0.5rem; text-decoration: none; font-weight: 600;">Safari</a>
+              </div>
+            </div>
+          </div>
+        `;
+        throw new Error('ES6 Modules not supported');
+      }
+    </script>
+    
+    <script type="module" crossorigin src="/assets/index-BXTQmZe3.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-DqJQAOCM.js">
+    <link rel="modulepreload" crossorigin href="/assets/ui-qWb_eO8n.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Bl8gKDd3.css">
+  </head>
+  <body>
+    <div id="root">
+      <div class="loading-container">
+        <div class="logo-loader">✉️</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">InboxAI</div>
+        <div class="loading-subtext">Your AI-powered email workspace is loading...</div>
+        <div class="loading-features">
+          <div class="feature-pill">🤖 Smart AI Assistant</div>
+          <div class="feature-pill">⚡ Instant Processing</div>
+          <div class="feature-pill">🎯 Intelligent Organization</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Enhanced error handling
+      window.addEventListener('error', function(event) {
+        console.error('Global error:', event.error);
+        const root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = `
+            <div class="loading-container" style="background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.3);">
+              <div class="logo-loader" style="background: rgba(220, 38, 38, 0.1);">⚠️</div>
+              <div class="loading-text" style="background: linear-gradient(135deg, #fff, #fecaca); -webkit-background-clip: text;">Loading Error</div>
+              <div class="loading-subtext">Please refresh the page or check your connection</div>
+              <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: white; color: #dc2626; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600;">
+                Try Again
+              </button>
+            </div>
+          `;
+        }
+      });
+
+      // Handle unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+      });
+    </script>
+    
+  </body>
+</html>

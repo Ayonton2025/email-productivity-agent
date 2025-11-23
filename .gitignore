@@ -1,0 +1,64 @@
+# Create .gitignore in your project root
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.python-version
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database
+*.sqlite
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Credentials
+credentials.json
+token.json
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Railway
+.railway/
+EOF
