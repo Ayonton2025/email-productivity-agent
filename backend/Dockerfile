@@ -18,8 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# EXPOSE tells Railway: "This is a web service"
+# 🚀 THIS IS THE CRITICAL MISSING LINE
 EXPOSE 8000
 
-# Start FastAPI with Railway's injected port
+# Use shell so ${PORT} expands
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
