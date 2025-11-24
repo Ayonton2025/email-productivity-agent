@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime, timedelta
 import uuid
@@ -24,30 +24,49 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def set_password(self, password: str):
+        """Hash and set password with bcrypt length validation"""
+        # Validate password length for bcrypt (72 character limit)
+        if len(password) > 72:
+            raise ValueError("Password cannot be longer than 72 characters")
+        
         self.password_hash = get_password_hash(password)
+        print(f"🔑 [User] Password hashed successfully for: {self.email}")
 
     def check_password(self, password: str) -> bool:
-        return verify_password(password, self.password_hash)
+        """Check password against hash"""
+        try:
+            result = verify_password(password, self.password_hash)
+            print(f"🔑 [User] Password check for {self.email}: {result}")
+            return result
+        except Exception as e:
+            print(f"❌ [User] Password verification failed: {e}")
+            return False
 
     def generate_verification_token(self) -> str:
-        token = jwt.encode(
-            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(days=1)},
-            settings.SECRET_KEY,
-            algorithm="HS256"
-        )
+        """Generate email verification token"""
+        token_data = {
+            "user_id": self.id,
+            "email": self.email,
+            "exp": datetime.utcnow() + timedelta(days=1)
+        }
+        token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.verification_token = token
+        print(f"🔐 [User] Verification token generated: {token[:20]}...")
         return token
 
     def generate_reset_token(self) -> str:
-        token = jwt.encode(
-            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(hours=1)},
-            settings.SECRET_KEY,
-            algorithm="HS256"
-        )
+        """Generate password reset token"""
+        token_data = {
+            "user_id": self.id,
+            "email": self.email,
+            "exp": datetime.utcnow() + timedelta(hours=1)
+        }
+        token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.reset_token = token
         return token
 
     def to_dict(self):
+        """Convert user to dictionary"""
         return {
             "id": self.id,
             "email": self.email,
