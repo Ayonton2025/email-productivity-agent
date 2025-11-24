@@ -19,4 +19,5 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Use python3 explicitly in the command
 CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
