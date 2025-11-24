@@ -57,16 +57,35 @@ const Register = () => {
     }
 
     const { confirmPassword, ...submitData } = formData;
+    
+    console.log('🔍 [Register] Starting registration process...');
     const result = await register(submitData);
     
     if (result.success) {
-      setSuccess('Registration successful! Please check your email for verification instructions.');
-      setFormData({
-        full_name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-      });
+      console.log('🔍 [Register] Registration result:', result);
+      
+      if (result.autoLoggedIn) {
+        // User is automatically logged in - redirect to dashboard
+        console.log('✅ [Register] Auto-login successful, redirecting to dashboard');
+        setSuccess('Registration successful! Welcome to InboxAI.');
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 1500);
+      } else {
+        // User needs to verify email or login manually
+        setSuccess(result.message || 'Registration successful! Please check your email for verification instructions.');
+        setFormData({
+          full_name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        });
+        
+        // Redirect to login page after a delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      }
     } else {
       setError(result.error);
     }
@@ -118,6 +137,7 @@ const Register = () => {
                   name="full_name"
                   type="text"
                   autoComplete="name"
+                  required
                   value={formData.full_name}
                   onChange={handleChange}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -165,7 +185,7 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min. 6 characters)"
                 />
                 <button
                   type="button"
@@ -207,7 +227,7 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 {loading ? 'Creating account...' : 'Create account'}
@@ -219,7 +239,7 @@ const Register = () => {
                 Already have an account?{' '}
                 <Link
                   to="/login"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
                 >
                   Sign in
                 </Link>
