@@ -186,11 +186,12 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
             detail="Account is deactivated"
         )
 
-    if not user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Please verify your email first"
-        )
+    # Remove email verification requirement for now to allow immediate login
+    # if not user.is_verified:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Please verify your email first"
+    #     )
 
     # Update last login
     user.last_login = datetime.utcnow()
@@ -199,10 +200,21 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
     # Generate access token
     access_token = create_access_token(data={"user_id": user.id})
 
+    # Return user data safely without relying on to_dict()
+    user_data = {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_verified": user.is_verified,
+        "is_active": user.is_active,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "last_login": user.last_login.isoformat() if user.last_login else None
+    }
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": user.to_dict()
+        "user": user_data
     }
 
 @router.post("/forgot-password")
@@ -280,7 +292,34 @@ async def reset_password(reset_data: dict, db: AsyncSession = Depends(get_db)):
 @router.get("/me")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
-    return current_user.to_dict()
+    # Return user data safely without relying on to_dict()
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "is_verified": current_user.is_verified,
+        "is_active": current_user.is_active,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+        "last_login": current_user.last_login.isoformat() if current_user.last_login else None
+    }
+
+@router.post("/logout")
+async def logout():
+    """User logout"""
+    return {
+        "message": "Successfully logged out",
+        "success": True
+    }
+
+@router.post("/refresh")
+async def refresh_token(current_user: User = Depends(get_current_user)):
+    """Refresh access token"""
+    new_token = create_access_token(data={"user_id": current_user.id})
+    
+    return {
+        "access_token": new_token,
+        "token_type": "bearer"
+    }
 
 # Email sending functions (to be implemented with real email service)
 async def send_verification_email(email: str, name: str, token: str):
