@@ -1,54 +1,206 @@
-// In your services/api.js
-import axios from 'axios';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authApi } from '../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const AuthContext = createContext();
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to all requests automatically
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 [API] Adding token to request:', token.substring(0, 20) + '...');
-    } else {
-      console.log('⚠️ [API] No token available for request');
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-);
-
-// Handle token expiration
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.log('🔐 [API] Token expired or invalid, clearing auth data');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login'; // Redirect to login
-    }
-    return Promise.reject(error);
-  }
-);
-
-export const authApi = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  getCurrentUser: () => api.get('/auth/me'),
-  verifyEmail: (data) => api.post('/auth/verify-email', data),
-  forgotPassword: (data) => api.post('/auth/forgot-password', data),
-  resetPassword: (data) => api.post('/auth/reset-password', data),
-  logout: () => api.post('/auth/logout'),
+  return context;
 };
 
-export default api;
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+
+  // Check authentication on app start
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('user');
+      
+      console.log('🔍 [AuthContext] Checking authentication:');
+      console.log('   - Token in localStorage:', storedToken ? `Present (${storedToken.substring(0, 20)}...)` : 'Not found');
+      console.log('   - User in localStorage:', storedUser ? 'Present' : 'Not found');
+      
+      if (storedToken && storedUser) {
+        try {
+          // Verify the token is still valid by calling the backend
+          console.log('🔄 [AuthContext] Validating token with backend...');
+          const response = await authApi.getCurrentUser();
+          console.log('✅ [AuthContext] Token is valid, user:', response.data.email);
+          
+          setUser(response.data);
+          setToken(storedToken);
+        } catch (error) {
+          console.error('❌ [AuthContext] Token validation failed:', error);
+          // Token is invalid, clear everything
+          clearAuthData();
+        }
+      } else {
+        console.log('❌ [AuthContext] No valid auth data found');
+        clearAuthData();
+      }
+    } catch (error) {
+      console.error('❌ [AuthContext] Auth check failed:', error);
+      clearAuthData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearAuthData = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setToken(null);
+  };
+
+  const login = async (email, password) => {
+    try {
+      console.log('🔑 [AuthContext] Attempting login for:', email);
+      const response = await authApi.login({ email, password });
+      const { access_token, user: userData } = response.data;
+      
+      console.log('✅ [AuthContext] Login successful:');
+      console.log('   - Token received:', access_token ? `Present (${access_token.substring(0, 20)}...)` : 'Missing!');
+      console.log('   - User data:', userData);
+      
+      if (!access_token) {
+        console.error('❌ [AuthContext] No access token in login response!');
+        return { 
+          success: false, 
+          error: 'No access token received from server' 
+        };
+      }
+      
+      // Store token and user data
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      setToken(access_token);
+      
+      console.log('💾 [AuthContext] Auth data stored in localStorage and state');
+      console.log('🔍 [AuthContext] Current auth state - User:', !!userData, 'Token:', !!access_token);
+      
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error('❌ [AuthContext] Login failed:', error);
+      console.log('   - Error response:', error.response?.data);
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Login failed' 
+      };
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      console.log('📝 [AuthContext] Attempting registration for:', userData.email);
+      const response = await authApi.register(userData);
+      
+      console.log('✅ [AuthContext] Registration successful:', response.data);
+      
+      // Note: Registration might not return token immediately if email verification is required
+      if (response.data.access_token && response.data.user) {
+        const { access_token, user: newUser } = response.data;
+        
+        console.log('✅ [AuthContext] Auto-login after registration');
+        localStorage.setItem('auth_token', access_token);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        setUser(newUser);
+        setToken(access_token);
+        
+        return { success: true, user: newUser, autoLoggedIn: true };
+      } else {
+        // Registration successful but needs email verification
+        return { 
+          success: true, 
+          user: null, 
+          autoLoggedIn: false,
+          message: response.data.message || 'Registration successful. Please check your email for verification.'
+        };
+      }
+    } catch (error) {
+      console.error('❌ [AuthContext] Registration failed:', error);
+      console.log('   - Error response:', error.response?.data);
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Registration failed' 
+      };
+    }
+  };
+
+  const verifyEmail = async (token) => {
+    try {
+      const response = await authApi.verifyEmail({ token });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Email verification failed' 
+      };
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    try {
+      const response = await authApi.forgotPassword({ email });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Password reset request failed' 
+      };
+    }
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    try {
+      const response = await authApi.resetPassword({ token, new_password: newPassword });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Password reset failed' 
+      };
+    }
+  };
+
+  const logout = () => {
+    console.log('🚪 [AuthContext] Logging out user');
+    clearAuthData();
+    
+    // Optional: Call backend logout
+    authApi.logout().catch(error => {
+      console.log('⚠️ [AuthContext] Backend logout failed (may be expected):', error);
+    });
+  };
+
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    register,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
+    logout,
+    checkAuth,
+    isAuthenticated: !!user && !!token,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
