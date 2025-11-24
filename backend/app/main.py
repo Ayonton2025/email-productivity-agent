@@ -40,14 +40,22 @@ async def lifespan(app: FastAPI):
 
 # Get environment variables
 debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
-allowed_origins = os.environ.get("ALLOWED_ORIGINS", "").split(",") if os.environ.get("ALLOWED_ORIGINS") else [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001", 
-    "http://127.0.0.1:3001",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+
+# Get allowed origins from environment or use defaults
+allowed_origins_str = os.environ.get("ALLOWED_ORIGINS", "")
+if allowed_origins_str:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001", 
+        "http://127.0.0.1:3001",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://email-productivity-agent.vercel.app",  # ADDED: Your Vercel frontend
+        "https://*.vercel.app",  # ADDED: All Vercel preview deployments
+    ]
 
 app = FastAPI(
     title="Email Productivity Agent",
@@ -58,13 +66,26 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Enhanced CORS configuration
+# Enhanced CORS configuration - FIXED for Vercel
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Credentials",
+        "*"  # Fallback for any other headers
+    ],
+    expose_headers=["*"],
+    max_age=600  # Cache preflight requests for 10 minutes
 )
 
 # Register all API endpoints under /api/v1/
@@ -80,13 +101,8 @@ async def root():
         "docs": "/docs",
         "api_base": "/api/v1",
         "environment": "development" if debug_mode else "production",
-        "endpoints": {
-            "auth": "/api/v1/auth/register, /api/v1/auth/login, etc.",
-            "emails": "/api/v1/emails, /api/v1/emails/my-inbox, etc.",
-            "prompts": "/api/v1/prompts, /api/v1/prompts/my, etc.",
-            "agent": "/api/v1/agent/process, /api/v1/agent/chat, etc.",
-            "email_accounts": "/api/v1/email-accounts, /api/v1/email-accounts/connect/gmail, etc."
-        }
+        "cors_enabled": True,
+        "allowed_origins": allowed_origins
     }
 
 @app.get("/health")
@@ -95,7 +111,21 @@ async def health_check():
         "status": "healthy", 
         "service": "email-agent",
         "timestamp": datetime.utcnow().isoformat(),
-        "environment": "development" if debug_mode else "production"
+        "environment": "development" if debug_mode else "production",
+        "cors": {
+            "enabled": True,
+            "allowed_origins_count": len(allowed_origins)
+        }
+    }
+
+@app.get("/test-cors")
+async def test_cors():
+    """Test endpoint to verify CORS is working"""
+    return {
+        "message": "CORS test endpoint",
+        "cors_configured": True,
+        "allowed_origins": allowed_origins,
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 @app.get("/test")
@@ -105,7 +135,18 @@ async def test_endpoint():
         "message": "API is working!",
         "endpoints_available": True,
         "authentication_ready": True,
-        "environment": "development" if debug_mode else "production"
+        "environment": "development" if debug_mode else "production",
+        "cors_enabled": True
+    }
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    """Handle preflight OPTIONS requests for all paths"""
+    return {
+        "message": "Preflight request handled",
+        "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+        "allowed_headers": ["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+        "allow_credentials": True
     }
 
 if __name__ == "__main__":
@@ -117,14 +158,17 @@ if __name__ == "__main__":
     print(f"Host: 0.0.0.0")
     print(f"Port: {port}")
     print(f"Environment: {'development' if debug_mode else 'production'}")
+    print(f"Allowed Origins: {allowed_origins}")
+    print(f"CORS Enabled: Yes")
     print(f"Docs: http://localhost:{port}/docs")
     print(f"Health: http://localhost:{port}/health")
+    print(f"CORS Test: http://localhost:{port}/test-cors")
     print("=" * 60)
     
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=port,
-        reload=debug_mode,  # Only reload in development
+        reload=debug_mode,
         log_level="info"
     )
