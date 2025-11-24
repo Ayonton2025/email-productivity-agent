@@ -93,7 +93,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Enhanced Authentication API with comprehensive debugging
+// Enhanced Authentication API with comprehensive debugging - CORRECTED ENDPOINTS
 export const authApi = {
   register: async (userData) => {
     console.log('📝 [Auth] Registering user:', { 
@@ -111,7 +111,8 @@ export const authApi = {
     console.log('📤 [Auth] Sending registration data:', registerData);
     
     try {
-      const response = await apiClient.post('/auth/register', registerData);
+      // CORRECTED: Changed from '/auth/register' to '/register'
+      const response = await apiClient.post('/register', registerData);
       console.log('✅ [Auth] Registration successful:', {
         userId: response.data.user_id,
         email: response.data.email,
@@ -138,7 +139,8 @@ export const authApi = {
     };
     
     try {
-      const response = await apiClient.post('/auth/login', loginData);
+      // CORRECTED: Changed from '/auth/login' to '/login'
+      const response = await apiClient.post('/login', loginData);
       console.log('✅ [Auth] Login successful:', {
         hasToken: !!response.data.access_token,
         tokenPreview: response.data.access_token ? `${response.data.access_token.substring(0, 20)}...` : 'None',
@@ -178,7 +180,8 @@ export const authApi = {
     localStorage.removeItem('user');
     
     try {
-      const response = await apiClient.post('/auth/logout');
+      // CORRECTED: Changed from '/auth/logout' to '/logout'
+      const response = await apiClient.post('/logout');
       console.log('✅ [Auth] Backend logout successful');
       return response;
     } catch (error) {
@@ -194,7 +197,8 @@ export const authApi = {
     console.log('🔍 [Auth] Using token:', token ? `${token.substring(0, 20)}...` : 'None');
     
     try {
-      const response = await apiClient.get('/auth/me');
+      // CORRECTED: Changed from '/auth/me' to '/me'
+      const response = await apiClient.get('/me');
       console.log('✅ [Auth] Current user fetched:', {
         email: response.data.email,
         id: response.data.id,
@@ -213,7 +217,8 @@ export const authApi = {
   refreshToken: async () => {
     console.log('🔄 [Auth] Refreshing token');
     try {
-      const response = await apiClient.post('/auth/refresh');
+      // CORRECTED: Changed from '/auth/refresh' to '/refresh'
+      const response = await apiClient.post('/refresh');
       console.log('✅ [Auth] Token refreshed successfully');
       return response;
     } catch (error) {
@@ -225,7 +230,8 @@ export const authApi = {
   verifyEmail: async (data) => {
     console.log('📧 [Auth] Verifying email with token');
     try {
-      const response = await apiClient.post('/auth/verify-email', data);
+      // CORRECTED: Changed from '/auth/verify-email' to '/verify-email'
+      const response = await apiClient.post('/verify-email', data);
       console.log('✅ [Auth] Email verification successful');
       return response;
     } catch (error) {
@@ -237,7 +243,8 @@ export const authApi = {
   forgotPassword: async (data) => {
     console.log('🔐 [Auth] Requesting password reset for:', data.email);
     try {
-      const response = await apiClient.post('/auth/forgot-password', data);
+      // CORRECTED: Changed from '/auth/forgot-password' to '/forgot-password'
+      const response = await apiClient.post('/forgot-password', data);
       console.log('✅ [Auth] Password reset request sent');
       return response;
     } catch (error) {
@@ -249,7 +256,8 @@ export const authApi = {
   resetPassword: async (data) => {
     console.log('🔐 [Auth] Resetting password with token');
     try {
-      const response = await apiClient.post('/auth/reset-password', data);
+      // CORRECTED: Changed from '/auth/reset-password' to '/reset-password'
+      const response = await apiClient.post('/reset-password', data);
       console.log('✅ [Auth] Password reset successful');
       return response;
     } catch (error) {
