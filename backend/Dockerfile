@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+# Create python symlink (pip already exists)
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
 WORKDIR /app
 
 # Copy package files
@@ -14,10 +17,9 @@ COPY requirements.txt .
 
 # Install dependencies
 RUN npm ci
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Use python3 explicitly in the command
-CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
