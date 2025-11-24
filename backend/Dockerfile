@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY requirements.txt .
+COPY requirements.txt ./
 
 # Install dependencies
 RUN npm ci
@@ -22,5 +22,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Use explicit port 80 (no variables)
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0"]
+# Railway requires listening on $PORT
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
