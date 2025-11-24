@@ -5,8 +5,11 @@ from passlib.context import CryptContext
 import secrets
 import json
 
-# Security configuration - use a consistent secret key
-SECRET_KEY = "your-secret-key-here-make-it-very-long-and-secure-in-production"
+# Import settings to use the same SECRET_KEY
+from app.core.config import settings
+
+# Security configuration - use the SAME secret key from config
+SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
