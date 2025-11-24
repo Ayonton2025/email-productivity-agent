@@ -30,7 +30,8 @@ async def get_user_inbox(
     """Get user's inbox emails (requires authentication)"""
     try:
         email_service = EmailService(db)
-        emails = await email_service.get_all_emails(limit, offset)
+        # Use user-specific method to get only current user's emails
+        emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
         
         filtered_emails = emails
         if category and category != 'all':
@@ -183,10 +184,13 @@ async def get_emails(limit: int = 50, offset: int = 0, db: AsyncSession = Depend
     return await email_service.get_all_emails(limit, offset)
 
 @router.post("/emails/load-mock")
-async def load_mock_emails(db: AsyncSession = Depends(get_db)):
-    """Load mock emails (public for demo)"""
+async def load_mock_emails(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Load mock emails for current user"""
     email_service = EmailService(db)
-    emails = await email_service.load_mock_emails("data/mock_inbox.json")
+    emails = await email_service.load_mock_emails("data/mock_inbox.json", user_id=current_user.id)
     return {"message": f"Loaded {len(emails)} emails", "emails": emails}
 
 @router.get("/emails/{email_id}", response_model=Dict[str, Any])
@@ -239,18 +243,25 @@ async def delete_prompt(prompt_id: str, db: AsyncSession = Depends(get_db)):
 
 # Draft endpoints
 @router.get("/drafts", response_model=List[Dict[str, Any]])
-async def get_drafts(db: AsyncSession = Depends(get_db)):
-    """Get all drafts"""
+async def get_drafts(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get user's drafts"""
     email_service = EmailService(db)
-    return await email_service.get_drafts()
+    return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any])
-async def create_draft(draft_data: dict, db: AsyncSession = Depends(get_db)):
-    """Create a draft"""
+@router.post("/drafts", response_model=Dict[str, Any]])
+async def create_draft(
+    draft_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a draft for current user"""
     email_service = EmailService(db)
-    return await email_service.create_draft(draft_data)
+    return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any]])
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
