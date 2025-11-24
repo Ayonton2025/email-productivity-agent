@@ -15,7 +15,7 @@ class EmailService:
         self.llm_service = LLMService()
         self.prompt_service = PromptService(db)
     
-    async def load_mock_emails(self, file_path: str) -> List[Dict[str, Any]]:
+    async def load_mock_emails(self, file_path: str, user_id: str = None) -> List[Dict[str, Any]]:
         """Load mock emails from JSON file"""
         try:
             with open(file_path, 'r') as f:
@@ -23,7 +23,7 @@ class EmailService:
             
             processed_emails = []
             for email_data in emails_data:
-                processed_email = await self.process_single_email(email_data)
+                processed_email = await self.process_single_email(email_data, user_id)
                 processed_emails.append(processed_email)
             
             return processed_emails
@@ -31,7 +31,7 @@ class EmailService:
             print(f"Error loading mock emails: {e}")
             return []
     
-    async def process_single_email(self, email_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_single_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Process a single email with AI categorization and extraction"""
         
         # Get active prompts
@@ -59,8 +59,9 @@ class EmailService:
         except:
             action_items_parsed = [{"task": action_items, "deadline": None}]
         
-        # Create email record - UPDATED: using email_metadata instead of metadata
+        # Create email record - ADD user_id field
         email = Email(
+            user_id=user_id,  # CRITICAL: Add user_id to associate email with user
             sender=email_data.get('sender', ''),
             subject=email_data.get('subject', ''),
             body=email_data.get('body', ''),
@@ -68,7 +69,7 @@ class EmailService:
             category=category,
             action_items=action_items_parsed,
             summary=summary,
-            email_metadata=email_data.get('metadata', {})  # CHANGED: email_metadata
+            email_metadata=email_data.get('metadata', {})
         )
         
         self.db.add(email)
@@ -81,6 +82,16 @@ class EmailService:
         """Get all emails with pagination"""
         result = await self.db.execute(
             select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset)
+        )
+        emails = result.scalars().all()
+        return [email.to_dict() for email in emails]
+    
+    async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get emails for a specific user"""
+        result = await self.db.execute(
+            select(Email).where(Email.user_id == user_id)
+            .order_by(Email.timestamp.desc())
+            .limit(limit).offset(offset)
         )
         emails = result.scalars().all()
         return [email.to_dict() for email in emails]
@@ -102,12 +113,16 @@ class EmailService:
             return True
         return False
     
-    async def create_draft(self, draft_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_draft(self, draft_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Create a new email draft"""
         # CHANGED: Handle metadata field conversion
         draft_metadata = draft_data.pop('metadata', {})
         draft_data['draft_metadata'] = draft_metadata
         
+        # Add user_id if provided
+        if user_id:
+            draft_data['user_id'] = user_id
+            
         draft = EmailDraft(**draft_data)
         self.db.add(draft)
         await self.db.commit()
@@ -119,3 +134,36 @@ class EmailService:
         result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
         drafts = result.scalars().all()
         return [draft.to_dict() for draft in drafts]
+    
+    async def get_user_drafts(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get drafts for a specific user"""
+        result = await self.db.execute(
+            select(EmailDraft).where(EmailDraft.user_id == user_id)
+            .order_by(EmailDraft.updated_at.desc())
+        )
+        drafts = result.scalars().all()
+        return [draft.to_dict() for draft in drafts]
+    
+    async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Update a draft"""
+        result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+        draft = result.scalar_one_or_none()
+        
+        if draft:
+            for key, value in draft_data.items():
+                setattr(draft, key, value)
+            await self.db.commit()
+            await self.db.refresh(draft)
+            return draft.to_dict()
+        return None
+    
+    async def delete_draft(self, draft_id: str) -> bool:
+        """Delete a draft"""
+        result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+        draft = result.scalar_one_or_none()
+        
+        if draft:
+            await self.db.delete(draft)
+            await self.db.commit()
+            return True
+        return False
