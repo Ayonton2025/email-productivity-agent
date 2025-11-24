@@ -21,7 +21,7 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       }
-    }
+    },
     // Enable hot module replacement
     hmr: {
       overlay: true
