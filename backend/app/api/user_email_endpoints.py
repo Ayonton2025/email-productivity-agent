@@ -8,54 +8,19 @@ from app.services.email_provider_service import EmailProviderService
 from app.core.config import settings
 from datetime import datetime
 
+# Import the proper authentication dependency
+from app.api.auth_endpoints import get_current_user
+
 router = APIRouter(prefix="/email-accounts", tags=["email-accounts"])
 email_provider_service = EmailProviderService()
-
-# Import and use the same authentication system as endpoints.py
-from app.api.endpoints import verify_token
-
-async def get_current_user_from_token(authorization: Optional[str] = Header(None)):
-    """Get current user from token (compatible with endpoints.py auth)"""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    
-    try:
-        if authorization.startswith("Bearer "):
-            token = authorization[7:]
-        else:
-            token = authorization
-        
-        session = verify_token(token)
-        if not session:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-        
-        # Get user from database using the user_id from the token session
-        from sqlalchemy import select
-        
-        async for db in get_db():
-            result = await db.execute(select(User).where(User.id == session["user_id"]))
-            user = result.scalar_one_or_none()
-            
-            if not user:
-                raise HTTPException(status_code=401, detail="User not found")
-            
-            return user
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Authentication error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
 
 @router.get("/connect/gmail/url")
 async def get_gmail_connect_url(
     redirect_uri: str, 
-    authorization: Optional[str] = Header(None)
+    current_user: User = Depends(get_current_user)
 ):
     """Get Gmail OAuth URL for connection"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         if not settings.GOOGLE_CLIENT_ID:
             raise HTTPException(status_code=500, detail="Google OAuth not configured")
         
@@ -67,13 +32,11 @@ async def get_gmail_connect_url(
 @router.post("/connect/gmail")
 async def connect_gmail_account(
     auth_data: dict,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Connect Gmail account using OAuth tokens"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         success = await email_provider_service.authenticate_gmail_with_token(
             auth_data.get('access_token'),
             auth_data.get('refresh_token')
@@ -112,13 +75,11 @@ async def connect_gmail_account(
 @router.post("/gmail")
 async def connect_gmail_account_simple_post(
     auth_data: dict,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Connect Gmail account - simple POST endpoint for frontend compatibility"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         success = await email_provider_service.authenticate_gmail_with_token(
             auth_data.get('access_token'),
             auth_data.get('refresh_token')
@@ -157,13 +118,11 @@ async def connect_gmail_account_simple_post(
 @router.post("/connect/gmail/code")
 async def connect_gmail_account_with_code(
     auth_data: dict,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Connect Gmail account using OAuth authorization code"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
             raise HTTPException(status_code=500, detail="Google OAuth not configured")
         
@@ -213,13 +172,11 @@ async def connect_gmail_account_with_code(
 @router.post("/connect/gmail-legacy")
 async def connect_gmail_account_legacy(
     auth_data: dict,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Connect Gmail account (legacy method)"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         success = await email_provider_service.authenticate_gmail(
             auth_data.get('credentials_file'),
             auth_data.get('token_file')
@@ -257,13 +214,11 @@ async def connect_gmail_account_legacy(
 @router.post("/connect/outlook")
 async def connect_outlook_account(
     auth_data: dict,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Connect Outlook account"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         success = await email_provider_service.authenticate_outlook(
             auth_data.get('client_id'),
             auth_data.get('client_secret'),
@@ -299,13 +254,11 @@ async def connect_outlook_account(
 
 @router.get("/")
 async def get_user_email_accounts(
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> List[dict]:
     """Get user's connected email accounts"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         from sqlalchemy import select
         result = await db.execute(
             select(UserEmailAccount).where(
@@ -320,13 +273,11 @@ async def get_user_email_accounts(
 @router.delete("/{account_id}")
 async def disconnect_email_account(
     account_id: str,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Disconnect email account"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         from sqlalchemy import select
         result = await db.execute(
             select(UserEmailAccount).where(
@@ -349,13 +300,11 @@ async def disconnect_email_account(
 @router.post("/{account_id}/sync")
 async def sync_email_account(
     account_id: str,
-    authorization: Optional[str] = Header(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Sync emails from connected account"""
     try:
-        current_user = await get_current_user_from_token(authorization)
-        
         from sqlalchemy import select
         result = await db.execute(
             select(UserEmailAccount).where(
