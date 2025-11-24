@@ -9,7 +9,7 @@ from datetime import datetime
 # Import your application components
 from app.api.endpoints import router as api_router
 from app.api.user_email_endpoints import router as user_email_router
-from app.api.auth_endpoints import router as auth_router
+from app.api.auth_endpoints import router as auth_router  # Make sure this is imported
 from app.models.database import init_db, AsyncSessionLocal
 from app.services.prompt_service import PromptService
 from app.core.config import settings
@@ -20,30 +20,23 @@ async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting Email Productivity Agent Backend...")
     print("📦 Initializing database...")
-    
     try:
         await init_db()
-        
         # Initialize default prompts using a DB session
         async with AsyncSessionLocal() as db:
             prompt_service = PromptService(db)
             await prompt_service.initialize_default_prompts()
-        
         print("✅ Database initialized successfully")
         print("✅ Default prompts created")
-        
         # Create default admin user if not exists
         await create_default_admin()
-        
     except Exception as e:
         print(f"❌ Startup error: {e}")
         import traceback
         print(f"❌ Stack trace: {traceback.format_exc()}")
         if os.environ.get("DEBUG", "False").lower() == "true":
             raise
-    
     yield
-    
     # Shutdown
     print("🛑 Shutting down...")
 
@@ -52,11 +45,9 @@ async def create_default_admin():
     try:
         from sqlalchemy import select
         from app.models.database import User
-        
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(User))
             users = result.scalars().all()
-            
             if not users:
                 # Create default admin user
                 admin_user = User(
@@ -66,11 +57,9 @@ async def create_default_admin():
                 admin_user.set_password("admin123")
                 admin_user.is_verified = True
                 admin_user.is_active = True
-                
                 db.add(admin_user)
                 await db.commit()
                 print("✅ Default admin user created: admin@inboxai.com / admin123")
-                
     except Exception as e:
         print(f"⚠️ Could not create default admin: {e}")
 
@@ -86,11 +75,12 @@ else:
     allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "http://localhost:3001", 
+        "http://localhost:3001",
         "http://127.0.0.1:3001",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://email-productivity-agent.vercel.app"
+        "https://email-productivity-agent.vercel.app",
+        "https://sunny-recreation-production.up.railway.app"
     ]
 
 print(f"🔧 Starting on port: {port}")
@@ -118,10 +108,54 @@ app.add_middleware(
     max_age=600
 )
 
-# Register API endpoints
-app.include_router(auth_router, prefix="/api/v1", tags=["authentication"])
+# Register API endpoints - MAKE SURE AUTH ROUTER IS INCLUDED
+app.include_router(auth_router, prefix="/api/v1", tags=["authentication"])  # This line is critical!
 app.include_router(api_router, prefix="/api/v1", tags=["api"])
 app.include_router(user_email_router, prefix="/api/v1", tags=["email-accounts"])
+
+# Add test endpoints
+@app.get("/test-connection")
+async def test_connection():
+    """Test if backend is responding"""
+    return {
+        "status": "backend_working",
+        "message": "Backend is responding correctly",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@app.get("/test-db")
+async def test_database():
+    """Test database connection"""
+    try:
+        from app.models.database import get_db
+        async for db in get_db():
+            await db.execute("SELECT 1")
+            return {"database": "connected"}
+    except Exception as e:
+        return {"database": "error", "detail": str(e)}
+
+@app.get("/test-all")
+async def test_all_services():
+    """Test all services"""
+    results = {}
+    
+    # Test database
+    try:
+        from app.models.database import get_db
+        async for db in get_db():
+            await db.execute("SELECT 1")
+            results["database"] = "connected"
+    except Exception as e:
+        results["database"] = f"error: {str(e)}"
+    
+    # Test environment
+    results["environment"] = {
+        "debug_mode": debug_mode,
+        "port": port,
+        "database_url": settings.DATABASE_URL[:20] + "..." if settings.DATABASE_URL else "not_set"
+    }
+    
+    return results
 
 @app.get("/")
 async def root():
@@ -134,7 +168,7 @@ async def root():
         "environment": "development" if debug_mode else "production",
         "features": [
             "User Authentication & Registration",
-            "Email Verification System", 
+            "Email Verification System",
             "Password Reset Functionality",
             "Real Email Provider Integration (Gmail, Outlook)",
             "Multi-User Data Isolation",
@@ -150,7 +184,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {
-        "status": "healthy", 
+        "status": "healthy",
         "service": "email-productivity-agent",
         "version": "2.0.0",
         "timestamp": datetime.utcnow().isoformat(),
@@ -249,11 +283,11 @@ if __name__ == "__main__":
     print(f"Features: User Auth, Real Email Sync, AI Processing")
     print("=" * 70)
     print(f"📚 API Documentation: http://localhost:{port}/docs")
-    print(f"❤️  Health Check: http://localhost:{port}/health")
+    print(f"❤️ Health Check: http://localhost:{port}/health")
     print(f"🔧 CORS Test: http://localhost:{port}/test-cors")
-    print(f"ℹ️  API Info: http://localhost:{port}/info")
+    print(f"ℹ️ API Info: http://localhost:{port}/info")
     print("=" * 70)
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",
