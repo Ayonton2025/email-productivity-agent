@@ -1,13 +1,10 @@
 {
+  "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "node",
-    "buildCommand": "npm ci && npm run build"
+    "builder": "NIXPACKS"
   },
-  "start": {
-    "startCommand": "npm run preview"
-  },
-  "env": {
-    "VITE_API_URL": "https://sunny-recreation.up.railway.app/api/v1",
-    "VITE_WS_URL": "wss://sunny-recreation.up.railway.app"
+  "deploy": {
+    "startCommand": "npm run preview",
+    "restartPolicyType": "ON_FAILURE"
   }
 }
