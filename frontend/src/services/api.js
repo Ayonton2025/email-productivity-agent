@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// Make sure this environment variable is set correctly
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://sunny-recreation-production.up.railway.app/api/v1';
 
 console.log('🚀 [API] Initializing with base URL:', API_BASE_URL);
 
@@ -99,8 +100,18 @@ export const authApi = {
       email: userData.email, 
       fullName: userData.full_name 
     });
+    
+    // Make sure we're sending the correct data structure
+    const registerData = {
+      email: userData.email,
+      password: userData.password,
+      full_name: userData.full_name || userData.fullName
+    };
+    
+    console.log('📤 [Auth] Sending registration data:', registerData);
+    
     try {
-      const response = await apiClient.post('/auth/register', userData);
+      const response = await apiClient.post('/auth/register', registerData);
       console.log('✅ [Auth] Registration successful:', {
         userId: response.data.user_id,
         email: response.data.email,
@@ -111,7 +122,8 @@ export const authApi = {
     } catch (error) {
       console.error('❌ [Auth] Registration failed:', {
         error: error.response?.data?.detail,
-        status: error.response?.status
+        status: error.response?.status,
+        fullError: error.response?.data
       });
       throw error;
     }
@@ -119,8 +131,14 @@ export const authApi = {
   
   login: async (credentials) => {
     console.log('🔑 [Auth] Logging in user:', { email: credentials.email });
+    
+    const loginData = {
+      email: credentials.email,
+      password: credentials.password
+    };
+    
     try {
-      const response = await apiClient.post('/auth/login', credentials);
+      const response = await apiClient.post('/auth/login', loginData);
       console.log('✅ [Auth] Login successful:', {
         hasToken: !!response.data.access_token,
         tokenPreview: response.data.access_token ? `${response.data.access_token.substring(0, 20)}...` : 'None',
@@ -143,7 +161,8 @@ export const authApi = {
     } catch (error) {
       console.error('❌ [Auth] Login failed:', {
         error: error.response?.data?.detail || error.message,
-        status: error.response?.status
+        status: error.response?.status,
+        fullError: error.response?.data
       });
       throw error;
     }
