@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.services.email_service import EmailService
 from app.utils.validators import EmailValidator
 
-
 router = APIRouter()
 security = HTTPBearer()
 
