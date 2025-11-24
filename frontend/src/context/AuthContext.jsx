@@ -81,6 +81,14 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
+      if (!userData) {
+        console.error('❌ [AuthContext] No user data in login response!');
+        return { 
+          success: false, 
+          error: 'No user data received from server' 
+        };
+      }
+      
       // Store token and user data
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -104,28 +112,48 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       console.log('📝 [AuthContext] Attempting registration for:', userData.email);
+      
+      // Clear any existing auth data first
+      clearAuthData();
+      
       const response = await authApi.register(userData);
       
-      console.log('✅ [AuthContext] Registration successful:', response.data);
+      console.log('✅ [AuthContext] Registration response received:', response.data);
       
-      // Note: Registration might not return token immediately if email verification is required
+      // Check if we got an access token for auto-login
       if (response.data.access_token && response.data.user) {
         const { access_token, user: newUser } = response.data;
         
         console.log('✅ [AuthContext] Auto-login after registration');
+        console.log('🔍 [AuthContext] Token to store:', access_token ? `${access_token.substring(0, 20)}...` : 'None');
+        console.log('🔍 [AuthContext] User to store:', newUser);
+        
+        // Store token and user data
         localStorage.setItem('auth_token', access_token);
         localStorage.setItem('user', JSON.stringify(newUser));
         setUser(newUser);
         setToken(access_token);
         
-        return { success: true, user: newUser, autoLoggedIn: true };
+        // Verify storage
+        const storedToken = localStorage.getItem('auth_token');
+        const storedUser = localStorage.getItem('user');
+        console.log('🔍 [AuthContext] After storage - Token in localStorage:', !!storedToken);
+        console.log('🔍 [AuthContext] After storage - User in localStorage:', !!storedUser);
+        
+        return { 
+          success: true, 
+          user: newUser, 
+          autoLoggedIn: true,
+          message: 'Registration successful! Welcome to InboxAI.'
+        };
       } else {
-        // Registration successful but needs email verification
+        // Registration successful but no auto-login
+        console.log('⚠️ [AuthContext] Registration successful but no auto-login');
         return { 
           success: true, 
           user: null, 
           autoLoggedIn: false,
-          message: response.data.message || 'Registration successful. Please check your email for verification.'
+          message: response.data.message || 'Registration successful! Please check your email for verification.'
         };
       }
     } catch (error) {
