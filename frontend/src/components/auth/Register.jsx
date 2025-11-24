@@ -20,6 +20,7 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('🔍 [Register] User already authenticated, redirecting to dashboard');
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
@@ -34,14 +35,43 @@ const Register = () => {
   };
 
   const validateForm = () => {
+    if (!formData.full_name?.trim()) {
+      setError('Full name is required');
+      return false;
+    }
+    
+    if (!formData.email?.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    
+    if (!formData.password) {
+      setError('Password is required');
+      return false;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
     }
+    
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return false;
     }
+    
+    if (formData.password.length > 72) {
+      setError('Password cannot be longer than 72 characters');
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
     return true;
   };
 
@@ -51,29 +81,38 @@ const Register = () => {
     setError('');
     setSuccess('');
 
+    console.log('🔍 [Register] Starting registration process...');
+    console.log('📝 [Register] Form data:', { 
+      email: formData.email, 
+      full_name: formData.full_name,
+      password_length: formData.password?.length 
+    });
+
     if (!validateForm()) {
+      console.log('❌ [Register] Form validation failed');
       setLoading(false);
       return;
     }
 
     const { confirmPassword, ...submitData } = formData;
     
-    console.log('🔍 [Register] Starting registration process...');
+    console.log('🚀 [Register] Calling register function...');
     const result = await register(submitData);
     
+    console.log('🔍 [Register] Registration result:', result);
+    
     if (result.success) {
-      console.log('🔍 [Register] Registration result:', result);
-      
       if (result.autoLoggedIn) {
         // User is automatically logged in - redirect to dashboard
         console.log('✅ [Register] Auto-login successful, redirecting to dashboard');
         setSuccess('Registration successful! Welcome to InboxAI.');
         setTimeout(() => {
           navigate('/', { replace: true });
-        }, 1500);
+        }, 1000);
       } else {
         // User needs to verify email or login manually
-        setSuccess(result.message || 'Registration successful! Please check your email for verification instructions.');
+        console.log('⚠️ [Register] Registration successful but no auto-login');
+        setSuccess(result.message || 'Registration successful! Please login to continue.');
         setFormData({
           full_name: '',
           email: '',
@@ -84,10 +123,11 @@ const Register = () => {
         // Redirect to login page after a delay
         setTimeout(() => {
           navigate('/login');
-        }, 3000);
+        }, 2000);
       }
     } else {
-      setError(result.error);
+      console.error('❌ [Register] Registration failed:', result.error);
+      setError(result.error || 'Registration failed. Please try again.');
     }
     
     setLoading(false);
@@ -126,7 +166,7 @@ const Register = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-                Full Name
+                Full Name *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -148,7 +188,7 @@ const Register = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email address *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -170,7 +210,7 @@ const Register = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -185,7 +225,9 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Create a password (min. 6 characters)"
+                  placeholder="Create a password (6-72 characters)"
+                  minLength={6}
+                  maxLength={72}
                 />
                 <button
                   type="button"
@@ -199,11 +241,14 @@ const Register = () => {
                   )}
                 </button>
               </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Password must be 6-72 characters long
+              </p>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                Confirm Password *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
