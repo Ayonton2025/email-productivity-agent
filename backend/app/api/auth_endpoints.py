@@ -20,39 +20,60 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    token = credentials.credentials
-    print(f"🔐 [get_current_user] Verifying token: {token[:20]}..." if token else "No token")
-    
-    payload = verify_token(token)
-    if not payload:
+    try:
+        token = credentials.credentials
+        print(f"🔐 [get_current_user] Verifying token: {token[:20]}..." if token else "No token")
+        
+        payload = verify_token(token)
+        if not payload:
+            print("❌ [get_current_user] Token verification failed")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        user_id = payload.get("user_id")
+        if not user_id:
+            print("❌ [get_current_user] No user_id in token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+
+        # Get user from database
+        from sqlalchemy import select
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            print(f"❌ [get_current_user] User not found: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+            
+        if not user.is_active:
+            print(f"❌ [get_current_user] User inactive: {user.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account is inactive",
+            )
+
+        print(f"✅ [get_current_user] User authenticated: {user.email}")
+        return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ [get_current_user] Unexpected error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Authentication failed",
         )
-    
-    user_id = payload.get("user_id")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
-    
-    # Get user from database
-    from sqlalchemy import select
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive",
-        )
-    
-    print(f"✅ [get_current_user] User authenticated: {user.email}")
-    return user
 
 # ========== DEBUG ENDPOINTS ==========
+
 @router.get("/debug/users")
 async def debug_users(db: AsyncSession = Depends(get_db)):
     """Debug endpoint to check all users in database"""
@@ -73,7 +94,7 @@ async def debug_users(db: AsyncSession = Depends(get_db)):
                 "created_at": user.created_at.isoformat() if user.created_at else None,
                 "password_hash": user.password_hash[:20] + "..." if user.password_hash else None
             })
-        
+
         print(f"✅ [debug_users] Found {len(users)} users")
         return {
             "total_users": len(users),
@@ -118,6 +139,7 @@ async def debug_database(db: AsyncSession = Depends(get_db)):
         }
 
 # ========== AUTH ENDPOINTS ==========
+
 @router.post("/register")
 async def register(
     user_data: dict,
@@ -129,7 +151,7 @@ async def register(
         email = user_data.get("email")
         password = user_data.get("password")
         full_name = user_data.get("full_name")
-
+        
         print(f"🔍 [Register] Starting registration for: {email}")
         print(f"🔍 [Register] Received data: {user_data}")
 
@@ -165,7 +187,7 @@ async def register(
             )
 
         print(f"✅ [Register] Creating new user: {email}")
-        
+
         # Create new user
         user = User(
             email=email,
@@ -173,8 +195,9 @@ async def register(
             is_verified=True,  # Auto-verify for immediate login
             is_active=True
         )
+
         print(f"🔍 [Register] User object created: {user.email}")
-        
+
         # Set password with error handling
         try:
             user.set_password(password)
@@ -185,14 +208,14 @@ async def register(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Password error: {str(password_error)}"
             )
-        
+
         # Generate verification token (but don't require verification for now)
         verification_token = user.generate_verification_token()
         print(f"🔍 [Register] Verification token generated")
 
         db.add(user)
         print(f"🔍 [Register] User added to session")
-        
+
         try:
             await db.commit()
             print(f"✅ [Register] Database commit successful")
@@ -203,7 +226,7 @@ async def register(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save user to database"
             )
-        
+
         await db.refresh(user)
         print(f"🔍 [Register] User refreshed from DB, ID: {user.id}")
 
@@ -228,7 +251,7 @@ async def register(
 
         print(f"✅ [Register] Registration completed successfully for: {email}")
         print(f"📤 [Register] Returning response with access_token: {access_token[:20]}...")
-        
+
         # CRITICAL: Return the access_token in the response
         return {
             "message": "User registered successfully",
@@ -238,7 +261,7 @@ async def register(
             "token_type": "bearer",
             "user": user_response_data
         }
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
@@ -263,7 +286,7 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid verification token"
             )
-        
+
         from sqlalchemy import select
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
@@ -273,17 +296,17 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
+
         if user.verification_token != token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid verification token"
             )
-        
+
         user.is_verified = True
         user.verification_token = None
         await db.commit()
-        
+
         return {"message": "Email verified successfully"}
         
     except jwt.ExpiredSignatureError:
@@ -303,7 +326,7 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
     try:
         email = credentials.get("email")
         password = credentials.get("password")
-
+        
         print(f"🔑 [Login] Attempting login for: {email}")
 
         if not email or not password:
@@ -315,7 +338,7 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
         from sqlalchemy import select
         result = await db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
-
+        
         print(f"🔍 [Login] User found in DB: {user is not None}")
         if user:
             print(f"🔍 [Login] User details - ID: {user.id}, Verified: {user.is_verified}, Active: {user.is_active}")
@@ -373,7 +396,7 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
             "token_type": "bearer",
             "user": user_data
         }
-        
+
     except Exception as e:
         print(f"❌ [Login] Login failed with error: {e}")
         import traceback
@@ -388,7 +411,6 @@ async def forgot_password(
 ):
     """Request password reset"""
     email = email_data.get("email")
-    
     from sqlalchemy import select
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
@@ -404,7 +426,7 @@ async def forgot_password(
             user.full_name,
             reset_token
         )
-    
+
     return {
         "message": "If the email exists, a password reset link has been sent"
     }
@@ -420,7 +442,7 @@ async def reset_password(reset_data: dict, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token and new password are required"
         )
-    
+
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         user_id = payload.get("user_id")
@@ -428,17 +450,17 @@ async def reset_password(reset_data: dict, db: AsyncSession = Depends(get_db)):
         from sqlalchemy import select
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
-        
+
         if not user or user.reset_token != token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid reset token"
             )
-        
+
         user.set_password(new_password)
         user.reset_token = None
         await db.commit()
-        
+
         return {"message": "Password reset successfully"}
         
     except jwt.ExpiredSignatureError:
@@ -456,6 +478,7 @@ async def reset_password(reset_data: dict, db: AsyncSession = Depends(get_db)):
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
     print(f"🔍 [me] Getting current user info for: {current_user.email}")
+
     # Return user data safely without relying on to_dict()
     user_data = {
         "id": current_user.id,
@@ -466,6 +489,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
         "last_login": current_user.last_login.isoformat() if current_user.last_login else None
     }
+
     print(f"✅ [me] Returning user data: {user_data}")
     return user_data
 
@@ -483,7 +507,6 @@ async def refresh_token(current_user: User = Depends(get_current_user)):
     """Refresh access token"""
     print(f"🔄 [refresh] Refreshing token for: {current_user.email}")
     new_token = create_access_token(data={"user_id": current_user.id})
-    
     return {
         "access_token": new_token,
         "token_type": "bearer"
