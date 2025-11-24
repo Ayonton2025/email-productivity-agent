@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "node",
+    "buildCommand": "npm ci && npm run build"
+  },
+  "start": {
+    "startCommand": "npm run preview"
+  },
+  "env": {
+    "VITE_API_URL": "https://sunny-recreation.up.railway.app/api/v1",
+    "VITE_WS_URL": "wss://sunny-recreation.up.railway.app"
+  }
+}
