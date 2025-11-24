@@ -272,11 +272,13 @@ export const tokenUtils = {
 export const createWebSocket = (clientId = 'default') => {
   const token = localStorage.getItem('auth_token');
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//localhost:8000/api/v1/ws/agent?client_id=${clientId}${token ? `&token=${token}` : ''}`;
+  const baseUrl = import.meta.env.VITE_API_URL?.replace(/^https?/, protocol);
+  const wsUrl = `${baseUrl}/ws/agent?client_id=${clientId}${token ? `&token=${token}` : ''}`;
   
   console.log('🔌 [WebSocket] Connecting to:', wsUrl);
   return new WebSocket(wsUrl);
 };
+
 
 // Connection status monitor
 export const monitorConnection = () => {
