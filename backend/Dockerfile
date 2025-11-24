@@ -6,14 +6,13 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Create symbolic links for python and pip
+# Create symbolic link for python only (pip already exists)
 RUN ln -s /usr/bin/python3 /usr/bin/python
-RUN ln -s /usr/bin/pip3 /usr/bin/pip
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package*..json ./
 COPY requirements.txt .
 
 # Install dependencies
