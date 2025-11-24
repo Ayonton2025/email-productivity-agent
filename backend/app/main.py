@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 import os
@@ -8,8 +9,11 @@ from datetime import datetime
 # Import your application components
 from app.api.endpoints import router as api_router
 from app.api.user_email_endpoints import router as user_email_router
+from app.api.auth_endpoints import router as auth_router
 from app.models.database import init_db, AsyncSessionLocal
 from app.services.prompt_service import PromptService
+from app.core.config import settings
+from app.core.security import get_password_hash
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,11 +32,13 @@ async def lifespan(app: FastAPI):
         print("✅ Database initialized successfully")
         print("✅ Default prompts created")
         
+        # Create default admin user if not exists
+        await create_default_admin()
+        
     except Exception as e:
         print(f"❌ Startup error: {e}")
         import traceback
         print(f"❌ Stack trace: {traceback.format_exc()}")
-        # Don't raise in production, just log
         if os.environ.get("DEBUG", "False").lower() == "true":
             raise
     
@@ -41,11 +47,38 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("🛑 Shutting down...")
 
+async def create_default_admin():
+    """Create a default admin user if no users exist"""
+    try:
+        from sqlalchemy import select
+        from app.models.database import User
+        
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User))
+            users = result.scalars().all()
+            
+            if not users:
+                # Create default admin user
+                admin_user = User(
+                    email="admin@inboxai.com",
+                    full_name="System Administrator"
+                )
+                admin_user.set_password("admin123")
+                admin_user.is_verified = True
+                admin_user.is_active = True
+                
+                db.add(admin_user)
+                await db.commit()
+                print("✅ Default admin user created: admin@inboxai.com / admin123")
+                
+    except Exception as e:
+        print(f"⚠️ Could not create default admin: {e}")
+
 # Get environment variables
 debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
-port = int(os.environ.get("PORT", 8000))  # Get PORT from Railway
+port = int(os.environ.get("PORT", 8000))
 
-# Get allowed origins from environment or use defaults
+# Allowed origins
 allowed_origins_str = os.environ.get("ALLOWED_ORIGINS", "")
 if allowed_origins_str:
     allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
@@ -57,8 +90,7 @@ else:
         "http://127.0.0.1:3001",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://email-productivity-agent.vercel.app",  # Your Vercel frontend
-        "https://*.vercel.app",  # All Vercel deployments
+        "https://email-productivity-agent.vercel.app"
     ]
 
 print(f"🔧 Starting on port: {port}")
@@ -67,65 +99,72 @@ print(f"🔧 Allowed origins: {allowed_origins}")
 
 app = FastAPI(
     title="Email Productivity Agent",
-    description="AI-powered email management system",
-    version="1.0.0",
+    description="AI-powered email management system with user authentication and real email provider integration",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
-# Enhanced CORS configuration for Railway + Vercel
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Headers", 
-        "Access-Control-Allow-Methods",
-        "Access-Control-Allow-Credentials",
-        "*"
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
     expose_headers=["*"],
-    max_age=600  # Cache preflight requests for 10 minutes
+    max_age=600
 )
 
-# Register all API endpoints under /api/v1/
-app.include_router(api_router, prefix="/api/v1")
-app.include_router(user_email_router, prefix="/api/v1")
+# Register API endpoints
+app.include_router(auth_router, prefix="/api/v1", tags=["authentication"])
+app.include_router(api_router, prefix="/api/v1", tags=["api"])
+app.include_router(user_email_router, prefix="/api/v1", tags=["email-accounts"])
 
 @app.get("/")
 async def root():
     return {
         "message": "Email Productivity Agent API",
         "status": "running",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "docs": "/docs",
         "api_base": "/api/v1",
         "environment": "development" if debug_mode else "production",
-        "cors_enabled": True,
-        "allowed_origins": allowed_origins
+        "features": [
+            "User Authentication & Registration",
+            "Email Verification System", 
+            "Password Reset Functionality",
+            "Real Email Provider Integration (Gmail, Outlook)",
+            "Multi-User Data Isolation",
+            "Advanced OpenAI AI Processing",
+            "Smart Email Categorization",
+            "AI-Powered Draft Generation",
+            "Cross-Email Insights",
+            "Productivity Analytics"
+        ],
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy", 
-        "service": "email-agent",
+        "service": "email-productivity-agent",
+        "version": "2.0.0",
         "timestamp": datetime.utcnow().isoformat(),
         "environment": "development" if debug_mode else "production",
-        "port": port
+        "database": "connected",
+        "ai_services": "available"
     }
+
+@app.get("/ping")
+async def ping():
+    return {"message": "pong", "status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 @app.get("/test-cors")
 async def test_cors():
-    """Test endpoint to verify CORS is working"""
     return {
         "message": "CORS test endpoint - Working!",
         "cors_configured": True,
@@ -133,52 +172,93 @@ async def test_cors():
         "timestamp": datetime.utcnow().isoformat()
     }
 
-@app.get("/test")
-async def test_endpoint():
-    """Test endpoint to verify the API is working"""
+@app.get("/info")
+async def api_info():
     return {
-        "message": "API is working!",
-        "endpoints_available": True,
-        "authentication_ready": True,
-        "environment": "development" if debug_mode else "production"
+        "name": "Email Productivity Agent API",
+        "version": "2.0.0",
+        "description": "AI-powered email management system",
+        "status": "operational",
+        "endpoints": {
+            "authentication": [
+                "POST /api/v1/auth/register",
+                "POST /api/v1/auth/login",
+                "POST /api/v1/auth/logout",
+                "GET /api/v1/auth/me",
+                "POST /api/v1/auth/refresh",
+                "POST /api/v1/auth/forgot-password",
+                "POST /api/v1/auth/reset-password",
+                "POST /api/v1/auth/verify-email"
+            ],
+            "emails": [
+                "GET /api/v1/emails",
+                "GET /api/v1/emails/my-inbox",
+                "GET /api/v1/emails/{email_id}",
+                "PUT /api/v1/emails/{email_id}/category",
+                "POST /api/v1/emails/sync",
+                "POST /api/v1/emails/load-mock"
+            ],
+            "email_accounts": [
+                "POST /api/v1/email-accounts/connect/gmail",
+                "POST /api/v1/email-accounts/connect/outlook",
+                "GET /api/v1/email-accounts",
+                "DELETE /api/v1/email-accounts/{account_id}",
+                "POST /api/v1/email-accounts/{account_id}/sync"
+            ],
+            "ai_agent": [
+                "POST /api/v1/agent/process",
+                "POST /api/v1/agent/chat",
+                "WS /ws/agent"
+            ],
+            "prompts": [
+                "GET /api/v1/prompts",
+                "GET /api/v1/prompts/my",
+                "POST /api/v1/prompts",
+                "PUT /api/v1/prompts/{prompt_id}",
+                "DELETE /api/v1/prompts/{prompt_id}"
+            ]
+        }
     }
 
-@app.get("/ping")
-async def ping():
-    """Simple ping endpoint for health checks"""
-    return {
-        "message": "pong", 
-        "status": "ok", 
-        "timestamp": datetime.utcnow().isoformat(),
-        "port": port
-    }
+# Error handlers
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Endpoint not found", "path": request.url.path}
+    )
 
-# Handle preflight OPTIONS requests
-@app.options("/{rest_of_path:path}")
-async def preflight_handler():
-    return {"message": "Preflight request handled"}
-
-@app.api_route("/{path_name:path}", methods=["OPTIONS"])
-async def options_handler():
-    return {"message": "OK"}
+@app.exception_handler(500)
+async def internal_error_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 if __name__ == "__main__":
-    print("=" * 60)
+    print("=" * 70)
     print("📧 Email Productivity Agent - Backend Server")
-    print("=" * 60)
+    print("=" * 70)
     print(f"Host: 0.0.0.0")
     print(f"Port: {port}")
     print(f"Environment: {'development' if debug_mode else 'production'}")
     print(f"Allowed Origins: {allowed_origins}")
-    print(f"Docs: http://localhost:{port}/docs")
-    print(f"Health: http://localhost:{port}/health")
-    print(f"CORS Test: http://localhost:{port}/test-cors")
-    print("=" * 60)
+    print(f"Database: SQLite + AIOSQLite")
+    print(f"AI Provider: OpenAI + Enhanced Processing")
+    print(f"Email Providers: Gmail, Outlook")
+    print(f"Features: User Auth, Real Email Sync, AI Processing")
+    print("=" * 70)
+    print(f"📚 API Documentation: http://localhost:{port}/docs")
+    print(f"❤️  Health Check: http://localhost:{port}/health")
+    print(f"🔧 CORS Test: http://localhost:{port}/test-cors")
+    print(f"ℹ️  API Info: http://localhost:{port}/info")
+    print("=" * 70)
     
     uvicorn.run(
-        app,  # Use the app instance directly
+        app,
         host="0.0.0.0",
         port=port,
         reload=debug_mode,
-        log_level="info"
+        log_level="info",
+        access_log=True
     )
