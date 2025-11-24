@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
+console.log('🚀 [API] Initializing with base URL:', API_BASE_URL);
+
 // Create axios instance with interceptors
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,23 +11,28 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 15000,
-  withCredentials: false, // CHANGED: Set to false for token-based auth (not cookie-based)
+  withCredentials: false,
 });
 
 // Enhanced Request interceptor to add auth token with debugging
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
-    console.log('🔐 [API Request] Adding token to request:', token ? `Yes (${token.substring(0, 20)}...)` : 'No token found');
+    
+    console.log('🔐 [API Request]', {
+      url: config.url,
+      method: config.method?.toUpperCase(),
+      tokenPresent: !!token,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'None'
+    });
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('✅ [API Request] Authorization header set');
     } else {
-      console.log('⚠️ [API Request] No auth token available');
+      console.log('⚠️ [API Request] No auth token available for request');
     }
     
-    console.log('📤 [API Request] Sending request to:', config.url);
     return config;
   },
   (error) => {
@@ -37,89 +44,200 @@ apiClient.interceptors.request.use(
 // Enhanced Response interceptor with better debugging
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ [API Response] Success:', response.status, response.config.url);
+    console.log('✅ [API Response] Success:', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase(),
+      data: response.data ? 'Received' : 'No data'
+    });
     return response;
   },
   (error) => {
-    console.error('❌ [API Response] Error:', {
+    const errorDetails = {
       status: error.response?.status,
       url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
       message: error.message,
       data: error.response?.data
-    });
+    };
     
+    console.error('❌ [API Response] Error:', errorDetails);
+    
+    // Handle specific error cases
     if (error.response?.status === 401) {
-      console.log('🔄 [API Response] Token expired or invalid, clearing local storage');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
+      console.log('🔄 [API Response] 401 Unauthorized - Token expired or invalid');
       
-      // Only redirect if we're not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        console.log('🔄 [API Response] Redirecting to login page');
-        window.location.href = '/login';
+      // Clear auth data
+      const currentToken = localStorage.getItem('auth_token');
+      if (currentToken) {
+        console.log('🗑️ [API Response] Clearing invalid token from storage');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        
+        // Only redirect if we're not already on login page and this is a browser environment
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          console.log('🔄 [API Response] Redirecting to login page');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1000);
+        }
       }
+    } else if (error.response?.status === 403) {
+      console.log('🚫 [API Response] 403 Forbidden - Insufficient permissions');
+    } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+      console.error('🌐 [API Response] Network error - Backend might be down');
     }
+    
     return Promise.reject(error);
   }
 );
 
-// Enhanced Authentication API with better error handling
+// Enhanced Authentication API with comprehensive debugging
 export const authApi = {
   register: async (userData) => {
-    console.log('📝 [Auth] Registering user:', userData.email);
+    console.log('📝 [Auth] Registering user:', { 
+      email: userData.email, 
+      fullName: userData.full_name 
+    });
     try {
       const response = await apiClient.post('/auth/register', userData);
-      console.log('✅ [Auth] Registration successful');
+      console.log('✅ [Auth] Registration successful:', {
+        userId: response.data.user_id,
+        email: response.data.email,
+        hasToken: !!response.data.access_token,
+        message: response.data.message
+      });
       return response;
     } catch (error) {
-      console.error('❌ [Auth] Registration failed:', error.response?.data);
+      console.error('❌ [Auth] Registration failed:', {
+        error: error.response?.data?.detail,
+        status: error.response?.status
+      });
       throw error;
     }
   },
   
   login: async (credentials) => {
-    console.log('🔑 [Auth] Logging in user:', credentials.email);
+    console.log('🔑 [Auth] Logging in user:', { email: credentials.email });
     try {
       const response = await apiClient.post('/auth/login', credentials);
-      console.log('✅ [Auth] Login successful');
+      console.log('✅ [Auth] Login successful:', {
+        hasToken: !!response.data.access_token,
+        tokenPreview: response.data.access_token ? `${response.data.access_token.substring(0, 20)}...` : 'None',
+        userEmail: response.data.user?.email,
+        userVerified: response.data.user?.is_verified
+      });
+      
+      // Validate response structure
+      if (!response.data.access_token) {
+        console.error('❌ [Auth] Login response missing access_token!');
+        throw new Error('No access token received from server');
+      }
+      
+      if (!response.data.user) {
+        console.error('❌ [Auth] Login response missing user data!');
+        throw new Error('No user data received from server');
+      }
+      
       return response;
     } catch (error) {
-      console.error('❌ [Auth] Login failed:', error.response?.data);
+      console.error('❌ [Auth] Login failed:', {
+        error: error.response?.data?.detail || error.message,
+        status: error.response?.status
+      });
       throw error;
     }
   },
   
   logout: async () => {
     console.log('🚪 [Auth] Logging out');
+    const tokenBefore = localStorage.getItem('auth_token');
+    console.log('🔍 [Auth] Token before logout:', tokenBefore ? 'Present' : 'None');
+    
+    // Clear local storage first
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    
     try {
       const response = await apiClient.post('/auth/logout');
-      console.log('✅ [Auth] Logout successful');
+      console.log('✅ [Auth] Backend logout successful');
       return response;
     } catch (error) {
-      console.error('❌ [Auth] Logout API call failed:', error);
-      // Still proceed with local logout even if API call fails
+      console.log('⚠️ [Auth] Backend logout failed (may be expected):', error.message);
+      // Still return success for local logout
       return { data: { message: 'Logged out locally' } };
     }
   },
   
   getCurrentUser: async () => {
     console.log('👤 [Auth] Getting current user');
+    const token = localStorage.getItem('auth_token');
+    console.log('🔍 [Auth] Using token:', token ? `${token.substring(0, 20)}...` : 'None');
+    
     try {
       const response = await apiClient.get('/auth/me');
-      console.log('✅ [Auth] Current user fetched successfully');
+      console.log('✅ [Auth] Current user fetched:', {
+        email: response.data.email,
+        id: response.data.id,
+        verified: response.data.is_verified
+      });
       return response;
     } catch (error) {
-      console.error('❌ [Auth] Get current user failed:', error.response?.data);
+      console.error('❌ [Auth] Get current user failed:', {
+        error: error.response?.data?.detail,
+        status: error.response?.status
+      });
       throw error;
     }
   },
   
-  refreshToken: () => apiClient.post('/auth/refresh'),
-  verifyEmail: (data) => apiClient.post('/auth/verify-email', data),
-  forgotPassword: (data) => apiClient.post('/auth/forgot-password', data),
-  resetPassword: (data) => apiClient.post('/auth/reset-password', data),
+  refreshToken: async () => {
+    console.log('🔄 [Auth] Refreshing token');
+    try {
+      const response = await apiClient.post('/auth/refresh');
+      console.log('✅ [Auth] Token refreshed successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ [Auth] Token refresh failed:', error.response?.data);
+      throw error;
+    }
+  },
+  
+  verifyEmail: async (data) => {
+    console.log('📧 [Auth] Verifying email with token');
+    try {
+      const response = await apiClient.post('/auth/verify-email', data);
+      console.log('✅ [Auth] Email verification successful');
+      return response;
+    } catch (error) {
+      console.error('❌ [Auth] Email verification failed:', error.response?.data);
+      throw error;
+    }
+  },
+  
+  forgotPassword: async (data) => {
+    console.log('🔐 [Auth] Requesting password reset for:', data.email);
+    try {
+      const response = await apiClient.post('/auth/forgot-password', data);
+      console.log('✅ [Auth] Password reset request sent');
+      return response;
+    } catch (error) {
+      console.error('❌ [Auth] Password reset request failed:', error.response?.data);
+      throw error;
+    }
+  },
+  
+  resetPassword: async (data) => {
+    console.log('🔐 [Auth] Resetting password with token');
+    try {
+      const response = await apiClient.post('/auth/reset-password', data);
+      console.log('✅ [Auth] Password reset successful');
+      return response;
+    } catch (error) {
+      console.error('❌ [Auth] Password reset failed:', error.response?.data);
+      throw error;
+    }
+  }
 };
 
 // Enhanced Email API with debugging
@@ -128,7 +246,10 @@ export const emailApi = {
     console.log('📧 [Email] Fetching user inbox with filters:', filters);
     try {
       const response = await apiClient.get('/emails/my-inbox', { params: filters });
-      console.log('✅ [Email] Inbox fetched successfully, emails count:', response.data?.length || 0);
+      console.log('✅ [Email] Inbox fetched successfully:', {
+        emailsCount: response.data?.length || 0,
+        hasEmails: !!response.data && response.data.length > 0
+      });
       return response;
     } catch (error) {
       console.error('❌ [Email] Fetch inbox failed:', error.response?.data);
@@ -136,17 +257,65 @@ export const emailApi = {
     }
   },
   
-  getEmails: (limit = 50, offset = 0) => 
-    apiClient.get(`/emails?limit=${limit}&offset=${offset}`),
+  getEmails: async (limit = 50, offset = 0) => {
+    console.log('📧 [Email] Fetching emails:', { limit, offset });
+    try {
+      const response = await apiClient.get(`/emails?limit=${limit}&offset=${offset}`);
+      console.log('✅ [Email] Emails fetched successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Fetch emails failed:', error.response?.data);
+      throw error;
+    }
+  },
   
-  getEmail: (emailId) => apiClient.get(`/emails/${emailId}`),
+  getEmail: async (emailId) => {
+    console.log('📧 [Email] Fetching email:', emailId);
+    try {
+      const response = await apiClient.get(`/emails/${emailId}`);
+      console.log('✅ [Email] Email fetched successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Fetch email failed:', error.response?.data);
+      throw error;
+    }
+  },
   
-  updateEmailCategory: (emailId, category) => 
-    apiClient.put(`/emails/${emailId}/category`, { category }),
+  updateEmailCategory: async (emailId, category) => {
+    console.log('📧 [Email] Updating category:', { emailId, category });
+    try {
+      const response = await apiClient.put(`/emails/${emailId}/category`, { category });
+      console.log('✅ [Email] Category updated successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Update category failed:', error.response?.data);
+      throw error;
+    }
+  },
   
-  syncUserEmails: () => apiClient.post('/emails/sync'),
+  syncUserEmails: async () => {
+    console.log('📧 [Email] Syncing user emails');
+    try {
+      const response = await apiClient.post('/emails/sync');
+      console.log('✅ [Email] Email sync initiated');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Email sync failed:', error.response?.data);
+      throw error;
+    }
+  },
   
-  loadMockEmails: () => apiClient.post('/emails/load-mock'),
+  loadMockEmails: async () => {
+    console.log('📧 [Email] Loading mock emails');
+    try {
+      const response = await apiClient.post('/emails/load-mock');
+      console.log('✅ [Email] Mock emails loaded');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Load mock emails failed:', error.response?.data);
+      throw error;
+    }
+  }
 };
 
 // Email Accounts API
@@ -229,7 +398,7 @@ export const testConnection = async () => {
     
     // Test token storage
     const token = localStorage.getItem('auth_token');
-    console.log('🔍 [Connection Test] Auth token in storage:', token ? 'Present' : 'Missing');
+    console.log('🔍 [Connection Test] Auth token in storage:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
     
     return { 
       success: true, 
@@ -249,10 +418,18 @@ export const testConnection = async () => {
 
 // Token management utilities
 export const tokenUtils = {
-  getToken: () => localStorage.getItem('auth_token'),
+  getToken: () => {
+    const token = localStorage.getItem('auth_token');
+    console.log('🔍 [Token] Retrieved token:', token ? `${token.substring(0, 20)}...` : 'None');
+    return token;
+  },
   
   setToken: (token) => {
-    console.log('💾 [Token] Storing token in localStorage');
+    console.log('💾 [Token] Storing token in localStorage:', token ? `${token.substring(0, 20)}...` : 'Empty token!');
+    if (!token) {
+      console.error('❌ [Token] Attempted to store empty token!');
+      return;
+    }
     localStorage.setItem('auth_token', token);
   },
   
@@ -264,7 +441,9 @@ export const tokenUtils = {
   
   isValid: () => {
     const token = localStorage.getItem('auth_token');
-    return !!token; // Simple check - in production, you might decode and check expiration
+    const isValid = !!token;
+    console.log('🔍 [Token] Validation check:', isValid ? 'Valid' : 'Invalid');
+    return isValid;
   }
 };
 
@@ -278,7 +457,6 @@ export const createWebSocket = (clientId = 'default') => {
   console.log('🔌 [WebSocket] Connecting to:', wsUrl);
   return new WebSocket(wsUrl);
 };
-
 
 // Connection status monitor
 export const monitorConnection = () => {
