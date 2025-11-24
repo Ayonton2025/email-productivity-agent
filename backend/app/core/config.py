@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # API Settings
     APP_NAME: str = "Email Productivity Agent"
     DEBUG: bool = True
-    SECRET_KEY: str = "your-secret-key-here"
+    SECRET_KEY: str = "your-secret-key-here-make-it-very-long-and-secure-in-production"
     
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./email_agent.db"
