@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 import jwt
+from datetime import datetime, timedelta
 
 from app.models.database import get_db
 from app.models.user_models import User, UserEmailAccount
@@ -10,7 +11,6 @@ from app.core.security import create_access_token, verify_token, get_password_ha
 from app.core.config import settings
 from app.services.email_service import EmailService
 from app.utils.validators import EmailValidator
-from datetime import datetime
 
 
 router = APIRouter()
@@ -22,6 +22,8 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ) -> User:
     token = credentials.credentials
+    print(f"🔐 [get_current_user] Verifying token: {token[:20]}..." if token else "No token")
+    
     payload = verify_token(token)
     if not payload:
         raise HTTPException(
@@ -48,8 +50,75 @@ async def get_current_user(
             detail="User not found or inactive",
         )
     
+    print(f"✅ [get_current_user] User authenticated: {user.email}")
     return user
 
+# ========== DEBUG ENDPOINTS ==========
+@router.get("/debug/users")
+async def debug_users(db: AsyncSession = Depends(get_db)):
+    """Debug endpoint to check all users in database"""
+    try:
+        print("🔍 [debug_users] Fetching all users from database")
+        from sqlalchemy import select
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        
+        user_list = []
+        for user in users:
+            user_list.append({
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "is_verified": user.is_verified,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "password_hash": user.password_hash[:20] + "..." if user.password_hash else None
+            })
+        
+        print(f"✅ [debug_users] Found {len(users)} users")
+        return {
+            "total_users": len(users),
+            "users": user_list
+        }
+    except Exception as e:
+        print(f"❌ [debug_users] Error: {e}")
+        return {
+            "error": str(e),
+            "total_users": 0,
+            "users": []
+        }
+
+@router.get("/debug/database")
+async def debug_database(db: AsyncSession = Depends(get_db)):
+    """Debug database connection and tables"""
+    try:
+        print("🔍 [debug_database] Testing database connection")
+        # Test connection
+        await db.execute("SELECT 1")
+        
+        # Check if users table exists and has data
+        from sqlalchemy import text
+        result = await db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'"))
+        users_table_exists = result.scalar_one_or_none() is not None
+        
+        result = await db.execute(text("SELECT COUNT(*) FROM users"))
+        user_count = result.scalar_one()
+        
+        print(f"✅ [debug_database] Database connected, users table: {users_table_exists}, user count: {user_count}")
+        return {
+            "database_connected": True,
+            "users_table_exists": users_table_exists,
+            "total_users": user_count,
+            "database_type": "sqlite"
+        }
+    except Exception as e:
+        print(f"❌ [debug_database] Error: {e}")
+        return {
+            "database_connected": False,
+            "error": str(e)
+        }
+
+# ========== AUTH ENDPOINTS ==========
 @router.post("/register")
 async def register(
     user_data: dict,
@@ -57,60 +126,114 @@ async def register(
     db: AsyncSession = Depends(get_db)
 ):
     """Register a new user"""
-    email = user_data.get("email")
-    password = user_data.get("password")
-    full_name = user_data.get("full_name")
+    try:
+        email = user_data.get("email")
+        password = user_data.get("password")
+        full_name = user_data.get("full_name")
 
-    if not email or not password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email and password are required"
+        print(f"🔍 [Register] Starting registration for: {email}")
+        print(f"🔍 [Register] Received data: {user_data}")
+
+        if not email or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email and password are required"
+            )
+
+        if not EmailValidator.validate_email_format(email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+
+        # Check if user already exists
+        from sqlalchemy import select
+        result = await db.execute(select(User).where(User.email == email))
+        existing_user = result.scalar_one_or_none()
+        
+        if existing_user:
+            print(f"❌ [Register] User already exists: {email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already exists"
+            )
+
+        print(f"✅ [Register] Creating new user: {email}")
+        
+        # Create new user
+        user = User(
+            email=email,
+            full_name=full_name,
+            is_verified=True,  # Auto-verify for now to allow immediate login
+            is_active=True
         )
+        print(f"🔍 [Register] User object created: {user.email}")
+        
+        user.set_password(password)
+        print(f"🔍 [Register] Password set for user")
+        
+        # Generate verification token (but don't require verification for now)
+        verification_token = user.generate_verification_token()
+        print(f"🔍 [Register] Verification token generated")
 
-    if not EmailValidator.validate_email_format(email):
+        db.add(user)
+        print(f"🔍 [Register] User added to session")
+        
+        await db.commit()
+        print(f"✅ [Register] Database commit successful")
+        
+        await db.refresh(user)
+        print(f"🔍 [Register] User refreshed from DB, ID: {user.id}")
+
+        # Verify the user was actually saved
+        result = await db.execute(select(User).where(User.email == email))
+        saved_user = result.scalar_one_or_none()
+        print(f"🔍 [Register] User verification - Found in DB: {saved_user is not None}")
+
+        # Generate access token for immediate login
+        access_token = create_access_token(data={"user_id": user.id})
+        print(f"🔍 [Register] Access token generated for immediate login")
+
+        # Send verification email (in background) - optional for now
+        # background_tasks.add_task(
+        #     send_verification_email,
+        #     user.email,
+        #     user.full_name,
+        #     verification_token
+        # )
+
+        user_response_data = {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_verified": user.is_verified,
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+        }
+
+        print(f"✅ [Register] Registration completed successfully for: {email}")
+        
+        return {
+            "message": "User registered successfully",
+            "user_id": user.id,
+            "email": user.email,
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user_response_data,
+            "debug": {
+                "saved_to_db": saved_user is not None,
+                "user_id": user.id
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ [Register] Registration failed with error: {e}")
+        import traceback
+        print(f"❌ [Register] Stack trace: {traceback.format_exc()}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
-
-    # Check if user already exists
-    from sqlalchemy import select
-    result = await db.execute(select(User).where(User.email == email))
-    existing_user = result.scalar_one_or_none()
-    
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
-        )
-
-    # Create new user
-    user = User(
-        email=email,
-        full_name=full_name
-    )
-    user.set_password(password)
-    
-    # Generate verification token
-    verification_token = user.generate_verification_token()
-    
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-
-    # Send verification email (in background)
-    background_tasks.add_task(
-        send_verification_email,
-        user.email,
-        user.full_name,
-        verification_token
-    )
-
-    return {
-        "message": "User registered successfully. Please check your email for verification.",
-        "user_id": user.id,
-        "email": user.email
-    }
 
 @router.post("/verify-email")
 async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
@@ -161,61 +284,85 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
 @router.post("/login")
 async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
     """User login"""
-    email = credentials.get("email")
-    password = credentials.get("password")
+    try:
+        email = credentials.get("email")
+        password = credentials.get("password")
 
-    if not email or not password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email and password are required"
-        )
+        print(f"🔑 [Login] Attempting login for: {email}")
 
-    from sqlalchemy import select
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
+        if not email or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email and password are required"
+            )
 
-    if not user or not user.check_password(password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+        from sqlalchemy import select
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is deactivated"
-        )
+        print(f"🔍 [Login] User found in DB: {user is not None}")
+        if user:
+            print(f"🔍 [Login] User details - ID: {user.id}, Verified: {user.is_verified}, Active: {user.is_active}")
 
-    # Remove email verification requirement for now to allow immediate login
-    # if not user.is_verified:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Please verify your email first"
-    #     )
+        if not user:
+            print(f"❌ [Login] User not found: {email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
 
-    # Update last login
-    user.last_login = datetime.utcnow()
-    await db.commit()
+        # Check password
+        password_valid = user.check_password(password)
+        print(f"🔍 [Login] Password valid: {password_valid}")
 
-    # Generate access token
-    access_token = create_access_token(data={"user_id": user.id})
+        if not password_valid:
+            print(f"❌ [Login] Invalid password for: {email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
 
-    # Return user data safely without relying on to_dict()
-    user_data = {
-        "id": user.id,
-        "email": user.email,
-        "full_name": user.full_name,
-        "is_verified": user.is_verified,
-        "is_active": user.is_active,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "last_login": user.last_login.isoformat() if user.last_login else None
-    }
+        if not user.is_active:
+            print(f"❌ [Login] Account deactivated: {email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is deactivated"
+            )
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user_data
-    }
+        # Update last login
+        user.last_login = datetime.utcnow()
+        await db.commit()
+        print(f"✅ [Login] Last login updated for: {email}")
+
+        # Generate access token
+        access_token = create_access_token(data={"user_id": user.id})
+        print(f"🔐 [Login] Access token generated for: {email}")
+
+        # Return user data
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_verified": user.is_verified,
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login": user.last_login.isoformat() if user.last_login else None
+        }
+
+        print(f"✅ [Login] Login successful for: {email}")
+        print(f"🔍 [Login] Returning user data: {user_data}")
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user_data
+        }
+        
+    except Exception as e:
+        print(f"❌ [Login] Login failed with error: {e}")
+        import traceback
+        print(f"❌ [Login] Stack trace: {traceback.format_exc()}")
+        raise
 
 @router.post("/forgot-password")
 async def forgot_password(
@@ -292,8 +439,9 @@ async def reset_password(reset_data: dict, db: AsyncSession = Depends(get_db)):
 @router.get("/me")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
+    print(f"🔍 [me] Getting current user info for: {current_user.email}")
     # Return user data safely without relying on to_dict()
-    return {
+    user_data = {
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
@@ -302,10 +450,13 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
         "last_login": current_user.last_login.isoformat() if current_user.last_login else None
     }
+    print(f"✅ [me] Returning user data: {user_data}")
+    return user_data
 
 @router.post("/logout")
 async def logout():
     """User logout"""
+    print("🚪 [Logout] User logging out")
     return {
         "message": "Successfully logged out",
         "success": True
@@ -314,6 +465,7 @@ async def logout():
 @router.post("/refresh")
 async def refresh_token(current_user: User = Depends(get_current_user)):
     """Refresh access token"""
+    print(f"🔄 [refresh] Refreshing token for: {current_user.email}")
     new_token = create_access_token(data={"user_id": current_user.id})
     
     return {
@@ -325,11 +477,11 @@ async def refresh_token(current_user: User = Depends(get_current_user)):
 async def send_verification_email(email: str, name: str, token: str):
     """Send verification email"""
     verification_url = f"http://localhost:3000/verify-email?token={token}"
-    print(f"Verification email sent to {email}: {verification_url}")
+    print(f"📧 Verification email sent to {email}: {verification_url}")
     # TODO: Integrate with real email service (SendGrid, SMTP, etc.)
 
 async def send_password_reset_email(email: str, name: str, token: str):
     """Send password reset email"""
     reset_url = f"http://localhost:3000/reset-password?token={token}"
-    print(f"Password reset email sent to {email}: {reset_url}")
+    print(f"📧 Password reset email sent to {email}: {reset_url}")
     # TODO: Integrate with real email service
