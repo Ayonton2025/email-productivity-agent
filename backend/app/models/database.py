@@ -36,21 +36,28 @@ class User(Base):
     def check_password(self, password: str) -> bool:
         return verify_password(password, self.password_hash)
 
+
     def generate_verification_token(self) -> str:
         token = jwt.encode(
             {"user_id": self.id, "exp": datetime.utcnow() + timedelta(days=1)},
             settings.SECRET_KEY,
             algorithm="HS256"
         )
+        # Ensure token is string (jwt.encode returns bytes in some versions)
+        if isinstance(token, bytes):
+            token = token.decode('utf-8')
         self.verification_token = token
         return token
-
+    
     def generate_reset_token(self) -> str:
         token = jwt.encode(
             {"user_id": self.id, "exp": datetime.utcnow() + timedelta(hours=1)},
             settings.SECRET_KEY,
             algorithm="HS256"
         )
+        # Ensure token is string
+        if isinstance(token, bytes):
+            token = token.decode('utf-8')
         self.reset_token = token
         return token
 
