@@ -458,8 +458,13 @@ const DevelopmentTools = () => {
         <div className="text-green-400">✓ OpenAI Enhanced</div>
       </div>
       <div className="flex gap-2 mt-2">
-        <button 
-          onClick={() => window.open('http://localhost:8000/docs', '_blank')}
+        <button
+          onClick={() => {
+            // Prefer production backend from environment variable
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            // Open /docs endpoint
+            window.open(`${apiUrl}/docs`, '_blank');
+          }}
           className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded text-xs"
         >
           API Docs
