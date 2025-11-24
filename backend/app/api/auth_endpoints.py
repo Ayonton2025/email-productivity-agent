@@ -146,6 +146,13 @@ async def register(
                 detail="Invalid email format"
             )
 
+        # Check password length for bcrypt (CRITICAL FIX)
+        if len(password) > 72:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password cannot be longer than 72 characters"
+            )
+
         # Check if user already exists
         from sqlalchemy import select
         result = await db.execute(select(User).where(User.email == email))
@@ -164,13 +171,21 @@ async def register(
         user = User(
             email=email,
             full_name=full_name,
-            is_verified=True,  # Auto-verify for now to allow immediate login
+            is_verified=True,  # Auto-verify for immediate login
             is_active=True
         )
         print(f"🔍 [Register] User object created: {user.email}")
         
-        user.set_password(password)
-        print(f"🔍 [Register] Password set for user")
+        # Set password with error handling
+        try:
+            user.set_password(password)
+            print(f"🔍 [Register] Password set successfully for user")
+        except Exception as password_error:
+            print(f"❌ [Register] Password setting failed: {password_error}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Password error: {str(password_error)}"
+            )
         
         # Generate verification token (but don't require verification for now)
         verification_token = user.generate_verification_token()
@@ -179,8 +194,16 @@ async def register(
         db.add(user)
         print(f"🔍 [Register] User added to session")
         
-        await db.commit()
-        print(f"✅ [Register] Database commit successful")
+        try:
+            await db.commit()
+            print(f"✅ [Register] Database commit successful")
+        except Exception as commit_error:
+            print(f"❌ [Register] Database commit failed: {commit_error}")
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save user to database"
+            )
         
         await db.refresh(user)
         print(f"🔍 [Register] User refreshed from DB, ID: {user.id}")
@@ -190,18 +213,11 @@ async def register(
         saved_user = result.scalar_one_or_none()
         print(f"🔍 [Register] User verification - Found in DB: {saved_user is not None}")
 
-        # Generate access token for immediate login
+        # Generate access token for immediate login (CRITICAL FIX)
         access_token = create_access_token(data={"user_id": user.id})
-        print(f"🔍 [Register] Access token generated for immediate login")
+        print(f"🔐 [Register] Access token generated: {access_token[:20]}...")
 
-        # Send verification email (in background) - optional for now
-        # background_tasks.add_task(
-        #     send_verification_email,
-        #     user.email,
-        #     user.full_name,
-        #     verification_token
-        # )
-
+        # Return user data
         user_response_data = {
             "id": user.id,
             "email": user.email,
@@ -212,20 +228,21 @@ async def register(
         }
 
         print(f"✅ [Register] Registration completed successfully for: {email}")
+        print(f"📤 [Register] Returning response with access_token: {access_token[:20]}...")
         
+        # CRITICAL: Return the access_token in the response
         return {
             "message": "User registered successfully",
             "user_id": user.id,
             "email": user.email,
-            "access_token": access_token,
+            "access_token": access_token,  # THIS MUST BE INCLUDED
             "token_type": "bearer",
-            "user": user_response_data,
-            "debug": {
-                "saved_to_db": saved_user is not None,
-                "user_id": user.id
-            }
+            "user": user_response_data
         }
         
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
         print(f"❌ [Register] Registration failed with error: {e}")
         import traceback
@@ -350,7 +367,7 @@ async def login(credentials: dict, db: AsyncSession = Depends(get_db)):
         }
 
         print(f"✅ [Login] Login successful for: {email}")
-        print(f"🔍 [Login] Returning user data: {user_data}")
+        print(f"📤 [Login] Returning access_token: {access_token[:20]}...")
 
         return {
             "access_token": access_token,
