@@ -10,18 +10,18 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true, // Listen on all addresses
-    proxy: {
+   proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: import.meta.env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: import.meta.env.VITE_WS_URL || 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,
       }
-    },
+    }
     // Enable hot module replacement
     hmr: {
       overlay: true
