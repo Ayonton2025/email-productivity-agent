@@ -251,7 +251,7 @@ async def get_drafts(
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any]])
+@router.post("/drafts", response_model=Dict[str, Any])  # FIXED: Removed extra bracket
 async def create_draft(
     draft_data: dict,
     current_user: User = Depends(get_current_user),
@@ -261,7 +261,7 @@ async def create_draft(
     email_service = EmailService(db)
     return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any]])
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])  # FIXED: Removed extra bracket
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
