@@ -102,5 +102,110 @@
     "metadata": {
       "event": true
     }
+  },
+  {
+    "id": "11",
+    "sender": "recruiting@techcorp.com",
+    "subject": "Interview Invitation: Senior Developer Position",
+    "body": "Dear Candidate,\n\nThank you for your application for the Senior Developer position at TechCorp.\n\nWe were impressed with your background and would like to invite you for a technical interview.\n\nDate: January 15, 2024\nTime: 2:00 PM EST\nFormat: Video Call (Zoom link will be sent)\nDuration: 60 minutes\n\nPlease confirm your availability by replying to this email.\n\nBest regards,\nRecruiting Team\nTechCorp",
+    "timestamp": "2024-01-06T15:20:00Z",
+    "metadata": {
+      "recruiting": true,
+      "priority": "medium"
+    }
+  },
+  {
+    "id": "12",
+    "sender": "support@cloudservice.com",
+    "subject": "Scheduled Maintenance Notice",
+    "body": "Maintenance Notification\n\nWe will be performing scheduled maintenance on our cloud infrastructure:\n\nDate: January 10, 2024\nTime: 2:00 AM - 6:00 AM UTC\nImpact: Service may be intermittently unavailable\n\nThis maintenance includes:\n- Database optimization\n- Security patches\n- Performance improvements\n\nWe apologize for any inconvenience and appreciate your understanding.\n\nCloud Services Team",
+    "timestamp": "2024-01-06T13:45:00Z",
+    "metadata": {
+      "maintenance": true
+    }
+  },
+  {
+    "id": "13",
+    "sender": "travel@airline.com",
+    "subject": "Your Flight Itinerary: NYC to SFO",
+    "body": "FLIGHT CONFIRMATION\n\nPassenger: John Doe\nBooking Reference: AB7X9K\n\nFlight: AA2456\nRoute: New York (JFK) to San Francisco (SFO)\nDate: January 20, 2024\nDeparture: 8:15 AM\nArrival: 11:45 AM\nSeat: 14A\n\nFlight: AA2891\nRoute: San Francisco (SFO) to New York (JFK)\nDate: January 25, 2024\nDeparture: 4:30 PM\nArrival: 12:45 AM (+1)\nSeat: 22C\n\nCheck-in opens 24 hours before departure.\nSafe travels!\n\nAirline Operations",
+    "timestamp": "2024-01-06T11:30:00Z",
+    "metadata": {
+      "travel": true
+    }
+  },
+  {
+    "id": "14",
+    "sender": "marketing@ecommerce.com",
+    "subject": "Your Order #789123 Has Shipped!",
+    "body": "Great news! Your order has shipped.\n\nOrder #789123\nShipped: January 6, 2024\nEstimated Delivery: January 9, 2024\nTracking Number: 1Z987XYZ654321\n\nItems Shipped:\n- Wireless Headphones (Qty: 1)\n- USB-C Cable (Qty: 2)\n\nTrack your package: https://tracking.com/1Z987XYZ654321\n\nThank you for your purchase!\n\nCustomer Service Team",
+    "timestamp": "2024-01-06T10:15:00Z",
+    "metadata": {
+      "shipping": true
+    }
+  },
+  {
+    "id": "15",
+    "sender": "legal@company.com",
+    "subject": "Contract Review: Client Services Agreement",
+    "body": "Dear Team,\n\nPlease review the attached Client Services Agreement for our new partnership with Global Solutions Inc.\n\nKey points requiring attention:\n- Section 4.2: Service Level Agreements\n- Section 7.3: Intellectual Property Rights\n- Section 9.1: Termination Clauses\n- Appendix B: Pricing Schedule\n\nPlease provide your feedback by EOD Friday.\n\nLegal Department",
+    "timestamp": "2024-01-05T16:40:00Z",
+    "metadata": {
+      "legal": true,
+      "attachments": 1,
+      "priority": "high"
+    }
+  },
+  {
+    "id": "16",
+    "sender": "training@devskills.org",
+    "subject": "Advanced Python Workshop - Registration Confirmation",
+    "body": "Registration Confirmed!\n\nWorkshop: Advanced Python for Data Engineering\nDate: January 18-19, 2024\nTime: 9:00 AM - 5:00 PM Daily\nLocation: Virtual (Zoom)\n\nWhat to bring:\n- Laptop with Python 3.8+ installed\n- Text editor/IDE of your choice\n- Curiosity and questions!\n\nCourse materials will be shared 24 hours before the workshop.\n\nWe look forward to seeing you there!\n\nDevSkills Training Team",
+    "timestamp": "2024-01-05T14:25:00Z",
+    "metadata": {
+      "training": true
+    }
+  },
+  {
+    "id": "17",
+    "sender": "system@monitoring.com",
+    "subject": "ALERT: High CPU Usage Detected",
+    "body": "SYSTEM ALERT\n\nServer: production-web-03\nCPU Usage: 95% (Threshold: 85%)\nMemory Usage: 78%\nDuration: 15 minutes\n\nRecommended Actions:\n1. Check application logs for errors\n2. Review recent deployments\n3. Monitor database connections\n4. Consider scaling resources\n\nNext alert in 30 minutes if issue persists.\n\nSystem Monitoring Bot",
+    "timestamp": "2024-01-05T12:50:00Z",
+    "metadata": {
+      "alert": true,
+      "priority": "high"
+    }
+  },
+  {
+    "id": "18",
+    "sender": "partner@collaboration.com",
+    "subject": "Partnership Proposal: Joint Marketing Initiative",
+    "body": "Dear Business Partner,\n\nWe're excited to propose a joint marketing initiative for Q1 2024.\n\nProposal Highlights:\n- Co-branded webinar series\n- Joint case study development\n- Cross-promotion in newsletters\n- Shared social media campaign\n\nExpected Outcomes:\n- 25% increase in lead generation\n- Expanded market reach\n- Enhanced brand visibility\n\nLet's schedule a call to discuss further.\n\nBest regards,\nPartnership Team",
+    "timestamp": "2024-01-05T10:35:00Z",
+    "metadata": {
+      "partnership": true
+    }
+  },
+  {
+    "id": "19",
+    "sender": "finance@accounting.com",
+    "subject": "Monthly Expense Report Submission Reminder",
+    "body": "Expense Report Reminder\n\nThis is a friendly reminder that monthly expense reports for December 2023 are due by January 10th, 2024.\n\nRequired Documentation:\n- Receipts for all expenses over $25\n- Business purpose for each expense\n- Project/client code if applicable\n\nSubmit via: https://expense.portal.com\n\nLate submissions may delay reimbursement.\n\nFinance Department",
+    "timestamp": "2024-01-05T09:20:00Z",
+    "metadata": {
+      "finance": true,
+      "deadline": "2024-01-10"
+    }
+  },
+  {
+    "id": "20",
+    "sender": "social@linkedin.com",
+    "subject": "You have 5 new connection requests",
+    "body": "Hi John,\n\nYou have 5 new connection requests waiting:\n\n- Sarah Johnson (Tech Industry)\n- Mike Chen (Software Development)\n- Dr. Emily Wong (AI Research)\n- Robert Garcia (Product Management)\n- Lisa Thompson (Data Science)\n\nView and respond to your connection requests:\nhttps://linkedin.com/mynetwork\n\nStay connected,\nThe LinkedIn Team",
+    "timestamp": "2024-01-05T07:45:00Z",
+    "metadata": {
+      "social": true
+    }
   }
 ]
