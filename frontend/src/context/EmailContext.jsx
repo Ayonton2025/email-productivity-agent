@@ -79,7 +79,7 @@ export const EmailProvider = ({ children }) => {
   // Load user's real emails when authenticated
   const loadEmails = async () => {
     if (!isAuthenticated) {
-      setEmails(mockEmails);
+      setEmails(response.data);
       return;
     }
 
