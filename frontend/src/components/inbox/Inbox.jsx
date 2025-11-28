@@ -17,7 +17,7 @@ import {
   Loader
 } from 'lucide-react';
 import { EmailContext } from '../../context/EmailContext';
-import { agentApi } from '../../services/api';
+import { emailApi, agentApi } from '../../services/api'; // ✅ Import both APIs
 
 const Inbox = () => {
   const { emails, loadEmails, loading, selectedEmail, setSelectedEmail, loadMockEmails } = useContext(EmailContext);
@@ -34,7 +34,7 @@ const Inbox = () => {
     loadMockEmails();
   }, []);
 
-  // Enhanced function to generate AI reply
+  // ✅ CORRECTED: Use the proper endpoint from your API docs
   const generateReply = async () => {
     if (!selectedEmail) return;
     
@@ -42,37 +42,88 @@ const Inbox = () => {
     setAgentResult(null);
     setAgentError(null);
     
-    console.log('🔄 [Inbox] Generating reply for email:', selectedEmail.id, selectedEmail.subject);
+    console.log('🔄 [Inbox] Generating reply for email:', {
+      id: selectedEmail.id,
+      subject: selectedEmail.subject,
+      sender: selectedEmail.sender
+    });
     
     try {
-      // Try multiple endpoint approaches
-      let response;
+      // Test backend connection first
+      console.log('🔍 [Inbox] Testing backend connection...');
+      const healthCheck = await fetch('https://sunny-recreation-production.up.railway.app/health');
+      console.log('✅ [Inbox] Backend health check:', healthCheck.status);
       
-      // Approach 1: Use the processEmail endpoint
-      response = await agentApi.processEmail({
+      if (!healthCheck.ok) {
+        throw new Error(`Backend health check failed: ${healthCheck.status}`);
+      }
+
+      // ✅ CORRECT ENDPOINT: Use the generate-reply endpoint
+      console.log('🚀 [Inbox] Calling generate-reply endpoint...');
+      
+      // Option 1: Try the specific generate-reply endpoint first
+      try {
+        const response = await emailApi.generateReply(selectedEmail.id);
+        console.log('✅ [Inbox] Generate-reply response:', response.data);
+        
+        if (response.data && response.data.reply) {
+          setAgentResult(response.data.reply);
+          return; // Success, exit early
+        }
+      } catch (replyError) {
+        console.log('⚠️ [Inbox] Generate-reply endpoint failed, trying agent process...', replyError.message);
+      }
+
+      // Option 2: Fallback to agent process endpoint
+      console.log('🔄 [Inbox] Trying agent process endpoint...');
+      const requestData = {
         email_id: selectedEmail.id,
         prompt_type: 'reply_draft',
-        email_content: selectedEmail.body, // Include email content directly
-        email_subject: selectedEmail.subject
-      });
+        email_content: selectedEmail.body,
+        email_subject: selectedEmail.subject,
+        sender: selectedEmail.sender
+      };
       
-      console.log('✅ [Inbox] Reply generated successfully:', response.data);
+      const agentResponse = await agentApi.processEmail(requestData);
+      console.log('✅ [Inbox] Agent process response:', agentResponse.data);
       
-      if (response.data && (response.data.result || response.data.reply)) {
-        setAgentResult(response.data.result || response.data.reply);
+      // Handle different response formats
+      if (agentResponse.data) {
+        if (agentResponse.data.result) {
+          setAgentResult(agentResponse.data.result);
+        } else if (agentResponse.data.reply) {
+          setAgentResult(agentResponse.data.reply);
+        } else if (agentResponse.data.message) {
+          setAgentResult(agentResponse.data.message);
+        } else {
+          setAgentResult(JSON.stringify(agentResponse.data, null, 2));
+          setAgentError('Unexpected response format - showing raw data');
+        }
       } else {
-        throw new Error('Invalid response format from server');
+        throw new Error('Empty response from server');
       }
       
     } catch (err) {
-      console.error('❌ [Inbox] Error generating reply:', err);
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to generate reply';
+      console.error('❌ [Inbox] Detailed error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText
+      });
+      
+      const errorDetails = err.response?.data?.detail || err.message;
+      const statusCode = err.response?.status;
+      
+      let errorMessage = `Backend Error: ${statusCode ? `Status ${statusCode}` : 'No response'}`;
+      if (errorDetails) {
+        errorMessage += ` - ${errorDetails}`;
+      }
+      
       setAgentError(errorMessage);
       
-      // Fallback: Create a mock reply for demo purposes
-      const mockReply = `Dear ${selectedEmail.sender.split('@')[0]},\n\nThank you for your email regarding "${selectedEmail.subject}". I will review this and get back to you shortly.\n\nBest regards,\nUser`;
+      // Enhanced fallback reply
+      const mockReply = `Dear ${selectedEmail.sender.split('@')[0]},\n\nThank you for your email regarding "${selectedEmail.subject}".\n\nI have received your message and will review it carefully. Please expect a response within 24-48 hours.\n\nIf this matter requires immediate attention, please don't hesitate to contact me directly.\n\nBest regards,\nUser\n\n---\n[This is a demo reply - Backend connection needs configuration]`;
       setAgentResult(mockReply);
-      setAgentError('Using demo reply - Backend connection issue');
     } finally {
       setProcessing(false);
     }
