@@ -267,7 +267,7 @@ export const authApi = {
   }
 };
 
-// Enhanced Email API with debugging - UPDATED WITH REPLY FUNCTIONALITY
+// Enhanced Email API with debugging
 export const emailApi = {
   getUserInbox: async (filters = {}) => {
     console.log('📧 [Email] Fetching user inbox with filters:', filters);
@@ -342,320 +342,64 @@ export const emailApi = {
       console.error('❌ [Email] Load mock emails failed:', error.response?.data);
       throw error;
     }
-  },
-
-  // NEW: AI-Powered Email Reply Generation
-  generateEmailReply: async (emailId, tone = 'professional') => {
-    console.log('🤖 [Email] Generating AI reply for email:', { emailId, tone });
-    try {
-      const response = await apiClient.post(`/emails/${emailId}/generate-reply`, { tone });
-      console.log('✅ [Email] AI reply generated successfully:', {
-        draftId: response.data.draft?.id,
-        subject: response.data.draft?.subject,
-        aiGenerated: response.data.ai_generated
-      });
-      return response;
-    } catch (error) {
-      console.error('❌ [Email] Generate reply failed:', {
-        error: error.response?.data?.detail,
-        status: error.response?.status,
-        fullError: error.response?.data
-      });
-      throw error;
-    }
   }
 };
 
 // Email Accounts API
 export const emailAccountsApi = {
-  connectGmail: async (authData) => {
-    console.log('📧 [EmailAccounts] Connecting Gmail account');
-    try {
-      const response = await apiClient.post('/email-accounts/gmail', authData);
-      console.log('✅ [EmailAccounts] Gmail connected successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Gmail connection failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  connectOutlook: async (authData) => {
-    console.log('📧 [EmailAccounts] Connecting Outlook account');
-    try {
-      const response = await apiClient.post('/email-accounts/outlook', authData);
-      console.log('✅ [EmailAccounts] Outlook connected successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Outlook connection failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  getEmailAccounts: async () => {
-    console.log('📧 [EmailAccounts] Fetching email accounts');
-    try {
-      const response = await apiClient.get('/email-accounts');
-      console.log('✅ [EmailAccounts] Accounts fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Fetch accounts failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  disconnectAccount: async (accountId) => {
-    console.log('📧 [EmailAccounts] Disconnecting account:', accountId);
-    try {
-      const response = await apiClient.delete(`/email-accounts/${accountId}`);
-      console.log('✅ [EmailAccounts] Account disconnected successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Disconnect account failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  syncAccount: async (accountId) => {
-    console.log('📧 [EmailAccounts] Syncing account:', accountId);
-    try {
-      const response = await apiClient.post(`/email-accounts/${accountId}/sync`);
-      console.log('✅ [EmailAccounts] Account sync initiated');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Account sync failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  getAccount: async (accountId) => {
-    console.log('📧 [EmailAccounts] Fetching account:', accountId);
-    try {
-      const response = await apiClient.get(`/email-accounts/${accountId}`);
-      console.log('✅ [EmailAccounts] Account fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [EmailAccounts] Fetch account failed:', error.response?.data);
-      throw error;
-    }
-  }
+  connectGmail: (authData) => apiClient.post('/email-accounts/gmail', authData),
+  connectOutlook: (authData) => apiClient.post('/email-accounts/outlook', authData),
+  getEmailAccounts: () => apiClient.get('/email-accounts'),
+  disconnectAccount: (accountId) => apiClient.delete(`/email-accounts/${accountId}`),
+  syncAccount: (accountId) => apiClient.post(`/email-accounts/${accountId}/sync`),
+  getAccount: (accountId) => apiClient.get(`/email-accounts/${accountId}`),
 };
 
-// AI Processing API - UPDATED WITH BETTER ERROR HANDLING
+// AI Processing API
 export const aiApi = {
-  categorizeEmail: async (emailId) => {
-    console.log('🤖 [AI] Categorizing email:', emailId);
-    try {
-      const response = await apiClient.post('/agent/process', { 
-        email_id: emailId, 
-        prompt_type: 'categorization' 
-      });
-      console.log('✅ [AI] Email categorized successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [AI] Categorization failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  summarizeEmail: async (emailId) => {
-    console.log('🤖 [AI] Summarizing email:', emailId);
-    try {
-      const response = await apiClient.post('/agent/process', { 
-        email_id: emailId, 
-        prompt_type: 'summary' 
-      });
-      console.log('✅ [AI] Email summarized successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [AI] Summarization failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  generateReply: async (emailId, options = {}) => {
-    console.log('🤖 [AI] Generating reply for email:', { emailId, options });
-    try {
-      const response = await apiClient.post('/agent/process', { 
-        email_id: emailId, 
-        prompt_type: 'reply_draft',
-        ...options 
-      });
-      console.log('✅ [AI] Reply generated successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [AI] Reply generation failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  extractActions: async (emailId) => {
-    console.log('🤖 [AI] Extracting actions from email:', emailId);
-    try {
-      const response = await apiClient.post('/agent/process', { 
-        email_id: emailId, 
-        prompt_type: 'action_extraction' 
-      });
-      console.log('✅ [AI] Actions extracted successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [AI] Action extraction failed:', error.response?.data);
-      throw error;
-    }
-  }
+  categorizeEmail: (emailId) => apiClient.post('/agent/process', { 
+    email_id: emailId, 
+    prompt_type: 'categorization' 
+  }),
+  summarizeEmail: (emailId) => apiClient.post('/agent/process', { 
+    email_id: emailId, 
+    prompt_type: 'summary' 
+  }),
+  generateReply: (emailId, options = {}) => 
+    apiClient.post('/agent/process', { 
+      email_id: emailId, 
+      prompt_type: 'reply_draft',
+      ...options 
+    }),
+  extractActions: (emailId) => apiClient.post('/agent/process', { 
+    email_id: emailId, 
+    prompt_type: 'action_extraction' 
+  }),
 };
 
-// Prompt API - UPDATED WITH BETTER ERROR HANDLING
+// Prompt API
 export const promptApi = {
-  getPrompts: async () => {
-    console.log('📝 [Prompt] Fetching all prompts');
-    try {
-      const response = await apiClient.get('/prompts');
-      console.log('✅ [Prompt] Prompts fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Prompt] Fetch prompts failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  getUserPrompts: async () => {
-    console.log('📝 [Prompt] Fetching user prompts');
-    try {
-      const response = await apiClient.get('/prompts/my');
-      console.log('✅ [Prompt] User prompts fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Prompt] Fetch user prompts failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  createPrompt: async (promptData) => {
-    console.log('📝 [Prompt] Creating new prompt:', { name: promptData.name });
-    try {
-      const response = await apiClient.post('/prompts', promptData);
-      console.log('✅ [Prompt] Prompt created successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Prompt] Create prompt failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  updatePrompt: async (promptId, promptData) => {
-    console.log('📝 [Prompt] Updating prompt:', promptId);
-    try {
-      const response = await apiClient.put(`/prompts/${promptId}`, promptData);
-      console.log('✅ [Prompt] Prompt updated successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Prompt] Update prompt failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  deletePrompt: async (promptId) => {
-    console.log('📝 [Prompt] Deleting prompt:', promptId);
-    try {
-      const response = await apiClient.delete(`/prompts/${promptId}`);
-      console.log('✅ [Prompt] Prompt deleted successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Prompt] Delete prompt failed:', error.response?.data);
-      throw error;
-    }
-  }
+  getPrompts: () => apiClient.get('/prompts'),
+  getUserPrompts: () => apiClient.get('/prompts/my'),
+  createPrompt: (promptData) => apiClient.post('/prompts', promptData),
+  updatePrompt: (promptId, promptData) => 
+    apiClient.put(`/prompts/${promptId}`, promptData),
+  deletePrompt: (promptId) => apiClient.delete(`/prompts/${promptId}`),
 };
 
-// Agent API - UPDATED WITH BETTER ERROR HANDLING
+// Agent API
 export const agentApi = {
-  processEmail: async (requestData) => {
-    console.log('🤖 [Agent] Processing email with agent:', { emailId: requestData.email_id });
-    try {
-      const response = await apiClient.post('/agent/process', requestData);
-      console.log('✅ [Agent] Email processed successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Agent] Process email failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  chatWithAgent: async (message) => {
-    console.log('🤖 [Agent] Chatting with agent:', { message: message.substring(0, 50) + '...' });
-    try {
-      const response = await apiClient.post('/agent/chat', { message });
-      console.log('✅ [Agent] Chat response received');
-      return response;
-    } catch (error) {
-      console.error('❌ [Agent] Chat failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  getAgentStatus: async () => {
-    console.log('🤖 [Agent] Getting agent status');
-    try {
-      const response = await apiClient.get('/agent/status');
-      console.log('✅ [Agent] Status fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Agent] Get status failed:', error.response?.data);
-      throw error;
-    }
-  }
+  processEmail: (requestData) => apiClient.post('/agent/process', requestData),
+  chatWithAgent: (message) => apiClient.post('/agent/chat', { message }),
+  getAgentStatus: () => apiClient.get('/agent/status'),
 };
 
-// Draft API - UPDATED WITH BETTER ERROR HANDLING
+// Draft API
 export const draftApi = {
-  getDrafts: async () => {
-    console.log('📝 [Draft] Fetching drafts');
-    try {
-      const response = await apiClient.get('/drafts');
-      console.log('✅ [Draft] Drafts fetched successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Draft] Fetch drafts failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  createDraft: async (draftData) => {
-    console.log('📝 [Draft] Creating draft:', { subject: draftData.subject });
-    try {
-      const response = await apiClient.post('/drafts', draftData);
-      console.log('✅ [Draft] Draft created successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Draft] Create draft failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  updateDraft: async (draftId, draftData) => {
-    console.log('📝 [Draft] Updating draft:', draftId);
-    try {
-      const response = await apiClient.put(`/drafts/${draftId}`, draftData);
-      console.log('✅ [Draft] Draft updated successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Draft] Update draft failed:', error.response?.data);
-      throw error;
-    }
-  },
-  
-  deleteDraft: async (draftId) => {
-    console.log('📝 [Draft] Deleting draft:', draftId);
-    try {
-      const response = await apiClient.delete(`/drafts/${draftId}`);
-      console.log('✅ [Draft] Draft deleted successfully');
-      return response;
-    } catch (error) {
-      console.error('❌ [Draft] Delete draft failed:', error.response?.data);
-      throw error;
-    }
-  }
+  getDrafts: () => apiClient.get('/drafts'),
+  createDraft: (draftData) => apiClient.post('/drafts', draftData),
+  updateDraft: (draftId, draftData) => apiClient.put(`/drafts/${draftId}`, draftData),
+  deleteDraft: (draftId) => apiClient.delete(`/drafts/${draftId}`),
 };
 
 // Analytics API
@@ -676,13 +420,10 @@ export const healthApi = {
 export const testConnection = async () => {
   try {
     console.log('🔍 [Connection Test] Testing connection to:', API_BASE_URL);
-    
     const healthResponse = await apiClient.get('/health');
-    
     // Test token storage
     const token = localStorage.getItem('auth_token');
     console.log('🔍 [Connection Test] Auth token in storage:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
-    
     return { 
       success: true, 
       data: healthResponse.data,
@@ -706,7 +447,6 @@ export const tokenUtils = {
     console.log('🔍 [Token] Retrieved token:', token ? `${token.substring(0, 20)}...` : 'None');
     return token;
   },
-  
   setToken: (token) => {
     console.log('💾 [Token] Storing token in localStorage:', token ? `${token.substring(0, 20)}...` : 'Empty token!');
     if (!token) {
@@ -715,13 +455,11 @@ export const tokenUtils = {
     }
     localStorage.setItem('auth_token', token);
   },
-  
   removeToken: () => {
     console.log('🗑️ [Token] Removing token from localStorage');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
   },
-  
   isValid: () => {
     const token = localStorage.getItem('auth_token');
     const isValid = !!token;
@@ -736,7 +474,6 @@ export const createWebSocket = (clientId = 'default') => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const baseUrl = import.meta.env.VITE_API_URL?.replace(/^https?/, protocol);
   const wsUrl = `${baseUrl}/ws/agent?client_id=${clientId}${token ? `&token=${token}` : ''}`;
-  
   console.log('🔌 [WebSocket] Connecting to:', wsUrl);
   return new WebSocket(wsUrl);
 };
@@ -749,36 +486,7 @@ export const monitorConnection = () => {
       console.warn('⚠️ [Monitor] Backend connection lost');
     }
   }, 30000);
-  
   return () => clearInterval(checkInterval);
-};
-
-// NEW: Quick reply helper function for frontend components
-export const quickReply = {
-  generate: async (emailId, tone = 'professional') => {
-    try {
-      console.log('🚀 [QuickReply] Generating reply for email:', emailId);
-      const response = await emailApi.generateEmailReply(emailId, tone);
-      
-      if (response.data.draft) {
-        console.log('✅ [QuickReply] Reply generated and saved as draft:', response.data.draft.id);
-        return {
-          success: true,
-          draft: response.data.draft,
-          message: response.data.message
-        };
-      } else {
-        throw new Error('No draft returned from server');
-      }
-    } catch (error) {
-      console.error('❌ [QuickReply] Failed to generate reply:', error);
-      return {
-        success: false,
-        error: error.message,
-        message: 'Failed to generate AI reply'
-      };
-    }
-  }
 };
 
 export default apiClient;
