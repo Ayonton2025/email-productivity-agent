@@ -111,6 +111,18 @@ class PromptService:
             return prompt.to_dict()
         
         return None
+
+    async def delete_prompt(self, prompt_id: str) -> bool:
+        """Delete a prompt template"""
+        result = await self.db.execute(select(PromptTemplate).where(PromptTemplate.id == prompt_id))
+        prompt = result.scalar_one_or_none()
+        
+        if prompt:
+            await self.db.delete(prompt)
+            await self.db.commit()
+            return True
+        
+        return False
     
     async def _deactivate_other_prompts(self, category: str, exclude_id: str = None):
         """Deactivate all prompts in a category except the excluded one"""
