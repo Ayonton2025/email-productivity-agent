@@ -1,177 +1,239 @@
-import React, { useState, useContext } from 'react';
-import { useEmail } from '../../context/EmailContext';
-import { agentApi } from '../../services/api';
-import { 
-  Star, Archive, Reply, Clock, Tag, User, Calendar,
-  Play, Loader 
-} from 'lucide-react';
+# backend/app/services/email_service.py
+import json
+import asyncio
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-const EmailDetail = ({ email }) => {
-  const { updateEmailCategory } = useEmail();
-  const [processing, setProcessing] = useState(false);
-  const [agentResult, setAgentResult] = useState(null);
+from app.models.database import Email, EmailDraft
+from app.services.llm_service import LLMService
+from app.services.prompt_service import PromptService
 
-  const handleCategoryChange = async (newCategory) => {
-    try {
-      await updateEmailCategory(email.id, newCategory);
-    } catch (err) {
-      console.error('Error updating category:', err);
-    }
-  };
-
-  const processWithAgent = async (promptType) => {
-    setProcessing(true);
-    setAgentResult(null);
-    try {
-      const response = await agentApi.processEmail({
-      email_id: email.id,
-      prompt_type: promptType
-    });
-      setAgentResult(response.data);
-    } catch (err) {
-      console.error('Error processing with agent:', err);
-      setAgentResult({ error: 'Failed to process email' });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const categories = ['Important', 'Newsletter', 'Spam', 'To-Do', 'Personal', 'Work'];
-
-  return (
-    <div className="h-full flex flex-col bg-white border border-gray-200 rounded-lg">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">{email.subject}</h1>
-            <div className="flex items-center mt-2 space-x-4">
-              <div className="flex items-center text-sm text-gray-600">
-                <User className="h-4 w-4 mr-1" />
-                {email.sender}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="h-4 w-4 mr-1" />
-                {new Date(email.timestamp).toLocaleString()}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="p-2 text-gray-400 hover:text-yellow-500">
-              <Star className="h-5 w-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-gray-600">
-              <Archive className="h-5 w-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-blue-600">
-              <Reply className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Category Selector */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  email.category === category
-                    ? 'bg-indigo-100 text-indigo-800 border border-indigo-300'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Agent Actions */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">AI Actions</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => processWithAgent('summary')}
-            disabled={processing}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            {processing ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Summarize
-          </button>
-          <button
-            onClick={() => processWithAgent('action_extraction')}
-            disabled={processing}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            {processing ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Extract Tasks
-          </button>
-          <button
-            onClick={() => processWithAgent('reply_draft')}
-            disabled={processing}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            {processing ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Draft Reply
-          </button>
-        </div>
-      </div>
-
-      {/* Agent Results */}
-      {agentResult && (
-        <div className="p-4 border-b border-gray-200 bg-blue-50">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">AI Result</h3>
-          <div className="text-sm text-blue-800 bg-white p-3 rounded border">
-            {agentResult.error ? (
-              <p className="text-red-600">{agentResult.error}</p>
-            ) : (
-              <pre className="whitespace-pre-wrap">{agentResult.result}</pre>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Email Body */}
-      <div className="flex-1 p-6 overflow-y-auto">
-        <div className="prose max-w-none">
-          <div className="whitespace-pre-wrap text-gray-900">{email.body}</div>
-        </div>
-
-        {/* Action Items */}
-        {email.action_items && email.action_items.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Action Items</h3>
-            <div className="space-y-2">
-              {email.action_items.map((item, index) => (
-                <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{item.task}</p>
-                    {item.deadline && (
-                      <p className="text-sm text-gray-600">Deadline: {item.deadline}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Summary */}
-        {email.summary && (
-          <div className="mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Summary</h3>
-            <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{email.summary}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default EmailDetail;
+class EmailService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.llm_service = LLMService()
+        self.prompt_service = PromptService(db)
+    
+    async def load_mock_emails(self, file_path: str, user_id: str = None) -> List[Dict[str, Any]]:
+        """Load mock emails from JSON file"""
+        try:
+            with open(file_path, 'r') as f:
+                emails_data = json.load(f)
+            
+            processed_emails = []
+            for email_data in emails_data:
+                processed_email = await self.process_single_email(email_data, user_id)
+                processed_emails.append(processed_email)
+            
+            return processed_emails
+        except Exception as e:
+            print(f"Error loading mock emails: {e}")
+            return []
+    
+    async def process_single_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+        """Process a single email with AI categorization and extraction"""
+        
+        # Get active prompts
+        categorization_prompt = await self.prompt_service.get_active_prompt("categorization")
+        action_prompt = await self.prompt_service.get_active_prompt("action_extraction")
+        summary_prompt = await self.prompt_service.get_active_prompt("summary")
+        
+        email_content = f"From: {email_data.get('sender', '')}\nSubject: {email_data.get('subject', '')}\nBody: {email_data.get('body', '')}"
+        
+        # Run AI processing
+        tasks = [
+            self.llm_service.process_prompt(categorization_prompt.template, email_content),
+            self.llm_service.process_prompt(action_prompt.template, email_content),
+            self.llm_service.process_prompt(summary_prompt.template, email_content)
+        ]
+        
+        category, action_items, summary = await asyncio.gather(*tasks)
+        
+        # Parse action items if it's JSON
+        try:
+            if action_items.strip().startswith('{') or action_items.strip().startswith('['):
+                action_items_parsed = json.loads(action_items)
+            else:
+                action_items_parsed = [{"task": action_items, "deadline": None}]
+        except:
+            action_items_parsed = [{"task": action_items, "deadline": None}]
+        
+        # Handle timestamp with 'Z' suffix
+        raw_ts = email_data.get('timestamp', datetime.utcnow().isoformat())
+        if isinstance(raw_ts, str) and raw_ts.endswith('Z'):
+            raw_ts = raw_ts.replace('Z', '+00:00')
+        timestamp = datetime.fromisoformat(raw_ts)
+        
+        # Create email record - ADD user_id field
+        email = Email(
+            user_id=user_id,  # CRITICAL: Add user_id to associate email with user
+            sender=email_data.get('sender', ''),
+            subject=email_data.get('subject', ''),
+            body=email_data.get('body', ''),
+            timestamp=timestamp,
+            category=category,
+            action_items=action_items_parsed,
+            summary=summary,
+            email_metadata=email_data.get('metadata', {})
+        )
+        
+        self.db.add(email)
+        await self.db.commit()
+        await self.db.refresh(email)
+        
+        return email.to_dict()
+    
+    async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get all emails with pagination"""
+        try:
+            result = await self.db.execute(
+                select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset)
+            )
+            emails = result.scalars().all()
+            return [email.to_dict() for email in emails]
+        except Exception as e:
+            print(f"❌ [EmailService] Error in get_all_emails: {e}")
+            return []
+    
+    async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get emails for a specific user"""
+        try:
+            print(f"📧 [EmailService] Getting emails for user: {user_id}")
+            
+            result = await self.db.execute(
+                select(Email).where(Email.user_id == user_id)
+                .order_by(Email.timestamp.desc())
+                .limit(limit).offset(offset)
+            )
+            emails = result.scalars().all()
+            
+            print(f"📧 [EmailService] Found {len(emails)} emails in database")
+            
+            # Convert to dict and handle any serialization issues
+            email_list = []
+            for email in emails:
+                try:
+                    email_dict = email.to_dict()
+                    email_list.append(email_dict)
+                except Exception as e:
+                    print(f"⚠️ [EmailService] Error converting email {email.id}: {e}")
+                    # Create a basic dict as fallback
+                    email_list.append({
+                        "id": getattr(email, 'id', 'unknown'),
+                        "user_id": getattr(email, 'user_id', 'unknown'),
+                        "sender": getattr(email, 'sender', 'Unknown'),
+                        "subject": getattr(email, 'subject', 'No Subject'),
+                        "body": getattr(email, 'body', ''),
+                        "timestamp": getattr(email, 'timestamp', '').isoformat() if getattr(email, 'timestamp', None) else '',
+                        "category": getattr(email, 'category', 'Uncategorized')
+                    })
+            
+            return email_list
+            
+        except Exception as e:
+            print(f"❌ [EmailService] Error in get_user_emails: {e}")
+            import traceback
+            print(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
+            return []
+    
+    async def get_email_by_id(self, email_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific email by ID"""
+        try:
+            result = await self.db.execute(select(Email).where(Email.id == email_id))
+            email = result.scalar_one_or_none()
+            return email.to_dict() if email else None
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting email by ID: {e}")
+            return None
+    
+    async def update_email_category(self, email_id: str, category: str) -> bool:
+        """Update email category"""
+        try:
+            result = await self.db.execute(select(Email).where(Email.id == email_id))
+            email = result.scalar_one_or_none()
+            
+            if email:
+                email.category = category
+                await self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ [EmailService] Error updating email category: {e}")
+            return False
+    
+    async def create_draft(self, draft_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+        """Create a new email draft"""
+        try:
+            # CHANGED: Handle metadata field conversion
+            draft_metadata = draft_data.pop('metadata', {})
+            draft_data['draft_metadata'] = draft_metadata
+            
+            # Add user_id if provided
+            if user_id:
+                draft_data['user_id'] = user_id
+                
+            draft = EmailDraft(**draft_data)
+            self.db.add(draft)
+            await self.db.commit()
+            await self.db.refresh(draft)
+            return draft.to_dict()
+        except Exception as e:
+            print(f"❌ [EmailService] Error creating draft: {e}")
+            raise
+    
+    async def get_drafts(self) -> List[Dict[str, Any]]:
+        """Get all email drafts"""
+        try:
+            result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
+            drafts = result.scalars().all()
+            return [draft.to_dict() for draft in drafts]
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting drafts: {e}")
+            return []
+    
+    async def get_user_drafts(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get drafts for a specific user"""
+        try:
+            result = await self.db.execute(
+                select(EmailDraft).where(EmailDraft.user_id == user_id)
+                .order_by(EmailDraft.updated_at.desc())
+            )
+            drafts = result.scalars().all()
+            return [draft.to_dict() for draft in drafts]
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting user drafts: {e}")
+            return []
+    
+    async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Update a draft"""
+        try:
+            result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+            draft = result.scalar_one_or_none()
+            
+            if draft:
+                for key, value in draft_data.items():
+                    setattr(draft, key, value)
+                await self.db.commit()
+                await self.db.refresh(draft)
+                return draft.to_dict()
+            return None
+        except Exception as e:
+            print(f"❌ [EmailService] Error updating draft: {e}")
+            return None
+    
+    async def delete_draft(self, draft_id: str) -> bool:
+        """Delete a draft"""
+        try:
+            result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+            draft = result.scalar_one_or_none()
+            
+            if draft:
+                await self.db.delete(draft)
+                await self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ [EmailService] Error deleting draft: {e}")
+            return False
