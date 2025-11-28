@@ -263,13 +263,13 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
     prompt_service = PromptService(db)
     return await prompt_service.get_all_prompts()
 
-@router.post("/prompts", response_model=Dict[str, Any]])
+@router.post("/prompts", response_model=Dict[str, Any])
 async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new prompt"""
     prompt_service = PromptService(db)
     return await prompt_service.create_prompt(prompt_data)
 
-@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any]])
+@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
 async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
@@ -297,7 +297,7 @@ async def get_drafts(
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any]])
+@router.post("/drafts", response_model=Dict[str, Any])
 async def create_draft(
     draft_data: dict,
     current_user: User = Depends(get_current_user),
@@ -307,7 +307,7 @@ async def create_draft(
     email_service = EmailService(db)
     return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any]])
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
