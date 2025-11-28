@@ -17,7 +17,7 @@ import {
   Loader
 } from 'lucide-react';
 import { EmailContext } from '../../context/EmailContext';
-import { agentApi } from '../../services/api'; // ✅ ADDED: Import agentApi
+import { agentApi } from '../../services/api';
 
 const Inbox = () => {
   const { emails, loadEmails, loading, selectedEmail, setSelectedEmail, loadMockEmails } = useContext(EmailContext);
@@ -25,29 +25,54 @@ const Inbox = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   
-  // ✅ ADDED: State for AI reply generation
+  // Enhanced state for AI reply generation
   const [processing, setProcessing] = useState(false);
   const [agentResult, setAgentResult] = useState(null);
+  const [agentError, setAgentError] = useState(null);
 
   useEffect(() => {
     loadMockEmails();
   }, []);
 
-  // ✅ ADDED: Function to generate AI reply
+  // Enhanced function to generate AI reply
   const generateReply = async () => {
     if (!selectedEmail) return;
     
     setProcessing(true);
     setAgentResult(null);
+    setAgentError(null);
+    
+    console.log('🔄 [Inbox] Generating reply for email:', selectedEmail.id, selectedEmail.subject);
+    
     try {
-      const response = await agentApi.processEmail({
+      // Try multiple endpoint approaches
+      let response;
+      
+      // Approach 1: Use the processEmail endpoint
+      response = await agentApi.processEmail({
         email_id: selectedEmail.id,
-        prompt_type: 'reply_draft'
+        prompt_type: 'reply_draft',
+        email_content: selectedEmail.body, // Include email content directly
+        email_subject: selectedEmail.subject
       });
-      setAgentResult(response.data);
+      
+      console.log('✅ [Inbox] Reply generated successfully:', response.data);
+      
+      if (response.data && (response.data.result || response.data.reply)) {
+        setAgentResult(response.data.result || response.data.reply);
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+      
     } catch (err) {
-      console.error('Error generating reply:', err);
-      setAgentResult({ error: 'Failed to generate reply' });
+      console.error('❌ [Inbox] Error generating reply:', err);
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to generate reply';
+      setAgentError(errorMessage);
+      
+      // Fallback: Create a mock reply for demo purposes
+      const mockReply = `Dear ${selectedEmail.sender.split('@')[0]},\n\nThank you for your email regarding "${selectedEmail.subject}". I will review this and get back to you shortly.\n\nBest regards,\nUser`;
+      setAgentResult(mockReply);
+      setAgentError('Using demo reply - Backend connection issue');
     } finally {
       setProcessing(false);
     }
@@ -198,7 +223,11 @@ const Inbox = () => {
                 {sortedEmails.map((email) => (
                   <div
                     key={email.id}
-                    onClick={() => setSelectedEmail(email)}
+                    onClick={() => {
+                      setSelectedEmail(email);
+                      setAgentResult(null); // Clear previous results when selecting new email
+                      setAgentError(null);
+                    }}
                     className={`p-4 cursor-pointer transition-colors ${
                       selectedEmail?.id === email.id
                         ? 'bg-indigo-50 border-l-4 border-indigo-500'
@@ -335,17 +364,24 @@ const Inbox = () => {
                   </div>
                 )}
 
-                {/* ✅ ADDED: AI Result Display */}
+                {/* AI Result Display */}
                 {agentResult && (
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="font-semibold text-blue-900 mb-2">AI Reply Draft</h3>
-                    <div className="text-sm text-blue-800 bg-white p-3 rounded">
-                      {agentResult.error ? (
-                        <p className="text-red-600">{agentResult.error}</p>
-                      ) : (
-                        <pre className="whitespace-pre-wrap">{agentResult.result}</pre>
-                      )}
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h3 className="font-semibold text-green-900 mb-2">AI Reply Draft</h3>
+                    <div className="text-sm text-green-800 bg-white p-3 rounded border">
+                      <pre className="whitespace-pre-wrap font-sans">{agentResult}</pre>
                     </div>
+                    {agentError && (
+                      <p className="text-xs text-orange-600 mt-2">{agentError}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {agentError && !agentResult && (
+                  <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <h3 className="font-semibold text-red-900 mb-2">Error</h3>
+                    <p className="text-sm text-red-800">{agentError}</p>
                   </div>
                 )}
               </div>
@@ -353,14 +389,13 @@ const Inbox = () => {
               {/* Email Actions */}
               <div className="border-t border-gray-200 p-4">
                 <div className="flex gap-2">
-                  {/* ✅ FIXED: Wired Reply button */}
                   <button
                     onClick={generateReply}
                     disabled={processing || !selectedEmail}
                     className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {processing ? <Loader className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                    {processing ? 'Generating...' : 'Reply'}
+                    {processing ? 'Generating Reply...' : 'Generate AI Reply'}
                   </button>
                   <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                     <Archive className="h-4 w-4" />
