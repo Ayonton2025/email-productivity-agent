@@ -38,17 +38,30 @@ class LLMService:
     async def process_prompt(self, prompt: str, email_content: str, system_message: str = None) -> str:
         """Process a prompt with email content using the configured LLM"""
         print(f"🤖 [LLMService] Processing prompt: {prompt[:100]}...")
-        
+
         try:
             if self.provider == "openai" and self.openai_client:
-                return await self._process_with_openai(prompt, email_content, system_message)
+                print("🚀 [LLMService] Using OpenAI...")
+                try:
+                    return await self._process_with_openai(prompt, email_content, system_message)
+                except Exception as openai_error:
+                    print(f"❌ [LLMService] OpenAI failed, falling back to mock: {openai_error}")
+                    return await self._mock_processing(prompt, email_content)
             elif self.provider == "anthropic" and self.anthropic_client:
-                return await self._process_with_anthropic(prompt, email_content, system_message)
+                print("🚀 [LLMService] Using Anthropic...")
+                try:
+                    return await self._process_with_anthropic(prompt, email_content, system_message)
+                except Exception as anthropic_error:
+                    print(f"❌ [LLMService] Anthropic failed, falling back to mock: {anthropic_error}")
+                    return await self._mock_processing(prompt, email_content)
             else:
+                print("🔄 [LLMService] Using mock processing (no API configured)")
                 return await self._mock_processing(prompt, email_content)
+
         except Exception as e:
             print(f"❌ [LLMService] Error in process_prompt: {e}")
-            return f"Error processing request: {str(e)}"
+            # Always fall back to mock processing
+            return await self._mock_processing(prompt, email_content)
     
     async def _process_with_openai(self, prompt: str, email_content: str, system_message: str) -> str:
         """Process using OpenAI GPT"""
@@ -75,7 +88,8 @@ class LLMService:
             
         except Exception as e:
             print(f"❌ [LLMService] OpenAI API error: {e}")
-            return f"OpenAI API error: {str(e)}"
+            # Re-raise to trigger fallback in process_prompt
+            raise e
     
     async def _process_with_anthropic(self, prompt: str, email_content: str, system_message: str) -> str:
         """Process using Anthropic Claude"""
@@ -99,34 +113,42 @@ class LLMService:
             
         except Exception as e:
             print(f"❌ [LLMService] Anthropic API error: {e}")
-            return f"Anthropic API error: {str(e)}"
+            # Re-raise to trigger fallback in process_prompt
+            raise e
     
     async def _mock_processing(self, prompt: str, email_content: str) -> str:
         """Mock processing for testing without API keys"""
-        print("🔄 [LLMService] Using mock processing")
+        print("🔄 [LLMService] Using enhanced mock processing")
         await asyncio.sleep(0.5)  # Simulate processing time
-        
-        # Enhanced mock responses
+
+        # Enhanced mock responses based on prompt content
         if "categoriz" in prompt.lower():
-            categories = ["Important", "Newsletter", "Spam", "To-Do"]
-            category = categories[len(email_content) % 4]
-            return json.dumps({"category": category, "confidence": 0.85})
-            
-        elif "action" in prompt.lower() or "task" in prompt.lower():
+            categories = ["Important", "Newsletter", "Spam", "To-Do", "Work", "Personal"]
+            category = categories[len(email_content) % len(categories)]
+            return json.dumps({"category": category, "confidence": 0.85, "mock": True})
+        
+        elif "action" in prompt.lower() or "task" in prompt.lower() or "extract" in prompt.lower():
             return json.dumps({
                 "tasks": [
                     {
-                        "task": "Review the document mentioned in email", 
-                        "deadline": "2024-01-15", 
-                        "priority": "medium"
+                        "task": "Review the document mentioned in the email",
+                        "deadline": "2024-01-15",
+                        "priority": "medium",
+                        "assigned_to": "You"
+                    },
+                    {
+                        "task": "Follow up with the sender for more details",
+                        "deadline": None,
+                        "priority": "low", 
+                        "assigned_to": "You"
                     }
-                ]
+                ],
+                "mock": True
             })
-            
+        
         elif "reply" in prompt.lower() or "draft" in prompt.lower():
             sender_name = "there"
             if "From:" in email_content:
-                # Extract sender name from email content
                 for line in email_content.split('\n'):
                     if 'From:' in line:
                         sender_part = line.split('From:')[-1].strip()
@@ -141,17 +163,18 @@ Thank you for your email. I have received your message and will review it carefu
 I appreciate you taking the time to reach out and will get back to you with a proper response soon.
 
 Best regards,
+
 [Your Name]
 
 ---
 [AI-generated draft - Mock response]"""
-            
+        
         elif "summar" in prompt.lower():
             summary_length = min(150, len(email_content))
-            return f"This email appears to be about: {email_content[:summary_length]}... The main points discussed require your attention and follow-up."
-            
+            return f"This email appears to be about: {email_content[:summary_length]}... The main points discussed require your attention and follow-up. [Mock summary]"
+        
         else:
-            return f"I've processed your request regarding: {prompt[:80]}. Based on the email content, here's my analysis: This appears to be a message that requires your review and potential action."
+            return f"I've processed your request. Based on the email content, here's my analysis: This appears to be a message that requires your review and potential action. [Mock response]"
     
     async def chat_with_agent(self, messages: List[Dict[str, str]], email_context: str = None) -> str:
         """Chat interface for the email agent"""
@@ -176,12 +199,12 @@ Best regards,
                 
                 return response.choices[0].message.content
             except Exception as e:
-                print(f"❌ [LLMService] Chat OpenAI error: {e}")
-                return f"I encountered an error while processing your chat request: {str(e)}"
-        else:
-            # Enhanced mock response
-            user_message = messages[-1]["content"] if messages else ""
-            return f"I understand you're asking about: '{user_message[:100]}...'. As your email assistant, I can help you with:\n\n• Email categorization\n• Action item extraction\n• Reply drafting\n• Email summarization\n\nHow can I assist you with your email management today?"
+                print(f"❌ [LLMService] Chat OpenAI error: {e}, falling back to mock")
+                # Fall through to mock response
+        
+        # Enhanced mock response for chat
+        user_message = messages[-1]["content"] if messages else ""
+        return f"I understand you're asking about: '{user_message[:100]}...'. As your email assistant, I can help you with:\n\n• Email categorization\n• Action item extraction\n• Reply drafting\n• Email summarization\n\nHow can I assist you with your email management today? [Mock response]"
 
     async def generate_email_reply(self, original_email: Dict[str, Any], tone: str = "professional") -> Dict[str, Any]:
         """Generate email reply using AI"""
@@ -226,11 +249,11 @@ Best regards,
                     }
                     
                 except Exception as e:
-                    print(f"❌ [LLMService] OpenAI reply generation error: {e}")
+                    print(f"❌ [LLMService] OpenAI reply generation error: {e}, falling back to mock")
                     # Fall through to mock response
                     
-            # Fallback to mock response (for both OpenAI errors and no provider)
-            print("⚠️ [LLMService] Using mock reply generation")
+            # Fallback to enhanced mock response (for both OpenAI errors and no provider)
+            print("⚠️ [LLMService] Using enhanced mock reply generation")
             sender_name = original_email.get('sender', 'there').split('@')[0]
             
             return {
@@ -247,9 +270,10 @@ Best regards,
 [Your Name]
 
 ---
-[AI-generated draft - System initializing]""",
+[AI-generated draft - Mock response]""",
                 "tone": tone,
-                "ai_generated": True
+                "ai_generated": True,
+                "mock": True
             }
                 
         except Exception as e:
@@ -265,9 +289,13 @@ Best regards,
 I appreciate you reaching out and will respond properly once I've had a chance to consider your message.
 
 Best regards,
-[Your Name]""",
+[Your Name]
+
+---
+[Mock fallback response]""",
                 "tone": tone,
                 "ai_generated": True,
+                "mock": True,
                 "error": str(e)
             }
 
@@ -286,8 +314,8 @@ Best regards,
                 )
                 details.append("OpenAI API: Connected")
             except Exception as e:
-                status = "unhealthy"
-                details.append(f"OpenAI API: Error - {str(e)}")
+                status = "degraded"  # Changed from unhealthy to degraded since we have fallback
+                details.append(f"OpenAI API: Error - {str(e)} (but mock fallback available)")
         elif self.provider == "anthropic" and self.anthropic_client:
             details.append("Anthropic API: Configured")
         else:
@@ -298,5 +326,6 @@ Best regards,
             "status": status,
             "provider": self.provider,
             "model": self.model,
-            "details": details
+            "details": details,
+            "mock_fallback_available": True
         }
