@@ -7,10 +7,10 @@ aiosqlite==0.19.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# AI Libraries
-openai==1.40.0
+# AI Libraries - UPDATED FOR COMPATIBILITY
+openai==1.3.9
 anthropic==0.7.4
-httpx==0.27.2
+httpx==0.25.2
 
 # Uploads / Forms
 python-multipart==0.0.6
@@ -33,8 +33,8 @@ requests==2.31.0
 # JWT Auth
 python-jose[cryptography]==3.3.0
 
-# Password Hashing (IMPORTANT: FIXED)
-bcrypt==4.0.1                 # Stable version that contains __about__.__version__
+# Password Hashing
+bcrypt==4.0.1
 passlib[bcrypt,argon2]==1.7.4
 argon2-cffi==23.1.0
 
@@ -43,5 +43,3 @@ email-validator==2.1.0
 
 # Migrations
 alembic==1.12.1
-
-
