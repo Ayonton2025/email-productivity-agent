@@ -99,7 +99,11 @@ const Inbox = () => {
   };
 
   const generateReply = async () => {
-    if (!selectedEmail) return;
+    if (!selectedEmail || !selectedEmail.id) {
+      console.error('❌ [Inbox] No email selected or email ID missing');
+      setAgentError('Please select an email first');
+      return;
+    }
     
     setProcessing(true);
     setAgentResult(null);
@@ -120,7 +124,7 @@ const Inbox = () => {
         throw new Error(`Backend health check failed: ${healthCheck.status}`);
       }
 
-      console.log('🚀 [Inbox] Calling generate-reply endpoint...');
+      console.log('🚀 [Inbox] Calling generate-reply endpoint with ID:', selectedEmail.id);
       
       // Use the actual database ID (UUID) for the backend call
       const response = await emailApi.generateReply(selectedEmail.id);
@@ -323,14 +327,15 @@ const Inbox = () => {
               <div className="divide-y divide-gray-200">
                 {sortedEmails.map((email) => (
                   <div
-                    key={email.id} // ✅ Using real database ID as key
+                    key={email.id}
                     onClick={() => {
-                      setSelectedEmail(email); // ✅ Using the actual email object with real ID
+                      console.log('📧 [Inbox] Selected email:', { id: email.id, subject: email.subject });
+                      setSelectedEmail(email);
                       setAgentResult(null);
                       setAgentError(null);
                     }}
                     className={`p-4 cursor-pointer transition-colors ${
-                      selectedEmail?.id === email.id // ✅ Comparing real database IDs
+                      selectedEmail?.id === email.id
                         ? 'bg-indigo-50 border-l-4 border-indigo-500'
                         : 'hover:bg-gray-50'
                     } ${!email.is_read ? 'bg-blue-50' : ''}`}
@@ -492,7 +497,7 @@ const Inbox = () => {
                   </button>
                   
                   <button 
-                    onClick={() => archiveEmail(selectedEmail.id)} // ✅ Using real database ID
+                    onClick={() => archiveEmail(selectedEmail.id)}
                     disabled={!selectedEmail}
                     className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
                       selectedEmail?.is_archived 
@@ -505,7 +510,7 @@ const Inbox = () => {
                   </button>
                   
                   <button 
-                    onClick={() => toggleStarEmail(selectedEmail.id)} // ✅ Using real database ID
+                    onClick={() => toggleStarEmail(selectedEmail.id)}
                     disabled={!selectedEmail}
                     className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
                       selectedEmail?.is_starred 
