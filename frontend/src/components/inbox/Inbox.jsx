@@ -12,19 +12,46 @@ import {
   CheckCircle, 
   MessageSquare, 
   Plus,
-  Eye
+  Eye,
+  Play,
+  Loader
 } from 'lucide-react';
 import { EmailContext } from '../../context/EmailContext';
+import { agentApi } from '../../services/api'; // ✅ ADDED: Import agentApi
 
 const Inbox = () => {
   const { emails, loadEmails, loading, selectedEmail, setSelectedEmail, loadMockEmails } = useContext(EmailContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  
+  // ✅ ADDED: State for AI reply generation
+  const [processing, setProcessing] = useState(false);
+  const [agentResult, setAgentResult] = useState(null);
 
   useEffect(() => {
     loadMockEmails();
   }, []);
+
+  // ✅ ADDED: Function to generate AI reply
+  const generateReply = async () => {
+    if (!selectedEmail) return;
+    
+    setProcessing(true);
+    setAgentResult(null);
+    try {
+      const response = await agentApi.processEmail({
+        email_id: selectedEmail.id,
+        prompt_type: 'reply_draft'
+      });
+      setAgentResult(response.data);
+    } catch (err) {
+      console.error('Error generating reply:', err);
+      setAgentResult({ error: 'Failed to generate reply' });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const categories = ['all', 'Important', 'Newsletter', 'Spam', 'To-Do'];
   
@@ -307,13 +334,33 @@ const Inbox = () => {
                     <p className="text-gray-700">{selectedEmail.summary}</p>
                   </div>
                 )}
+
+                {/* ✅ ADDED: AI Result Display */}
+                {agentResult && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="font-semibold text-blue-900 mb-2">AI Reply Draft</h3>
+                    <div className="text-sm text-blue-800 bg-white p-3 rounded">
+                      {agentResult.error ? (
+                        <p className="text-red-600">{agentResult.error}</p>
+                      ) : (
+                        <pre className="whitespace-pre-wrap">{agentResult.result}</pre>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Email Actions */}
               <div className="border-t border-gray-200 p-4">
                 <div className="flex gap-2">
-                  <button className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                    Reply
+                  {/* ✅ FIXED: Wired Reply button */}
+                  <button
+                    onClick={generateReply}
+                    disabled={processing || !selectedEmail}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {processing ? <Loader className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                    {processing ? 'Generating...' : 'Reply'}
                   </button>
                   <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                     <Archive className="h-4 w-4" />
