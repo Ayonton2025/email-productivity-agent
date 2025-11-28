@@ -38,6 +38,7 @@ class LLMService:
     async def process_prompt(self, prompt: str, email_content: str, system_message: str = None) -> str:
         """Process a prompt with email content using the configured LLM"""
         print(f"🤖 [LLMService] Processing prompt: {prompt[:100]}...")
+        print(f"🔧 [LLMService] System message: {system_message[:100] if system_message else 'None'}...")
 
         try:
             if self.provider == "openai" and self.openai_client:
@@ -46,27 +47,29 @@ class LLMService:
                     return await self._process_with_openai(prompt, email_content, system_message)
                 except Exception as openai_error:
                     print(f"❌ [LLMService] OpenAI failed, falling back to mock: {openai_error}")
-                    return await self._mock_processing(prompt, email_content)
+                    return await self._mock_processing(prompt, email_content, system_message)
             elif self.provider == "anthropic" and self.anthropic_client:
                 print("🚀 [LLMService] Using Anthropic...")
                 try:
                     return await self._process_with_anthropic(prompt, email_content, system_message)
                 except Exception as anthropic_error:
                     print(f"❌ [LLMService] Anthropic failed, falling back to mock: {anthropic_error}")
-                    return await self._mock_processing(prompt, email_content)
+                    return await self._mock_processing(prompt, email_content, system_message)
             else:
                 print("🔄 [LLMService] Using mock processing (no API configured)")
-                return await self._mock_processing(prompt, email_content)
+                return await self._mock_processing(prompt, email_content, system_message)
 
         except Exception as e:
             print(f"❌ [LLMService] Error in process_prompt: {e}")
             # Always fall back to mock processing
-            return await self._mock_processing(prompt, email_content)
+            return await self._mock_processing(prompt, email_content, system_message)
     
     async def _process_with_openai(self, prompt: str, email_content: str, system_message: str) -> str:
         """Process using OpenAI GPT"""
         try:
             messages = []
+            
+            # Add system message if provided
             if system_message:
                 messages.append({"role": "system", "content": system_message})
             
@@ -116,16 +119,24 @@ class LLMService:
             # Re-raise to trigger fallback in process_prompt
             raise e
     
-    async def _mock_processing(self, prompt: str, email_content: str) -> str:
+    async def _mock_processing(self, prompt: str, email_content: str, system_message: str = None) -> str:
         """Mock processing for testing without API keys"""
         print("🔄 [LLMService] Using enhanced mock processing")
         await asyncio.sleep(0.5)  # Simulate processing time
 
-        # Enhanced mock responses based on prompt content
+        # Include system message context in mock responses
+        system_context = f"System context: {system_message[:100]}..." if system_message else ""
+        
+        # Enhanced mock responses with system context
         if "categoriz" in prompt.lower():
             categories = ["Important", "Newsletter", "Spam", "To-Do", "Work", "Personal"]
             category = categories[len(email_content) % len(categories)]
-            return json.dumps({"category": category, "confidence": 0.85, "mock": True})
+            return json.dumps({
+                "category": category, 
+                "confidence": 0.85, 
+                "mock": True,
+                "system_context_used": bool(system_message)
+            })
         
         elif "action" in prompt.lower() or "task" in prompt.lower() or "extract" in prompt.lower():
             return json.dumps({
@@ -143,7 +154,8 @@ class LLMService:
                         "assigned_to": "You"
                     }
                 ],
-                "mock": True
+                "mock": True,
+                "system_context_used": bool(system_message)
             })
         
         elif "reply" in prompt.lower() or "draft" in prompt.lower():
@@ -156,11 +168,13 @@ class LLMService:
                             sender_name = sender_part.split('@')[0]
                         break
             
+            system_note = f"\n\nNote: Processed with system context: {system_message[:50]}..." if system_message else ""
+            
             return f"""Dear {sender_name},
 
 Thank you for your email. I have received your message and will review it carefully.
 
-I appreciate you taking the time to reach out and will get back to you with a proper response soon.
+I appreciate you taking the time to reach out and will get back to you with a proper response soon.{system_note}
 
 Best regards,
 
@@ -171,10 +185,12 @@ Best regards,
         
         elif "summar" in prompt.lower():
             summary_length = min(150, len(email_content))
-            return f"This email appears to be about: {email_content[:summary_length]}... The main points discussed require your attention and follow-up. [Mock summary]"
+            system_info = f" (with system context)" if system_message else ""
+            return f"This email appears to be about: {email_content[:summary_length]}... The main points discussed require your attention and follow-up. [Mock summary]{system_info}"
         
         else:
-            return f"I've processed your request. Based on the email content, here's my analysis: This appears to be a message that requires your review and potential action. [Mock response]"
+            system_info = f" (with system context)" if system_message else ""
+            return f"I've processed your request{system_info}. Based on the email content and system instructions, here's my analysis: This appears to be a message that requires your review and potential action. [Mock response]"
     
     async def chat_with_agent(self, messages: List[Dict[str, str]], email_context: str = None) -> str:
         """Chat interface for the email agent"""
