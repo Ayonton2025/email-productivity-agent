@@ -6,27 +6,20 @@ import {
   Trash2,
   Copy,
   CheckCircle,
-  XCircle,
   Search,
   Filter,
-  Code,
-  Eye,
-  EyeOff,
   Zap,
   Brain,
   MessageSquare,
   FileText,
   Settings,
-  ChevronDown,
   Play,
   TestTube
 } from 'lucide-react';
 import { PromptContext } from '../../context/PromptContext';
-import { useAuth } from '../../context/AuthContext';
 
 const PromptManager = () => {
-  const { prompts, createPrompt, updatePrompt, deletePrompt, testPrompt } = useContext(PromptContext);
-  const { token } = useAuth();
+  const { prompts, createPrompt, updatePrompt, deletePrompt, testPrompt, loading } = useContext(PromptContext);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +35,6 @@ const PromptManager = () => {
   const [testInput, setTestInput] = useState('');
   const [testOutput, setTestOutput] = useState('');
   const [isTesting, setIsTesting] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const categories = [
@@ -75,7 +67,6 @@ const PromptManager = () => {
       return;
     }
 
-    setLoading(true);
     setError('');
 
     try {
@@ -92,15 +83,12 @@ const PromptManager = () => {
     } catch (error) {
       console.error('Failed to create prompt:', error);
       setError('Failed to create prompt: ' + (error.message || 'Unknown error'));
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleSavePrompt = async () => {
     if (!selectedPrompt) return;
 
-    setLoading(true);
     setError('');
 
     try {
@@ -109,15 +97,12 @@ const PromptManager = () => {
     } catch (error) {
       console.error('Failed to update prompt:', error);
       setError('Failed to update prompt: ' + (error.message || 'Unknown error'));
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDeletePrompt = async (promptId) => {
     if (!confirm('Are you sure you want to delete this prompt?')) return;
 
-    setLoading(true);
     setError('');
 
     try {
@@ -128,8 +113,6 @@ const PromptManager = () => {
     } catch (error) {
       console.error('Failed to delete prompt:', error);
       setError('Failed to delete prompt: ' + (error.message || 'Unknown error'));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -173,7 +156,7 @@ const PromptManager = () => {
     });
   };
 
-  // Add system prompts section
+  // Separate system and user prompts
   const systemPrompts = prompts.filter(p => p.is_system);
   const userPrompts = prompts.filter(p => !p.is_system);
 
@@ -232,7 +215,12 @@ const PromptManager = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200">
-            {filteredPrompts.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p>Loading prompts...</p>
+              </div>
+            ) : filteredPrompts.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>No prompts found</p>
@@ -358,11 +346,11 @@ const PromptManager = () => {
           </div>
         </div>
 
-        {/* Prompt Editor - Keep this section the same as before but add loading states */}
+        {/* Prompt Editor */}
         {selectedPrompt && (
           <div className="lg:w-3/5 flex flex-col">
             <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
-              {/* Editor Header - Same as before */}
+              {/* Editor Header */}
               <div className="border-b border-gray-200 p-4">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -457,64 +445,55 @@ const PromptManager = () => {
                 </div>
               </div>
 
-              {/* Editor Content - Same as before but add loading state */}
-              {loading ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
-                    <p className="text-gray-600">Saving...</p>
+              {/* Editor Content */}
+              <div className="flex-1 flex flex-col min-h-0">
+                {isEditing ? (
+                  <div className="flex-1 flex flex-col">
+                    <div className="p-4 border-b border-gray-200">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        value={selectedPrompt.description}
+                        onChange={(e) => setSelectedPrompt(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe what this prompt does..."
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        rows="3"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 p-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Prompt Template
+                      </label>
+                      <textarea
+                        value={selectedPrompt.template}
+                        onChange={(e) => setSelectedPrompt(prev => ({ ...prev, template: e.target.value }))}
+                        placeholder="Enter your prompt template here..."
+                        className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col min-h-0">
-                  {isEditing ? (
-                    <div className="flex-1 flex flex-col">
-                      <div className="p-4 border-b border-gray-200">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Description
-                        </label>
-                        <textarea
-                          value={selectedPrompt.description}
-                          onChange={(e) => setSelectedPrompt(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Describe what this prompt does..."
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                          rows="3"
-                        />
-                      </div>
-                      
-                      <div className="flex-1 p-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Prompt Template
-                        </label>
-                        <textarea
-                          value={selectedPrompt.template}
-                          onChange={(e) => setSelectedPrompt(prev => ({ ...prev, template: e.target.value }))}
-                          placeholder="Enter your prompt template here..."
-                          className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                        />
-                      </div>
+                ) : (
+                  <div className="flex-1 flex flex-col">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                      <p className="text-gray-900">
+                        {selectedPrompt.description || 'No description provided.'}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col">
-                      <div className="p-4 border-b border-gray-200">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                        <p className="text-gray-900">
-                          {selectedPrompt.description || 'No description provided.'}
-                        </p>
-                      </div>
-                      
-                      <div className="flex-1 p-4 overflow-y-auto">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Template</h3>
-                        <pre className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
-                          {selectedPrompt.template}
-                        </pre>
-                      </div>
+                    
+                    <div className="flex-1 p-4 overflow-y-auto">
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">Template</h3>
+                      <pre className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
+                        {selectedPrompt.template}
+                      </pre>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
-              {/* Test Panel - Same as before */}
+              {/* Test Panel */}
               {showTestPanel && (
                 <div className="border-t border-gray-200">
                   <div className="p-4">
@@ -558,7 +537,7 @@ const PromptManager = () => {
                 </div>
               )}
 
-              {/* Editor Footer - Add loading state */}
+              {/* Editor Footer */}
               <div className="border-t border-gray-200 p-4">
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-600">
@@ -617,7 +596,7 @@ const PromptManager = () => {
         )}
       </div>
 
-      {/* Create Prompt Modal - Add loading state */}
+      {/* Create Prompt Modal */}
       <dialog id="create-prompt-modal" className="modal">
         <div className="modal-box max-w-2xl">
           <h3 className="font-bold text-lg mb-4">Create New Prompt</h3>
