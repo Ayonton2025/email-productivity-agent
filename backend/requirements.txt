@@ -10,6 +10,7 @@ pydantic-settings==2.1.0
 # AI Libraries
 openai==1.40.0
 anthropic==0.7.4
+httpx==0.27.2
 
 # Uploads / Forms
 python-multipart==0.0.6
@@ -43,5 +44,4 @@ email-validator==2.1.0
 # Migrations
 alembic==1.12.1
 
-httpx==0.27.2
 
