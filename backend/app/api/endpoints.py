@@ -32,6 +32,10 @@ async def get_user_inbox(
         print(f"📧 [get_user_inbox] Fetching emails for user: {current_user.id}")
         
         email_service = EmailService(db)
+        
+        # ✅ CRITICAL: Ensure user has emails (load mock data if empty)
+        await email_service.ensure_user_has_emails(current_user.id)
+        
         # Use user-specific method to get only current user's emails
         emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
         print(f"📧 [get_user_inbox] Found {len(emails)} emails")
@@ -197,27 +201,61 @@ async def load_mock_emails(
     db: AsyncSession = Depends(get_db)
 ):
     """Load mock emails for current user"""
-    email_service = EmailService(db)
-    emails = await email_service.load_mock_emails("data/mock_inbox.json", user_id=current_user.id)
-    return {"message": f"Loaded {len(emails)} emails", "emails": emails}
+    try:
+        email_service = EmailService(db)
+        emails = await email_service.load_mock_emails(current_user.id)
+        return {
+            "message": f"Loaded {len(emails)} mock emails", 
+            "emails": emails,
+            "user_id": current_user.id
+        }
+    except Exception as e:
+        print(f"❌ [load_mock_emails] Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load mock emails: {str(e)}")
 
 @router.get("/emails/{email_id}", response_model=Dict[str, Any])
-async def get_email(email_id: str, db: AsyncSession = Depends(get_db)):
-    """Get a specific email"""
-    email_service = EmailService(db)
-    email = await email_service.get_email_by_id(email_id)
-    if not email:
-        raise HTTPException(status_code=404, detail="Email not found")
-    return email
+async def get_email(
+    email_id: str, 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get a specific email (user-specific)"""
+    try:
+        email_service = EmailService(db)
+        
+        # ✅ CRITICAL: Ensure user has emails first
+        await email_service.ensure_user_has_emails(current_user.id)
+        
+        # Get email with user_id filter for security
+        email = await email_service.get_email_by_id(email_id, current_user.id)
+        if not email:
+            raise HTTPException(status_code=404, detail="Email not found")
+        return email
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ [get_email] Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get email: {str(e)}")
 
 @router.put("/emails/{email_id}/category")
-async def update_email_category(email_id: str, category: str, db: AsyncSession = Depends(get_db)):
-    """Update email category"""
-    email_service = EmailService(db)
-    success = await email_service.update_email_category(email_id, category)
-    if not success:
-        raise HTTPException(status_code=404, detail="Email not found")
-    return {"message": "Category updated successfully"}
+async def update_email_category(
+    email_id: str, 
+    category: str, 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update email category (user-specific)"""
+    try:
+        email_service = EmailService(db)
+        success = await email_service.update_email_category(email_id, category, current_user.id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Email not found")
+        return {"message": "Category updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ [update_email_category] Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update category: {str(e)}")
 
 @router.get("/prompts", response_model=List[Dict[str, Any]])
 async def get_prompts(db: AsyncSession = Depends(get_db)):
@@ -225,13 +263,13 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
     prompt_service = PromptService(db)
     return await prompt_service.get_all_prompts()
 
-@router.post("/prompts", response_model=Dict[str, Any])
+@router.post("/prompts", response_model=Dict[str, Any]])
 async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new prompt"""
     prompt_service = PromptService(db)
     return await prompt_service.create_prompt(prompt_data)
 
-@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
+@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any]])
 async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
@@ -259,7 +297,7 @@ async def get_drafts(
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any])
+@router.post("/drafts", response_model=Dict[str, Any]])
 async def create_draft(
     draft_data: dict,
     current_user: User = Depends(get_current_user),
@@ -269,7 +307,7 @@ async def create_draft(
     email_service = EmailService(db)
     return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any]])
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
@@ -297,34 +335,32 @@ async def generate_email_reply(
 ):
     """Generate AI-powered email reply"""
     try:
-        print(f"🤖 [generate_email_reply] Generating reply for email: {email_id}")
+        print(f"🤖 [generate_email_reply] Generating reply for email: {email_id}, user: {current_user.id}")
         
         email_service = EmailService(db)
-        llm_service = LLMService()
         
-        # Get the email
-        email = await email_service.get_email_by_id(email_id)
+        # ✅ CRITICAL: Ensure user has emails first
+        await email_service.ensure_user_has_emails(current_user.id)
+        
+        # Get the email with user_id filter for security
+        email = await email_service.get_email_by_id(email_id, current_user.id)
         if not email:
             raise HTTPException(status_code=404, detail="Email not found")
         
-        # Get tone from request or use default
-        tone = request.get('tone', 'professional') if request else 'professional'
-        
         print(f"📧 [generate_email_reply] Generating reply for email from: {email.get('sender')}")
         
-        # Generate reply using AI
-        reply_data = await llm_service.generate_email_reply(email, tone)
+        # ✅ Use the email service to generate reply (simpler approach)
+        reply_body = await email_service.generate_reply_draft(email_id, current_user.id)
         
         # Create draft with the generated reply
         draft_data = {
-            "subject": reply_data["subject"],
-            "body": reply_data["body"],
-            "recipient": email['sender'],
+            "subject": f"Re: {email.get('subject', 'Your email')}",
+            "body": reply_body,
+            "recipient": email.get('sender'),
             "context_email_id": email_id,
             "metadata": {
-                "tone": tone,
                 "ai_generated": True,
-                "original_subject": email['subject'],
+                "original_subject": email.get('subject'),
                 "generated_at": datetime.utcnow().isoformat()
             }
         }
@@ -335,11 +371,13 @@ async def generate_email_reply(
         
         return {
             "message": "Reply generated successfully",
+            "reply": reply_body,  # ✅ Return the reply directly for frontend display
             "draft": draft,
-            "ai_generated": True,
-            "tone": tone
+            "ai_generated": True
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ [generate_email_reply] Error generating reply: {e}")
         import traceback
@@ -348,37 +386,51 @@ async def generate_email_reply(
 
 # Agent endpoints
 @router.post("/agent/process")
-async def process_with_agent(request: dict, db: AsyncSession = Depends(get_db)):
+async def process_with_agent(
+    request: dict, 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """Process email with agent"""
-    email_service = EmailService(db)
-    llm_service = LLMService()
-    prompt_service = PromptService(db)
-    
-    email_id = request.get('email_id')
-    prompt_type = request.get('prompt_type')
-    custom_prompt = request.get('custom_prompt')
-    
-    email = await email_service.get_email_by_id(email_id)
-    if not email:
-        raise HTTPException(status_code=404, detail="Email not found")
-    
-    if custom_prompt:
-        prompt_text = custom_prompt
-    else:
-        prompt = await prompt_service.get_active_prompt(prompt_type)
-        if not prompt:
-            raise HTTPException(status_code=404, detail=f"No active prompt found for {prompt_type}")
-        prompt_text = prompt.template
-    
-    email_content = f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
-    result = await llm_service.process_prompt(prompt_text, email_content)
-    
-    return {
-        "email_id": email_id,
-        "prompt_type": prompt_type,
-        "result": result,
-        "used_custom_prompt": custom_prompt is not None
-    }
+    try:
+        email_service = EmailService(db)
+        llm_service = LLMService()
+        prompt_service = PromptService(db)
+        
+        email_id = request.get('email_id')
+        prompt_type = request.get('prompt_type')
+        custom_prompt = request.get('custom_prompt')
+        
+        # ✅ Ensure user has emails first
+        await email_service.ensure_user_has_emails(current_user.id)
+        
+        # Get email with user_id filter for security
+        email = await email_service.get_email_by_id(email_id, current_user.id)
+        if not email:
+            raise HTTPException(status_code=404, detail="Email not found")
+        
+        if custom_prompt:
+            prompt_text = custom_prompt
+        else:
+            prompt = await prompt_service.get_active_prompt(prompt_type)
+            if not prompt:
+                raise HTTPException(status_code=404, detail=f"No active prompt found for {prompt_type}")
+            prompt_text = prompt.template
+        
+        email_content = f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
+        result = await llm_service.process_prompt(prompt_text, email_content)
+        
+        return {
+            "email_id": email_id,
+            "prompt_type": prompt_type,
+            "result": result,
+            "used_custom_prompt": custom_prompt is not None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ [process_with_agent] Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Agent processing failed: {str(e)}")
 
 @router.post("/agent/chat")
 async def chat_with_agent(request: dict, db: AsyncSession = Depends(get_db)):
@@ -443,7 +495,7 @@ async def api_info():
                 "PUT /emails/{email_id}/category",
                 "POST /emails/sync",
                 "POST /emails/load-mock",
-                "POST /emails/{email_id}/generate-reply"  # ADDED NEW ENDPOINT
+                "POST /emails/{email_id}/generate-reply"
             ],
             "prompts": [
                 "GET /prompts",
