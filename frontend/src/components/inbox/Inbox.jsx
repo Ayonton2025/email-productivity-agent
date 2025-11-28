@@ -122,23 +122,19 @@ const Inbox = () => {
 
       console.log('🚀 [Inbox] Calling generate-reply endpoint...');
       
-      // Option 1: Try the specific generate-reply endpoint first
-      try {
-        const response = await emailApi.generateReply(selectedEmail.id);
-        console.log('✅ [Inbox] Generate-reply response:', response.data);
-        
-        if (response.data && response.data.reply) {
-          setAgentResult(response.data.reply);
-          return;
-        }
-      } catch (replyError) {
-        console.log('⚠️ [Inbox] Generate-reply endpoint failed, trying agent process...', replyError.message);
+      // Use the actual database ID (UUID) for the backend call
+      const response = await emailApi.generateReply(selectedEmail.id);
+      console.log('✅ [Inbox] Generate-reply response:', response.data);
+      
+      if (response.data && response.data.reply) {
+        setAgentResult(response.data.reply);
+        return;
       }
 
-      // Option 2: Fallback to agent process endpoint
+      // Fallback to agent process if generate-reply doesn't return expected format
       console.log('🔄 [Inbox] Trying agent process endpoint...');
       const requestData = {
-        email_id: selectedEmail.id,
+        email_id: selectedEmail.id, // Using real database ID
         prompt_type: 'reply_draft',
         email_content: selectedEmail.body,
         email_subject: selectedEmail.subject,
@@ -327,14 +323,14 @@ const Inbox = () => {
               <div className="divide-y divide-gray-200">
                 {sortedEmails.map((email) => (
                   <div
-                    key={email.id}
+                    key={email.id} // ✅ Using real database ID as key
                     onClick={() => {
-                      setSelectedEmail(email);
+                      setSelectedEmail(email); // ✅ Using the actual email object with real ID
                       setAgentResult(null);
                       setAgentError(null);
                     }}
                     className={`p-4 cursor-pointer transition-colors ${
-                      selectedEmail?.id === email.id
+                      selectedEmail?.id === email.id // ✅ Comparing real database IDs
                         ? 'bg-indigo-50 border-l-4 border-indigo-500'
                         : 'hover:bg-gray-50'
                     } ${!email.is_read ? 'bg-blue-50' : ''}`}
@@ -496,7 +492,7 @@ const Inbox = () => {
                   </button>
                   
                   <button 
-                    onClick={() => archiveEmail(selectedEmail.id)}
+                    onClick={() => archiveEmail(selectedEmail.id)} // ✅ Using real database ID
                     disabled={!selectedEmail}
                     className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
                       selectedEmail?.is_archived 
@@ -509,7 +505,7 @@ const Inbox = () => {
                   </button>
                   
                   <button 
-                    onClick={() => toggleStarEmail(selectedEmail.id)}
+                    onClick={() => toggleStarEmail(selectedEmail.id)} // ✅ Using real database ID
                     disabled={!selectedEmail}
                     className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
                       selectedEmail?.is_starred 
