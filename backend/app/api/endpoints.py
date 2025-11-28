@@ -125,6 +125,20 @@ async def test_prompt(
         print(f"Error testing prompt: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to test prompt: {str(e)}")
 
+@router.get("/system-prompts")
+async def get_system_prompts(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all system prompts"""
+    try:
+        prompt_service = PromptService(db)
+        system_prompts = await prompt_service.get_all_system_prompts()
+        return system_prompts
+    except Exception as e:
+        print(f"Error getting system prompts: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get system prompts")
+
 @router.post("/emails/sync")
 async def sync_user_emails(
     current_user: User = Depends(get_current_user),
@@ -304,13 +318,13 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
     prompt_service = PromptService(db)
     return await prompt_service.get_all_prompts()
 
-@router.post("/prompts", response_model=Dict[str, Any])
+@router.post("/prompts", response_model=Dict[str, Any]])
 async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new prompt"""
     prompt_service = PromptService(db)
     return await prompt_service.create_prompt(prompt_data)
 
-@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
+@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any]])
 async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
@@ -338,7 +352,7 @@ async def get_drafts(
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any])
+@router.post("/drafts", response_model=Dict[str, Any]])
 async def create_draft(
     draft_data: dict,
     current_user: User = Depends(get_current_user),
@@ -348,7 +362,7 @@ async def create_draft(
     email_service = EmailService(db)
     return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any]])
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
@@ -432,7 +446,7 @@ async def process_with_agent(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Process email with agent"""
+    """Process email with agent using system prompts"""
     try:
         email_service = EmailService(db)
         llm_service = LLMService()
@@ -441,7 +455,8 @@ async def process_with_agent(
         email_id = request.get('email_id')
         prompt_type = request.get('prompt_type')
         custom_prompt = request.get('custom_prompt')
-        
+        system_prompt_name = request.get('system_prompt')  # Get system prompt name from request
+
         # ✅ Ensure user has emails first
         await email_service.ensure_user_has_emails(current_user.id)
         
@@ -449,7 +464,17 @@ async def process_with_agent(
         email = await email_service.get_email_by_id(email_id, current_user.id)
         if not email:
             raise HTTPException(status_code=404, detail="Email not found")
-        
+
+        # Get system prompt if specified
+        system_prompt_text = None
+        if system_prompt_name:
+            system_prompt = await prompt_service.get_system_prompt(system_prompt_name)
+            if system_prompt:
+                system_prompt_text = system_prompt.template
+                print(f"🔧 [agent/process] Using system prompt: {system_prompt_name}")
+            else:
+                print(f"⚠️ [agent/process] System prompt not found: {system_prompt_name}")
+
         if custom_prompt:
             prompt_text = custom_prompt
         else:
@@ -459,11 +484,14 @@ async def process_with_agent(
             prompt_text = prompt.template
         
         email_content = f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
-        result = await llm_service.process_prompt(prompt_text, email_content)
+        
+        # Pass system prompt to LLM service
+        result = await llm_service.process_prompt(prompt_text, email_content, system_prompt_text)
         
         return {
             "email_id": email_id,
             "prompt_type": prompt_type,
+            "system_prompt_used": system_prompt_name if system_prompt_name else None,
             "result": result,
             "used_custom_prompt": custom_prompt is not None
         }
@@ -519,7 +547,7 @@ async def health_check():
 async def api_info():
     return {
         "name": "Email Productivity Agent API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "description": "AI-powered email management system",
         "endpoints": {
             "auth": [
@@ -541,10 +569,11 @@ async def api_info():
             "prompts": [
                 "GET /prompts",
                 "GET /prompts/my",
+                "GET /system-prompts",
                 "POST /prompts",
                 "PUT /prompts/{prompt_id}",
                 "DELETE /prompts/{prompt_id}",
-                "POST /prompts/{prompt_id}/test"  # ADDED THIS
+                "POST /prompts/{prompt_id}/test"
             ],
             "agent": [
                 "POST /agent/process",
