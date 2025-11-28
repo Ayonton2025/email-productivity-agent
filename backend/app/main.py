@@ -87,7 +87,7 @@ async def create_default_admin():
 debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
 port = int(os.environ.get("PORT", 8000))
 
-# Allowed origins
+# Allowed origins - UPDATED with Vercel frontend and wildcards
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -95,9 +95,27 @@ allowed_origins = [
     "http://127.0.0.1:3001",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    # Vercel frontend URLs
     "https://email-productivity-agent.vercel.app",
-    "https://sunny-recreation-production.up.railway.app"
+    "https://*.vercel.app",
+    # Railway URLs (your current backend)
+    "https://sunny-recreation-production.up.railway.app",
+    "https://*.railway.app",
+    # Render URLs (if you use it in future)
+    "https://*.render.com",
+    # Netlify URLs
+    "https://*.netlify.app",
 ]
+
+# Also get allowed origins from environment variable for flexibility
+env_allowed_origins = os.environ.get("ALLOWED_ORIGINS", "")
+if env_allowed_origins:
+    additional_origins = [origin.strip() for origin in env_allowed_origins.split(",") if origin.strip()]
+    allowed_origins.extend(additional_origins)
+    print(f"🔧 Additional origins from environment: {additional_origins}")
+
+# Remove duplicates
+allowed_origins = list(set(allowed_origins))
 
 print(f"🔧 Starting on port: {port}")
 print(f"🔧 Debug mode: {debug_mode}")
@@ -113,15 +131,25 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# CORS configuration
+# ENHANCED CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=[
+        "*",
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-CSRF-Token",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Origin"
+    ],
     expose_headers=["*"],
-    max_age=600
+    max_age=3600  # Increase max age for better performance
 )
 
 # Register API endpoints with error handling
@@ -165,7 +193,36 @@ async def test_auth():
         }
     }
 
-# ... rest of your endpoints (health, info, etc.) remain the same
+@app.get("/api/v1/test-cors")
+async def test_cors():
+    """Test CORS configuration"""
+    return {
+        "message": "CORS test endpoint",
+        "cors_configured": True,
+        "allowed_origins_count": len(allowed_origins),
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+# Health check endpoint with detailed CORS info
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "email-productivity-agent",
+        "version": "2.0.0",
+        "timestamp": datetime.utcnow().isoformat(),
+        "routers": {
+            "auth": auth_router is not None,
+            "api": api_router is not None,
+            "email_accounts": user_email_router is not None
+        },
+        "cors": {
+            "enabled": True,
+            "allowed_origins_count": len(allowed_origins),
+            "frontend_urls": [origin for origin in allowed_origins if "vercel" in origin or "localhost" in origin]
+        }
+    }
+
 @app.get("/")
 async def root():
     return {
@@ -180,24 +237,71 @@ async def root():
             "api": api_router is not None,
             "email_accounts": user_email_router is not None
         },
+        "cors_info": {
+            "allowed_origins_count": len(allowed_origins),
+            "frontend_domains": [origin for origin in allowed_origins if "vercel" in origin or "localhost" in origin]
+        },
         "timestamp": datetime.utcnow().isoformat()
     }
 
-@app.get("/health")
-async def health_check():
+@app.get("/info")
+async def info():
+    """Detailed system information"""
     return {
-        "status": "healthy",
-        "service": "email-productivity-agent",
+        "service": "Email Productivity Agent Backend",
         "version": "2.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
-        "routers": {
-            "auth": auth_router is not None,
+        "environment": "development" if debug_mode else "production",
+        "debug_mode": debug_mode,
+        "port": port,
+        "cors": {
+            "allowed_origins": allowed_origins,
+            "allow_credentials": True,
+            "allow_methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+        },
+        "endpoints_available": {
+            "authentication": auth_router is not None,
             "api": api_router is not None,
             "email_accounts": user_email_router is not None
-        }
+        },
+        "timestamp": datetime.utcnow().isoformat()
     }
 
-# ... rest of your existing endpoints
+# Add OPTIONS handler for preflight requests
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    """Handle CORS preflight requests"""
+    return JSONResponse(
+        status_code=200,
+        content={"message": "CORS preflight successful"},
+        headers={
+            "Access-Control-Allow-Origin": ", ".join(allowed_origins),
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+# Add middleware to ensure CORS headers are always set
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    
+    # Add CORS headers to all responses
+    origin = request.headers.get("origin")
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        # If origin not in allowed list, you can choose to allow specific ones or none
+        # For development, you might want to be more permissive
+        if debug_mode:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+    
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, X-Requested-With"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Max-Age"] = "3600"
+    
+    return response
 
 if __name__ == "__main__":
     print("=" * 70)
@@ -206,6 +310,8 @@ if __name__ == "__main__":
     print(f"Host: 0.0.0.0")
     print(f"Port: {port}")
     print(f"Environment: {'development' if debug_mode else 'production'}")
+    print(f"CORS: {len(allowed_origins)} allowed origins")
+    print(f"Frontend URLs: {[origin for origin in allowed_origins if 'vercel' in origin or 'localhost' in origin]}")
     print("=" * 70)
 
     uvicorn.run(
