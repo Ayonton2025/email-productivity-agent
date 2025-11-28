@@ -33,8 +33,9 @@ async def get_user_inbox(
         
         email_service = EmailService(db)
         
-        # ✅ CRITICAL: Ensure user has emails (load mock data if empty)
-        await email_service.ensure_user_has_emails(current_user.id)
+        # ✅ REMOVED: Don't automatically ensure user has emails here
+        # This was causing duplicates on every API call
+        # await email_service.ensure_user_has_emails(current_user.id)
         
         # Use user-specific method to get only current user's emails
         emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
@@ -268,6 +269,35 @@ async def load_mock_emails(
         print(f"❌ [load_mock_emails] Error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to load mock emails: {str(e)}")
 
+# NEW ENDPOINT: Load mock emails only if user has very few emails
+@router.post("/emails/load-mock-if-empty")
+async def load_mock_emails_if_empty(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Load mock emails only if user has very few emails"""
+    try:
+        email_service = EmailService(db)
+        existing_emails = await email_service.get_user_emails(current_user.id)
+        
+        if existing_emails and len(existing_emails) >= 5:
+            return {
+                "message": f"User already has {len(existing_emails)} emails, no mock data loaded",
+                "user_id": current_user.id,
+                "existing_emails_count": len(existing_emails)
+            }
+        else:
+            emails = await email_service.load_mock_emails(current_user.id)
+            return {
+                "message": f"Loaded {len(emails)} mock emails",
+                "emails": emails,
+                "user_id": current_user.id
+            }
+            
+    except Exception as e:
+        print(f"❌ [load_mock_emails_if_empty] Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load mock emails: {str(e)}")
+
 @router.get("/emails/{email_id}", response_model=Dict[str, Any])
 async def get_email(
     email_id: str, 
@@ -278,8 +308,8 @@ async def get_email(
     try:
         email_service = EmailService(db)
         
-        # ✅ CRITICAL: Ensure user has emails first
-        await email_service.ensure_user_has_emails(current_user.id)
+        # ✅ REMOVED: Don't automatically ensure user has emails here
+        # await email_service.ensure_user_has_emails(current_user.id)
         
         # Get email with user_id filter for security
         email = await email_service.get_email_by_id(email_id, current_user.id)
@@ -394,8 +424,8 @@ async def generate_email_reply(
         
         email_service = EmailService(db)
         
-        # ✅ CRITICAL: Ensure user has emails first
-        await email_service.ensure_user_has_emails(current_user.id)
+        # ✅ REMOVED: Don't automatically ensure user has emails here
+        # await email_service.ensure_user_has_emails(current_user.id)
         
         # Get the email with user_id filter for security
         email = await email_service.get_email_by_id(email_id, current_user.id)
@@ -457,8 +487,8 @@ async def process_with_agent(
         custom_prompt = request.get('custom_prompt')
         system_prompt_name = request.get('system_prompt')  # Get system prompt name from request
 
-        # ✅ Ensure user has emails first
-        await email_service.ensure_user_has_emails(current_user.id)
+        # ✅ REMOVED: Don't automatically ensure user has emails here
+        # await email_service.ensure_user_has_emails(current_user.id)
         
         # Get email with user_id filter for security
         email = await email_service.get_email_by_id(email_id, current_user.id)
@@ -564,6 +594,7 @@ async def api_info():
                 "PUT /emails/{email_id}/category",
                 "POST /emails/sync",
                 "POST /emails/load-mock",
+                "POST /emails/load-mock-if-empty",
                 "POST /emails/{email_id}/generate-reply"
             ],
             "prompts": [
