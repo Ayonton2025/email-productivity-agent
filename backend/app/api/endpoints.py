@@ -94,6 +94,8 @@ async def test_prompt(
     """Test a prompt with sample input"""
     try:
         from sqlalchemy import select
+        from app.models.database import PromptTemplate
+        
         prompt_service = PromptService(db)
         llm_service = LLMService()
         
@@ -307,7 +309,7 @@ async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
     prompt_service = PromptService(db)
     return await prompt_service.create_prompt(prompt_data)
 
-@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any]])
+@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
 async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
