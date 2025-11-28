@@ -16,7 +16,8 @@ export const PromptProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+  // Use the same API_BASE_URL as your other contexts
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://sunny-recreation-production.up.railway.app/api/v1';
 
   // Fetch prompts from API
   const fetchPrompts = async () => {
