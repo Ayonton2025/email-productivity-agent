@@ -84,6 +84,7 @@ async def get_user_prompts(
         print(f"Error getting user prompts: {e}")
         raise HTTPException(status_code=500, detail="Failed to get prompts")
 
+# ADD THIS MISSING ENDPOINT
 @router.post("/prompts/{prompt_id}/test")
 async def test_prompt(
     prompt_id: str,
@@ -543,7 +544,7 @@ async def api_info():
                 "POST /prompts",
                 "PUT /prompts/{prompt_id}",
                 "DELETE /prompts/{prompt_id}",
-                "POST /prompts/{prompt_id}/test"
+                "POST /prompts/{prompt_id}/test"  # ADDED THIS
             ],
             "agent": [
                 "POST /agent/process",
