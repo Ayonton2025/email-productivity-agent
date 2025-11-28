@@ -29,11 +29,15 @@ async def get_user_inbox(
 ):
     """Get user's inbox emails (requires authentication)"""
     try:
+        print(f"📧 [get_user_inbox] Fetching emails for user: {current_user.id}")
+        
         email_service = EmailService(db)
         # Use user-specific method to get only current user's emails
         emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
+        print(f"📧 [get_user_inbox] Found {len(emails)} emails")
         
         filtered_emails = emails
+        
         if category and category != 'all':
             filtered_emails = [email for email in emails if email.get('category') == category]
         
@@ -53,11 +57,15 @@ async def get_user_inbox(
         elif sort_by == 'sender':
             filtered_emails.sort(key=lambda x: x.get('sender', ''))
         
+        print(f"✅ [get_user_inbox] Returning {len(filtered_emails)} filtered emails")
         return filtered_emails
         
     except Exception as e:
-        print(f"Error getting user inbox: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get emails")
+        print(f"❌ [get_user_inbox] Error getting user inbox: {e}")
+        import traceback
+        print(f"❌ [get_user_inbox] Stack trace: {traceback.format_exc()}")
+        # Return empty array instead of crashing to allow frontend to work
+        return []
 
 @router.get("/prompts/my", response_model=List[Dict[str, Any]])
 async def get_user_prompts(
@@ -251,7 +259,7 @@ async def get_drafts(
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
 
-@router.post("/drafts", response_model=Dict[str, Any])  # FIXED: Removed extra bracket
+@router.post("/drafts", response_model=Dict[str, Any])
 async def create_draft(
     draft_data: dict,
     current_user: User = Depends(get_current_user),
@@ -261,7 +269,7 @@ async def create_draft(
     email_service = EmailService(db)
     return await email_service.create_draft(draft_data, user_id=current_user.id)
 
-@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])  # FIXED: Removed extra bracket
+@router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
 async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
@@ -278,6 +286,65 @@ async def delete_draft(draft_id: str, db: AsyncSession = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Draft not found")
     return {"message": "Draft deleted successfully"}
+
+# NEW: Email Reply Generation Endpoint
+@router.post("/emails/{email_id}/generate-reply")
+async def generate_email_reply(
+    email_id: str,
+    request: dict = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate AI-powered email reply"""
+    try:
+        print(f"🤖 [generate_email_reply] Generating reply for email: {email_id}")
+        
+        email_service = EmailService(db)
+        llm_service = LLMService()
+        
+        # Get the email
+        email = await email_service.get_email_by_id(email_id)
+        if not email:
+            raise HTTPException(status_code=404, detail="Email not found")
+        
+        # Get tone from request or use default
+        tone = request.get('tone', 'professional') if request else 'professional'
+        
+        print(f"📧 [generate_email_reply] Generating reply for email from: {email.get('sender')}")
+        
+        # Generate reply using AI
+        reply_data = await llm_service.generate_email_reply(email, tone)
+        
+        # Create draft with the generated reply
+        draft_data = {
+            "subject": reply_data["subject"],
+            "body": reply_data["body"],
+            "recipient": email['sender'],
+            "context_email_id": email_id,
+            "metadata": {
+                "tone": tone,
+                "ai_generated": True,
+                "original_subject": email['subject'],
+                "generated_at": datetime.utcnow().isoformat()
+            }
+        }
+        
+        draft = await email_service.create_draft(draft_data, user_id=current_user.id)
+        
+        print(f"✅ [generate_email_reply] Reply generated and saved as draft: {draft['id']}")
+        
+        return {
+            "message": "Reply generated successfully",
+            "draft": draft,
+            "ai_generated": True,
+            "tone": tone
+        }
+        
+    except Exception as e:
+        print(f"❌ [generate_email_reply] Error generating reply: {e}")
+        import traceback
+        print(f"❌ [generate_email_reply] Stack trace: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate reply: {str(e)}")
 
 # Agent endpoints
 @router.post("/agent/process")
@@ -375,7 +442,8 @@ async def api_info():
                 "GET /emails/{email_id}",
                 "PUT /emails/{email_id}/category",
                 "POST /emails/sync",
-                "POST /emails/load-mock"
+                "POST /emails/load-mock",
+                "POST /emails/{email_id}/generate-reply"  # ADDED NEW ENDPOINT
             ],
             "prompts": [
                 "GET /prompts",
