@@ -1,34 +1,49 @@
 import json
 import asyncio
 from typing import Dict, Any, List, Optional
-import openai
-from anthropic import Anthropic
+from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 from app.core.config import settings
 
 class LLMService:
     def __init__(self):
         self.provider = settings.LLM_PROVIDER
+        self.model = settings.LLM_MODEL or "gpt-3.5-turbo"
         self.openai_client = None
         self.anthropic_client = None
         
-        if self.provider == "openai" and settings.OPENAI_API_KEY:
-            self.openai_client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-            print(f"✅ [LLMService] OpenAI client initialized with provider: {self.provider}")
-        elif self.provider == "anthropic" and settings.ANTHROPIC_API_KEY:
-            self.anthropic_client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-            print(f"✅ [LLMService] Anthropic client initialized with provider: {self.provider}")
-        else:
-            print(f"⚠️ [LLMService] No LLM provider configured - using mock mode. Provider: {self.provider}")
+        print(f"🔧 [LLMService] Initializing with provider: {self.provider}, model: {self.model}")
+        
+        try:
+            if self.provider == "openai" and settings.OPENAI_API_KEY:
+                # FIXED: Simple initialization without proxies issue
+                self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+                print(f"✅ [LLMService] OpenAI client initialized successfully")
+            elif self.provider == "anthropic" and settings.ANTHROPIC_API_KEY:
+                self.anthropic_client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+                print(f"✅ [LLMService] Anthropic client initialized successfully")
+            else:
+                print(f"⚠️ [LLMService] No valid LLM provider configured - using mock mode")
+                print(f"🔍 [LLMService] Provider: {self.provider}, OpenAI Key: {bool(settings.OPENAI_API_KEY)}, Anthropic Key: {bool(settings.ANTHROPIC_API_KEY)}")
+        except Exception as e:
+            print(f"❌ [LLMService] Failed to initialize LLM client: {e}")
+            import traceback
+            print(f"❌ [LLMService] Stack trace: {traceback.format_exc()}")
     
     async def process_prompt(self, prompt: str, email_content: str, system_message: str = None) -> str:
         """Process a prompt with email content using the configured LLM"""
+        print(f"🤖 [LLMService] Processing prompt: {prompt[:100]}...")
         
-        if self.provider == "openai" and self.openai_client:
-            return await self._process_with_openai(prompt, email_content, system_message)
-        elif self.provider == "anthropic" and self.anthropic_client:
-            return await self._process_with_anthropic(prompt, email_content, system_message)
-        else:
-            return await self._mock_processing(prompt, email_content)
+        try:
+            if self.provider == "openai" and self.openai_client:
+                return await self._process_with_openai(prompt, email_content, system_message)
+            elif self.provider == "anthropic" and self.anthropic_client:
+                return await self._process_with_anthropic(prompt, email_content, system_message)
+            else:
+                return await self._mock_processing(prompt, email_content)
+        except Exception as e:
+            print(f"❌ [LLMService] Error in process_prompt: {e}")
+            return f"Error processing request: {str(e)}"
     
     async def _process_with_openai(self, prompt: str, email_content: str, system_message: str) -> str:
         """Process using OpenAI GPT"""
@@ -37,88 +52,137 @@ class LLMService:
             if system_message:
                 messages.append({"role": "system", "content": system_message})
             
-            messages.extend([
-                {"role": "user", "content": f"Email Content:\n{email_content}\n\nInstruction: {prompt}"}
-            ])
+            user_content = f"Email Content:\n{email_content}\n\nInstruction: {prompt}"
+            messages.append({"role": "user", "content": user_content})
+            
+            print(f"🚀 [LLMService] Calling OpenAI with model: {self.model}")
             
             response = await self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=self.model,
                 messages=messages,
                 max_tokens=1000,
                 temperature=0.3
             )
             
-            return response.choices[0].message.content
+            result = response.choices[0].message.content
+            print(f"✅ [LLMService] OpenAI response received: {len(result)} characters")
+            return result
+            
         except Exception as e:
-            print(f"OpenAI API error: {e}")
-            return f"Error processing with OpenAI: {str(e)}"
+            print(f"❌ [LLMService] OpenAI API error: {e}")
+            return f"OpenAI API error: {str(e)}"
     
     async def _process_with_anthropic(self, prompt: str, email_content: str, system_message: str) -> str:
         """Process using Anthropic Claude"""
         try:
-            full_prompt = f"{system_message}\n\nEmail Content:\n{email_content}\n\nInstruction: {prompt}"
+            system_msg = system_message or "You are a helpful AI assistant."
+            user_content = f"Email Content:\n{email_content}\n\nInstruction: {prompt}"
             
-            response = self.anthropic_client.messages.create(
+            print(f"🚀 [LLMService] Calling Anthropic Claude")
+            
+            response = await self.anthropic_client.messages.create(
                 model="claude-3-sonnet-20240229",
                 max_tokens=1000,
                 temperature=0.3,
-                messages=[{"role": "user", "content": full_prompt}]
+                system=system_msg,
+                messages=[{"role": "user", "content": user_content}]
             )
             
-            return response.content[0].text
+            result = response.content[0].text
+            print(f"✅ [LLMService] Anthropic response received: {len(result)} characters")
+            return result
+            
         except Exception as e:
-            print(f"Anthropic API error: {e}")
-            return f"Error processing with Anthropic: {str(e)}"
+            print(f"❌ [LLMService] Anthropic API error: {e}")
+            return f"Anthropic API error: {str(e)}"
     
     async def _mock_processing(self, prompt: str, email_content: str) -> str:
         """Mock processing for testing without API keys"""
-        await asyncio.sleep(1)  # Simulate processing time
+        print("🔄 [LLMService] Using mock processing")
+        await asyncio.sleep(0.5)  # Simulate processing time
         
+        # Enhanced mock responses
         if "categoriz" in prompt.lower():
             categories = ["Important", "Newsletter", "Spam", "To-Do"]
-            return categories[len(email_content) % 4]
+            category = categories[len(email_content) % 4]
+            return json.dumps({"category": category, "confidence": 0.85})
+            
         elif "action" in prompt.lower() or "task" in prompt.lower():
             return json.dumps({
-                "task": "Review the document mentioned in email",
-                "deadline": "2024-01-15",
-                "priority": "medium"
+                "tasks": [
+                    {
+                        "task": "Review the document mentioned in email", 
+                        "deadline": "2024-01-15", 
+                        "priority": "medium"
+                    }
+                ]
             })
+            
         elif "reply" in prompt.lower() or "draft" in prompt.lower():
-            return "Thank you for your email. I will review this and get back to you shortly."
+            sender_name = "there"
+            if "From:" in email_content:
+                # Extract sender name from email content
+                for line in email_content.split('\n'):
+                    if 'From:' in line:
+                        sender_part = line.split('From:')[-1].strip()
+                        if '@' in sender_part:
+                            sender_name = sender_part.split('@')[0]
+                        break
+            
+            return f"""Dear {sender_name},
+
+Thank you for your email. I have received your message and will review it carefully.
+
+I appreciate you taking the time to reach out and will get back to you with a proper response soon.
+
+Best regards,
+[Your Name]
+
+---
+[AI-generated draft - Mock response]"""
+            
         elif "summar" in prompt.lower():
-            return f"Summary: This email discusses {email_content[:50]}..."
+            summary_length = min(150, len(email_content))
+            return f"This email appears to be about: {email_content[:summary_length]}... The main points discussed require your attention and follow-up."
+            
         else:
-            return f"Processed: {prompt[:50]}..."
+            return f"I've processed your request regarding: {prompt[:80]}. Based on the email content, here's my analysis: This appears to be a message that requires your review and potential action."
     
     async def chat_with_agent(self, messages: List[Dict[str, str]], email_context: str = None) -> str:
         """Chat interface for the email agent"""
+        print(f"💬 [LLMService] Chat with agent, messages: {len(messages)}")
+        
         system_message = "You are an intelligent email productivity assistant. Help users manage their inbox, summarize emails, extract tasks, and draft responses."
         
         if email_context:
             system_message += f"\n\nCurrent email context:\n{email_context}"
         
         if self.provider == "openai" and self.openai_client:
-            chat_messages = [{"role": "system", "content": system_message}]
-            chat_messages.extend(messages)
-            
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=chat_messages,
-                max_tokens=500,
-                temperature=0.7
-            )
-            
-            return response.choices[0].message.content
+            try:
+                chat_messages = [{"role": "system", "content": system_message}]
+                chat_messages.extend(messages)
+                
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=chat_messages,
+                    max_tokens=500,
+                    temperature=0.7
+                )
+                
+                return response.choices[0].message.content
+            except Exception as e:
+                print(f"❌ [LLMService] Chat OpenAI error: {e}")
+                return f"I encountered an error while processing your chat request: {str(e)}"
         else:
-            # Mock response
+            # Enhanced mock response
             user_message = messages[-1]["content"] if messages else ""
-            return f"I understand you're asking about: {user_message[:100]}. As your email assistant, I can help you categorize, summarize, and manage your emails effectively."
+            return f"I understand you're asking about: '{user_message[:100]}...'. As your email assistant, I can help you with:\n\n• Email categorization\n• Action item extraction\n• Reply drafting\n• Email summarization\n\nHow can I assist you with your email management today?"
 
     async def generate_email_reply(self, original_email: Dict[str, Any], tone: str = "professional") -> Dict[str, Any]:
         """Generate email reply using AI"""
+        print(f"📧 [LLMService] Generating email reply with tone: {tone}")
+        
         try:
-            print(f"🤖 [LLM] Generating email reply with tone: {tone}")
-            
             prompt = f"""
             Generate a {tone} email reply to this email:
             
@@ -132,47 +196,102 @@ class LLMService:
             """
             
             if self.provider == "openai" and self.openai_client:
-                print("🤖 [LLM] Using OpenAI for reply generation")
+                print("🚀 [LLMService] Using OpenAI for reply generation")
                 
-                response = await self.openai_client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a professional email assistant. Generate appropriate email replies in JSON format with 'subject' and 'body' fields."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500,
-                    response_format={"type": "json_object"}
-                )
-                
-                reply_data = json.loads(response.choices[0].message.content)
-                print(f"✅ [LLM] Reply generated successfully")
-                
-                return {
-                    "subject": reply_data.get("subject", f"Re: {original_email.get('subject', '')}"),
-                    "body": reply_data.get("body", ""),
-                    "tone": tone,
-                    "ai_generated": True
-                }
-            else:
-                print("⚠️ [LLM] Using mock reply generation")
-                # Fallback mock response
-                return {
-                    "subject": f"Re: {original_email.get('subject', '')}",
-                    "body": f"Thank you for your email regarding '{original_email.get('subject', 'this matter')}'. I've received your message and will review it carefully. I appreciate you reaching out and will get back to you with a proper response soon.\n\nBest regards,\n[Your Name]",
-                    "tone": tone,
-                    "ai_generated": True
-                }
+                try:
+                    response = await self.openai_client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {"role": "system", "content": "You are a professional email assistant. Generate appropriate email replies in JSON format with 'subject' and 'body' fields."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7,
+                        max_tokens=500,
+                        response_format={"type": "json_object"}
+                    )
+                    
+                    reply_data = json.loads(response.choices[0].message.content)
+                    print(f"✅ [LLMService] Reply generated successfully")
+                    
+                    return {
+                        "subject": reply_data.get("subject", f"Re: {original_email.get('subject', '')}"),
+                        "body": reply_data.get("body", ""),
+                        "tone": tone,
+                        "ai_generated": True
+                    }
+                    
+                except Exception as e:
+                    print(f"❌ [LLMService] OpenAI reply generation error: {e}")
+                    # Fall through to mock response
+                    
+            # Fallback to mock response (for both OpenAI errors and no provider)
+            print("⚠️ [LLMService] Using mock reply generation")
+            sender_name = original_email.get('sender', 'there').split('@')[0]
+            
+            return {
+                "subject": f"Re: {original_email.get('subject', 'Your email')}",
+                "body": f"""Dear {sender_name},
+
+Thank you for your email regarding "{original_email.get('subject', 'this matter')}".
+
+I've received your message and will review it carefully. I appreciate you reaching out and will get back to you with a proper response soon.
+
+If this matter requires immediate attention, please don't hesitate to contact me directly.
+
+Best regards,
+[Your Name]
+
+---
+[AI-generated draft - System initializing]""",
+                "tone": tone,
+                "ai_generated": True
+            }
                 
         except Exception as e:
-            print(f"❌ [LLM] Error generating email reply: {e}")
+            print(f"❌ [LLMService] Error generating email reply: {e}")
             import traceback
-            print(f"❌ [LLM] Stack trace: {traceback.format_exc()}")
-            # Return a safe fallback
+            print(f"❌ [LLMService] Stack trace: {traceback.format_exc()}")
+            
+            # Safe fallback response
             return {
                 "subject": f"Re: {original_email.get('subject', '')}",
-                "body": "Thank you for your email. I've received your message and will review it shortly. I appreciate you reaching out.\n\nBest regards,\n[Your Name]",
+                "body": f"""Thank you for your email. I've received your message regarding "{original_email.get('subject', 'this matter')}" and will review it shortly.
+
+I appreciate you reaching out and will respond properly once I've had a chance to consider your message.
+
+Best regards,
+[Your Name]""",
                 "tone": tone,
                 "ai_generated": True,
                 "error": str(e)
             }
+
+    async def health_check(self) -> Dict[str, Any]:
+        """Check LLM service health"""
+        status = "healthy"
+        details = []
+        
+        if self.provider == "openai" and self.openai_client:
+            try:
+                # Simple test call to check API connectivity
+                test_response = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": "Say 'OK'"}],
+                    max_tokens=5
+                )
+                details.append("OpenAI API: Connected")
+            except Exception as e:
+                status = "unhealthy"
+                details.append(f"OpenAI API: Error - {str(e)}")
+        elif self.provider == "anthropic" and self.anthropic_client:
+            details.append("Anthropic API: Configured")
+        else:
+            status = "degraded"
+            details.append("Using mock mode - No LLM provider configured")
+        
+        return {
+            "status": status,
+            "provider": self.provider,
+            "model": self.model,
+            "details": details
+        }
