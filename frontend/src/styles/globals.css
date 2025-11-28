@@ -128,12 +128,13 @@ button {
   border-radius: 0.5rem;
 }
 
-/* FIXED: Column layout improvements */
+/* FIXED: Column layout improvements - CRITICAL CHANGES */
 .column-container {
   display: flex;
   gap: 1.5rem;
   align-items: flex-start; /* Align columns to top */
   min-height: auto; /* Remove fixed min-height */
+  height: auto; /* Let content determine height */
 }
 
 .column {
@@ -143,15 +144,17 @@ button {
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: fit-content; /* Height based on content */
-  min-height: auto; /* Remove minimum height */
-  max-height: none; /* Remove maximum height constraint */
+  height: auto !important; /* CRITICAL: Let content determine height */
+  min-height: auto !important; /* Remove minimum height */
+  max-height: none !important; /* Remove maximum height constraint */
+  flex-shrink: 0; /* Prevent columns from shrinking */
 }
 
 .column-content {
   flex: 1;
   overflow: visible; /* Allow content to determine height */
   min-height: auto;
+  height: auto; /* Let content determine height */
 }
 
 /* Specific fixes for common layouts */
@@ -160,6 +163,7 @@ button {
   gap: 1.5rem;
   align-items: flex-start;
   min-height: auto;
+  height: auto; /* Let content determine height */
 }
 
 .prompt-list-column {
@@ -167,9 +171,10 @@ button {
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  height: fit-content;
-  max-height: calc(100vh - 2rem); /* But allow scrolling if content is too tall */
-  overflow-y: auto; /* Only scroll when necessary */
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  max-height: none !important; /* Remove max-height constraint */
+  overflow: visible; /* Allow content to flow naturally */
 }
 
 .prompt-editor-column {
@@ -177,8 +182,9 @@ button {
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  height: fit-content;
-  min-height: auto;
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  overflow: visible; /* Allow content to flow naturally */
 }
 
 .email-inbox-layout {
@@ -186,6 +192,7 @@ button {
   gap: 1.5rem;
   align-items: flex-start;
   min-height: auto;
+  height: auto; /* Let content determine height */
 }
 
 .email-list-column {
@@ -193,9 +200,10 @@ button {
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  height: fit-content;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  max-height: none !important; /* Remove max-height constraint */
+  overflow: visible; /* Allow content to flow naturally */
 }
 
 .email-detail-column {
@@ -203,16 +211,29 @@ button {
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  height: fit-content;
-  min-height: auto;
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  overflow: visible; /* Allow content to flow naturally */
 }
 
-/* Fix for scrollable areas */
+/* NEW: Content-based height classes */
+.content-based-height {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+.self-stretch {
+  align-self: stretch;
+}
+
+/* Fix for scrollable areas - only apply when needed */
 .scrollable-content {
   overflow-y: auto;
   flex: 1;
 }
 
+/* Only use fixed height when explicitly needed */
 .fixed-height-scroll {
   max-height: calc(100vh - 200px);
   overflow-y: auto;
@@ -220,12 +241,14 @@ button {
 
 /* Content-based height utilities */
 .content-height {
-  height: fit-content !important;
+  height: auto !important;
   min-height: auto !important;
+  max-height: none !important;
 }
 
 .auto-height {
   height: auto !important;
+  min-height: auto !important;
 }
 
 /* Remove unnecessary white space at bottom of columns */
@@ -238,11 +261,27 @@ button {
 .flex-column {
   display: flex;
   flex-direction: column;
-  height: fit-content;
+  height: auto; /* Let content determine height */
 }
 
 .flex-column > * {
   flex-shrink: 0; /* Prevent items from shrinking */
+}
+
+/* NEW: Flex container that allows natural heights */
+.flex-natural {
+  display: flex;
+  align-items: flex-start;
+  height: auto;
+  min-height: auto;
+}
+
+/* NEW: Individual column styling for independent heights */
+.column-independent {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  align-self: flex-start;
 }
 
 /* Dark mode support */
@@ -306,19 +345,22 @@ button {
   .email-inbox-layout {
     flex-direction: column;
     gap: 1rem;
+    height: auto;
   }
 
   .prompt-list-column,
   .email-list-column {
     flex: none;
     width: 100%;
-    max-height: 400px; /* Reasonable max height on mobile */
+    height: auto !important; /* Content-based height on mobile */
+    max-height: none !important; /* Remove max height constraint */
   }
 
   .prompt-editor-column,
   .email-detail-column {
     flex: none;
     width: 100%;
+    height: auto !important; /* Content-based height on mobile */
   }
 }
 
@@ -329,7 +371,7 @@ button {
   border: 1px solid var(--gray-200);
   padding: var(--space-6);
   color: #1f2937; /* Ensure dark text on white background */
-  height: fit-content; /* Content-based height */
+  height: auto; /* Content-based height */
 }
 
 .connection-header {
@@ -360,7 +402,7 @@ button {
   padding: var(--space-4);
   transition: all 0.2s;
   color: #1f2937; /* Ensure dark text */
-  height: fit-content; /* Content-based height */
+  height: auto; /* Content-based height */
 }
 
 .provider-card:hover {
@@ -427,7 +469,7 @@ button {
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   color: #1f2937; /* Ensure dark text */
-  height: fit-content; /* Content-based height */
+  height: auto; /* Content-based height */
 }
 
 .connection-info h4 {
@@ -466,12 +508,20 @@ button {
   height: fit-content !important;
 }
 
+.h-auto {
+  height: auto !important;
+}
+
 .min-h-0 {
   min-height: 0 !important;
 }
 
 .min-h-auto {
   min-height: auto !important;
+}
+
+.max-h-none {
+  max-height: none !important;
 }
 
 .flex-initial {
@@ -490,4 +540,24 @@ button {
 
 .no-extra-margin {
   margin: 0 !important;
+}
+
+/* NEW: Critical fixes for independent column heights */
+.column-fix {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.layout-fix {
+  height: auto !important;
+  min-height: auto !important;
+  align-items: flex-start;
+}
+
+/* Ensure background gradient shows through */
+.background-visible {
+  background: transparent !important;
 }
