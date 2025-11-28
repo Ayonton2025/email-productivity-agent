@@ -23,9 +23,9 @@ class EmailService:
         try:
             print(f"📧 [EmailService] Loading mock emails for user: {user_id}")
             
-            # First, check if user already has emails to avoid duplicates
+            # First, check if user already has emails to avoid duplicates - MORE ROBUST CHECK
             existing_emails = await self.get_user_emails(user_id)
-            if existing_emails and len(existing_emails) > 0:
+            if existing_emails and len(existing_emails) >= 5:  # Changed from 0 to 5 to be more conservative
                 print(f"📧 [EmailService] User already has {len(existing_emails)} emails, skipping mock load")
                 return existing_emails
             
@@ -61,8 +61,20 @@ class EmailService:
             
             print(f"📧 [EmailService] Found {len(mock_emails)} mock emails to load")
             
+            # CRITICAL FIX: Check for duplicates by email content before loading
             processed_emails = []
+            duplicate_count = 0
+            
             for email_data in mock_emails:
+                # Check if similar email already exists for this user
+                existing_similar = await self._check_duplicate_email(user_id, email_data)
+                
+                if existing_similar:
+                    duplicate_count += 1
+                    print(f"⚠️ [EmailService] Skipping duplicate email: {email_data.get('subject', 'No Subject')}")
+                    processed_emails.append(existing_similar)
+                    continue
+
                 # Ensure each email has required fields for processing
                 if 'category' not in email_data:
                     email_data['category'] = 'Uncategorized'
@@ -82,6 +94,9 @@ class EmailService:
                 processed_email = await self.process_single_email(email_data, user_id)
                 processed_emails.append(processed_email)
             
+            if duplicate_count > 0:
+                print(f"⚠️ [EmailService] Skipped {duplicate_count} duplicate emails")
+
             print(f"✅ [EmailService] Successfully loaded {len(processed_emails)} mock emails")
             return processed_emails
             
@@ -90,6 +105,42 @@ class EmailService:
             import traceback
             print(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
             return []
+
+    async def _check_duplicate_email(self, user_id: str, email_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Check if a similar email already exists for this user"""
+        try:
+            from sqlalchemy import select
+            
+            # Check by subject and sender (most reliable way to detect duplicates)
+            result = await self.db.execute(
+                select(Email).where(
+                    Email.user_id == user_id,
+                    Email.subject == email_data.get('subject', ''),
+                    Email.sender == email_data.get('sender', '')
+                )
+            )
+            existing_email = result.scalar_one_or_none()
+            
+            if existing_email:
+                return existing_email.to_dict()
+            
+            # Also check by ID if present
+            if 'id' in email_data:
+                result = await self.db.execute(
+                    select(Email).where(
+                        Email.user_id == user_id,
+                        Email.id == email_data['id']
+                    )
+                )
+                existing_email = result.scalar_one_or_none()
+                if existing_email:
+                    return existing_email.to_dict()
+                    
+            return None
+            
+        except Exception as e:
+            print(f"⚠️ [EmailService] Error checking duplicate: {e}")
+            return None
     
     def _get_hardcoded_mock_emails(self) -> List[Dict[str, Any]]:
         """Fallback hardcoded mock emails if JSON file is missing - ALL 20 EMAILS"""
@@ -718,14 +769,16 @@ User
     async def ensure_user_has_emails(self, user_id: str) -> bool:
         """Ensure a user has emails (load mock data if empty)"""
         try:
+            # More conservative check - only load if user has very few emails
             existing_emails = await self.get_user_emails(user_id)
-            if not existing_emails or len(existing_emails) == 0:
-                print(f"📧 [EmailService] No emails found for user {user_id}, loading mock data")
-                await self.load_mock_emails(user_id)
+            if existing_emails and len(existing_emails) >= 5:  # Changed from 0 to 5
+                print(f"📧 [EmailService] User {user_id} already has {len(existing_emails)} emails, skipping mock load")
                 return True
             else:
-                print(f"📧 [EmailService] User {user_id} already has {len(existing_emails)} emails")
+                print(f"📧 [EmailService] User {user_id} has only {len(existing_emails)} emails, loading mock data")
+                await self.load_mock_emails(user_id)
                 return True
+                
         except Exception as e:
             print(f"❌ [EmailService] Error ensuring user has emails: {e}")
             return False
