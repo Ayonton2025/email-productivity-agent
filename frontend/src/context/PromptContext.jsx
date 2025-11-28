@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
+import { useAuth } from './AuthContext';
 
 const PromptContext = createContext();
 
@@ -12,102 +13,158 @@ export const usePrompt = () => {
 
 export const PromptProvider = ({ children }) => {
   const [prompts, setPrompts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
 
-  // Mock prompts data
-  const mockPrompts = [
-    {
-      id: 'prompt-1',
-      name: 'Smart Categorization',
-      description: 'Intelligently categorize emails into relevant categories',
-      template: 'Categorize this email into one of: Important, Newsletter, Spam, To-Do...',
-      category: 'categorization',
-      version: 1,
-      is_active: true,
-      is_system: true,
-      parameters: {},
-      examples: [],
-      created_at: '2024-01-08T10:00:00Z',
-      updated_at: '2024-01-08T10:00:00Z'
-    },
-    {
-      id: 'prompt-2',
-      name: 'Action Item Extractor',
-      description: 'Extract specific tasks and action items from emails',
-      template: 'Extract all actionable tasks from this email. For each item, identify the task, deadline, and priority...',
-      category: 'action_extraction',
-      version: 1,
-      is_active: true,
-      is_system: true,
-      parameters: {},
-      examples: [],
-      created_at: '2024-01-08T10:00:00Z',
-      updated_at: '2024-01-08T10:00:00Z'
-    },
-    {
-      id: 'prompt-3',
-      name: 'Professional Reply Drafter',
-      description: 'Draft professional email responses',
-      template: 'Draft a professional email reply based on the original email. Be polite and address all points...',
-      category: 'reply_draft',
-      version: 1,
-      is_active: true,
-      is_system: true,
-      parameters: {},
-      examples: [],
-      created_at: '2024-01-08T10:00:00Z',
-      updated_at: '2024-01-08T10:00:00Z'
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+
+  // Fetch prompts from API
+  const fetchPrompts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/prompts/my`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch prompts');
+      }
+
+      const data = await response.json();
+      setPrompts(data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching prompts:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const createPrompt = async (promptData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newPrompt = {
-          ...promptData,
-          id: `prompt-${Date.now()}`,
-          version: 1,
-          is_system: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setPrompts(prev => [newPrompt, ...prev]);
-        resolve(newPrompt);
-      }, 500);
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/prompts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(promptData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create prompt');
+      }
+
+      const newPrompt = await response.json();
+      setPrompts(prev => [newPrompt, ...prev]);
+      return newPrompt;
+    } catch (error) {
+      console.error('Error creating prompt:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updatePrompt = async (promptId, promptData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setPrompts(prev => prev.map(prompt => 
-          prompt.id === promptId 
-            ? { ...prompt, ...promptData, version: prompt.version + 1, updated_at: new Date().toISOString() }
-            : prompt
-        ));
-        resolve();
-      }, 500);
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/prompts/${promptId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(promptData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update prompt');
+      }
+
+      const updatedPrompt = await response.json();
+      setPrompts(prev => prev.map(prompt => 
+        prompt.id === promptId ? updatedPrompt : prompt
+      ));
+      return updatedPrompt;
+    } catch (error) {
+      console.error('Error updating prompt:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deletePrompt = async (promptId) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setPrompts(prev => prev.filter(prompt => prompt.id !== promptId));
-        resolve();
-      }, 500);
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/prompts/${promptId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete prompt');
+      }
+
+      setPrompts(prev => prev.filter(prompt => prompt.id !== promptId));
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting prompt:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Initialize with mock data
+  const testPrompt = async (promptId, emailContent) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/prompts/${promptId}/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email_content: emailContent })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to test prompt');
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error testing prompt:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize with API data
   React.useEffect(() => {
-    setPrompts(mockPrompts);
-  }, []);
+    if (token) {
+      fetchPrompts();
+    }
+  }, [token]);
 
   const value = {
     prompts,
+    loading,
     createPrompt,
     updatePrompt,
-    deletePrompt
+    deletePrompt,
+    testPrompt,
+    refreshPrompts: fetchPrompts
   };
 
   return (
