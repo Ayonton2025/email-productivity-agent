@@ -295,6 +295,19 @@ export const emailApi = {
       throw error;
     }
   },
+
+
+  generateReply: async (emailId) => {
+    console.log('📧 [Email] Generating reply for email:', emailId);
+    try {
+      const response = await apiClient.post(`/emails/${emailId}/generate-reply`);
+      console.log('✅ [Email] Reply generated successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ [Email] Generate reply failed:', error.response?.data);
+      throw error;
+    }
+  },
   
   getEmail: async (emailId) => {
     console.log('📧 [Email] Fetching email:', emailId);
