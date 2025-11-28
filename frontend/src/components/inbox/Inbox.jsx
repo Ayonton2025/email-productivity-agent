@@ -310,9 +310,10 @@ const Inbox = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6 min-h-0">
-        <div className={`${selectedEmail ? 'w-1/2' : 'w-full'} flex flex-col`}>
-          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200">
+      {/* UPDATED: Added layout-fix and column-fix classes for independent column heights */}
+      <div className="flex-1 flex gap-6 min-h-0 email-inbox-layout layout-fix">
+        <div className={`${selectedEmail ? 'w-1/2' : 'w-full'} flex flex-column column-fix`}>
+          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200 email-list-column column-fix">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
@@ -387,8 +388,8 @@ const Inbox = () => {
         </div>
 
         {selectedEmail && (
-          <div className="w-1/2 flex flex-col">
-            <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
+          <div className="w-1/2 flex flex-column column-fix">
+            <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-column email-detail-column column-fix">
               <div className="border-b border-gray-200 p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-bold text-gray-900">
