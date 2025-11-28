@@ -11,7 +11,7 @@ from app.core.config import settings
 # Security configuration - use the SAME secret key from config
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # Increased to 24 hours for development stability
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
