@@ -79,6 +79,40 @@ class PromptService:
         )
         return result.scalar_one_or_none()
     
+    async def get_system_prompt(self, name: str = None) -> Optional[PromptTemplate]:
+        """Get system prompt by name or the default system prompt"""
+        try:
+            query = select(PromptTemplate).where(
+                (PromptTemplate.is_system == True) &
+                (PromptTemplate.is_active == True)
+            )
+            
+            if name:
+                query = query.where(PromptTemplate.name == name)
+            else:
+                # Get the first active system prompt as default
+                query = query.order_by(PromptTemplate.created_at.asc())
+            
+            result = await self.db.execute(query)
+            return result.scalar_one_or_none()
+        except Exception as e:
+            print(f"Error getting system prompt: {e}")
+            return None
+    
+    async def get_all_system_prompts(self) -> List[Dict[str, Any]]:
+        """Get all system prompts"""
+        try:
+            result = await self.db.execute(
+                select(PromptTemplate).where(
+                    PromptTemplate.is_system == True
+                ).order_by(PromptTemplate.name)
+            )
+            prompts = result.scalars().all()
+            return [prompt.to_dict() for prompt in prompts]
+        except Exception as e:
+            print(f"Error getting system prompts: {e}")
+            return []
+    
     async def create_prompt(self, prompt_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new prompt template"""
         # Handle metadata field
