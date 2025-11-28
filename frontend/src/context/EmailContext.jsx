@@ -301,4 +301,199 @@ export const EmailProvider = ({ children }) => {
       body: 'Great news! Phase 2 of Project Phoenix has been completed ahead of schedule. Key achievements: - All milestones met - Budget maintained - Client satisfaction high. Phase 3 planning begins next week.',
       timestamp: '2024-01-08T13:45:00Z',
       category: 'Important',
-      priority
+      priority: 'medium',
+      is_read: false,
+      is_archived: false,
+      is_starred: false,
+      action_items: [
+        { task: 'Review Phase 2 completion report', deadline: '2024-01-15', priority: 'low' }
+      ],
+      summary: 'Project Phoenix Phase 2 completed successfully ahead of schedule',
+      metadata: { type: 'project_update', status: 'completed' }
+    },
+    {
+      id: '18',
+      sender: 'team.lead@development.com',
+      subject: 'Code Review: New Feature Implementation',
+      body: 'The new authentication feature is ready for code review. Key changes: - OAuth2 implementation - Security enhancements - API updates. Please review the pull request by EOD tomorrow.',
+      timestamp: '2024-01-07T14:50:00Z',
+      category: 'To-Do',
+      priority: 'medium',
+      is_read: false,
+      is_archived: false,
+      is_starred: false,
+      action_items: [
+        { task: 'Review authentication feature code', deadline: '2024-01-09', priority: 'medium' }
+      ],
+      summary: 'Code review request for new authentication feature',
+      metadata: { type: 'project_update', technical: true }
+    },
+    {
+      id: '19',
+      sender: 'client@importantclient.com',
+      subject: 'Feedback: Website Redesign',
+      body: 'We have reviewed the website redesign mockups. Overall positive feedback with minor revisions requested: - Color scheme adjustments - Navigation improvements - Mobile optimization enhancements. Please schedule a call to discuss.',
+      timestamp: '2024-01-06T12:25:00Z',
+      category: 'Important',
+      priority: 'medium',
+      is_read: true,
+      is_archived: false,
+      is_starred: false,
+      action_items: [
+        { task: 'Schedule call to discuss client feedback', deadline: '2024-01-10', priority: 'medium' }
+      ],
+      summary: 'Client feedback on website redesign with revision requests',
+      metadata: { type: 'project_update', client_feedback: true }
+    },
+    {
+      id: '20',
+      sender: 'qa@company.com',
+      subject: 'URGENT: Production Bug Found',
+      body: 'Critical bug found in production: Users unable to complete checkout process. Error occurs during payment processing. Immediate fix required. Development team alerted. Status: Investigating root cause.',
+      timestamp: '2024-01-05T08:05:00Z',
+      category: 'Important',
+      priority: 'high',
+      is_read: false,
+      is_archived: false,
+      is_starred: false,
+      action_items: [
+        { task: 'Fix production checkout bug', deadline: '2024-01-05', priority: 'high' }
+      ],
+      summary: 'Critical production bug affecting user checkout process',
+      metadata: { type: 'project_update', critical: true }
+    }
+  ];
+
+  const loadEmails = async () => {
+    if (!isAuthenticated) {
+      setEmails(mockEmails);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await emailApi.getUserInbox(filters);
+      setEmails(response.data);
+    } catch (err) {
+      console.error('Error loading emails:', err);
+      setError('Failed to load emails');
+      setEmails(mockEmails);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMockEmails = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setEmails(mockEmails);
+    } catch (err) {
+      setError('Failed to load mock emails');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncUserEmails = async () => {
+    if (!isAuthenticated) {
+      setError('Please sign in to sync emails');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await emailApi.syncUserEmails();
+      await loadEmails();
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to sync emails';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateEmailCategory = async (emailId, category) => {
+    try {
+      if (isAuthenticated) {
+        await emailApi.updateEmailCategory(emailId, category);
+      }
+      
+      setEmails(prev => prev.map(email =>
+        email.id === emailId ? { ...email, category } : email
+      ));
+      
+      if (selectedEmail && selectedEmail.id === emailId) {
+        setSelectedEmail(prev => ({ ...prev, category }));
+      }
+    } catch (err) {
+      console.error('Error updating email category:', err);
+      throw err;
+    }
+  };
+
+  const filteredEmails = emails.filter(email => {
+    const matchesCategory = filters.category === 'all' || email.category === filters.category;
+    const matchesSearch = 
+      email.subject.toLowerCase().includes(filters.search.toLowerCase()) ||
+      email.sender.toLowerCase().includes(filters.search.toLowerCase()) ||
+      email.body.toLowerCase().includes(filters.search.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
+
+  const sortedEmails = [...filteredEmails].sort((a, b) => {
+    if (filters.sortBy === 'newest') {
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    } else if (filters.sortBy === 'oldest') {
+      return new Date(a.timestamp) - new Date(b.timestamp);
+    } else if (filters.sortBy === 'sender') {
+      return a.sender.localeCompare(b.sender);
+    }
+    return 0;
+  });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadEmails();
+    } else {
+      setEmails(mockEmails);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadEmails();
+    }
+  }, [filters]);
+
+  const value = {
+    emails: sortedEmails,
+    selectedEmail,
+    setSelectedEmail,
+    loading,
+    error,
+    filters,
+    setFilters,
+    loadEmails,
+    loadMockEmails,
+    syncUserEmails,
+    updateEmailCategory,
+    isUsingRealEmails: isAuthenticated,
+    userEmail: user?.email,
+    setEmails, // ✅ ADDED: Export setEmails for archive/star functionality
+  };
+
+  return (
+    <EmailContext.Provider value={value}>
+      {children}
+    </EmailContext.Provider>
+  );
+};
+
+export { EmailContext };
