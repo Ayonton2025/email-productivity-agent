@@ -13,6 +13,7 @@ export const usePrompt = () => {
 
 export const PromptProvider = ({ children }) => {
   const [prompts, setPrompts] = useState([]);
+  const [systemPrompts, setSystemPrompts] = useState([]);
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
 
@@ -42,6 +43,29 @@ export const PromptProvider = ({ children }) => {
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch system prompts from API
+  const fetchSystemPrompts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/system-prompts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch system prompts');
+      }
+
+      const data = await response.json();
+      setSystemPrompts(data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching system prompts:', error);
+      throw error;
     }
   };
 
@@ -155,17 +179,20 @@ export const PromptProvider = ({ children }) => {
   React.useEffect(() => {
     if (token) {
       fetchPrompts();
+      fetchSystemPrompts();
     }
   }, [token]);
 
   const value = {
     prompts,
+    systemPrompts,
     loading,
     createPrompt,
     updatePrompt,
     deletePrompt,
     testPrompt,
-    refreshPrompts: fetchPrompts
+    refreshPrompts: fetchPrompts,
+    refreshSystemPrompts: fetchSystemPrompts
   };
 
   return (
