@@ -80,90 +80,153 @@ class EmailService:
     
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""
-        result = await self.db.execute(
-            select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset)
-        )
-        emails = result.scalars().all()
-        return [email.to_dict() for email in emails]
+        try:
+            result = await self.db.execute(
+                select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset)
+            )
+            emails = result.scalars().all()
+            return [email.to_dict() for email in emails]
+        except Exception as e:
+            print(f"❌ [EmailService] Error in get_all_emails: {e}")
+            return []
     
     async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get emails for a specific user"""
-        result = await self.db.execute(
-            select(Email).where(Email.user_id == user_id)
-            .order_by(Email.timestamp.desc())
-            .limit(limit).offset(offset)
-        )
-        emails = result.scalars().all()
-        return [email.to_dict() for email in emails]
+        try:
+            print(f"📧 [EmailService] Getting emails for user: {user_id}")
+            
+            result = await self.db.execute(
+                select(Email).where(Email.user_id == user_id)
+                .order_by(Email.timestamp.desc())
+                .limit(limit).offset(offset)
+            )
+            emails = result.scalars().all()
+            
+            print(f"📧 [EmailService] Found {len(emails)} emails in database")
+            
+            # Convert to dict and handle any serialization issues
+            email_list = []
+            for email in emails:
+                try:
+                    email_dict = email.to_dict()
+                    email_list.append(email_dict)
+                except Exception as e:
+                    print(f"⚠️ [EmailService] Error converting email {email.id}: {e}")
+                    # Create a basic dict as fallback
+                    email_list.append({
+                        "id": getattr(email, 'id', 'unknown'),
+                        "user_id": getattr(email, 'user_id', 'unknown'),
+                        "sender": getattr(email, 'sender', 'Unknown'),
+                        "subject": getattr(email, 'subject', 'No Subject'),
+                        "body": getattr(email, 'body', ''),
+                        "timestamp": getattr(email, 'timestamp', '').isoformat() if getattr(email, 'timestamp', None) else '',
+                        "category": getattr(email, 'category', 'Uncategorized')
+                    })
+            
+            return email_list
+            
+        except Exception as e:
+            print(f"❌ [EmailService] Error in get_user_emails: {e}")
+            import traceback
+            print(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
+            return []
     
     async def get_email_by_id(self, email_id: str) -> Optional[Dict[str, Any]]:
         """Get a specific email by ID"""
-        result = await self.db.execute(select(Email).where(Email.id == email_id))
-        email = result.scalar_one_or_none()
-        return email.to_dict() if email else None
+        try:
+            result = await self.db.execute(select(Email).where(Email.id == email_id))
+            email = result.scalar_one_or_none()
+            return email.to_dict() if email else None
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting email by ID: {e}")
+            return None
     
     async def update_email_category(self, email_id: str, category: str) -> bool:
         """Update email category"""
-        result = await self.db.execute(select(Email).where(Email.id == email_id))
-        email = result.scalar_one_or_none()
-        
-        if email:
-            email.category = category
-            await self.db.commit()
-            return True
-        return False
+        try:
+            result = await self.db.execute(select(Email).where(Email.id == email_id))
+            email = result.scalar_one_or_none()
+            
+            if email:
+                email.category = category
+                await self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ [EmailService] Error updating email category: {e}")
+            return False
     
     async def create_draft(self, draft_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Create a new email draft"""
-        # CHANGED: Handle metadata field conversion
-        draft_metadata = draft_data.pop('metadata', {})
-        draft_data['draft_metadata'] = draft_metadata
-        
-        # Add user_id if provided
-        if user_id:
-            draft_data['user_id'] = user_id
+        try:
+            # CHANGED: Handle metadata field conversion
+            draft_metadata = draft_data.pop('metadata', {})
+            draft_data['draft_metadata'] = draft_metadata
             
-        draft = EmailDraft(**draft_data)
-        self.db.add(draft)
-        await self.db.commit()
-        await self.db.refresh(draft)
-        return draft.to_dict()
-    
-    async def get_drafts(self) -> List[Dict[str, Any]]:
-        """Get all email drafts"""
-        result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
-        drafts = result.scalars().all()
-        return [draft.to_dict() for draft in drafts]
-    
-    async def get_user_drafts(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get drafts for a specific user"""
-        result = await self.db.execute(
-            select(EmailDraft).where(EmailDraft.user_id == user_id)
-            .order_by(EmailDraft.updated_at.desc())
-        )
-        drafts = result.scalars().all()
-        return [draft.to_dict() for draft in drafts]
-    
-    async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Update a draft"""
-        result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
-        draft = result.scalar_one_or_none()
-        
-        if draft:
-            for key, value in draft_data.items():
-                setattr(draft, key, value)
+            # Add user_id if provided
+            if user_id:
+                draft_data['user_id'] = user_id
+                
+            draft = EmailDraft(**draft_data)
+            self.db.add(draft)
             await self.db.commit()
             await self.db.refresh(draft)
             return draft.to_dict()
-        return None
+        except Exception as e:
+            print(f"❌ [EmailService] Error creating draft: {e}")
+            raise
+    
+    async def get_drafts(self) -> List[Dict[str, Any]]:
+        """Get all email drafts"""
+        try:
+            result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
+            drafts = result.scalars().all()
+            return [draft.to_dict() for draft in drafts]
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting drafts: {e}")
+            return []
+    
+    async def get_user_drafts(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get drafts for a specific user"""
+        try:
+            result = await self.db.execute(
+                select(EmailDraft).where(EmailDraft.user_id == user_id)
+                .order_by(EmailDraft.updated_at.desc())
+            )
+            drafts = result.scalars().all()
+            return [draft.to_dict() for draft in drafts]
+        except Exception as e:
+            print(f"❌ [EmailService] Error getting user drafts: {e}")
+            return []
+    
+    async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Update a draft"""
+        try:
+            result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+            draft = result.scalar_one_or_none()
+            
+            if draft:
+                for key, value in draft_data.items():
+                    setattr(draft, key, value)
+                await self.db.commit()
+                await self.db.refresh(draft)
+                return draft.to_dict()
+            return None
+        except Exception as e:
+            print(f"❌ [EmailService] Error updating draft: {e}")
+            return None
     
     async def delete_draft(self, draft_id: str) -> bool:
         """Delete a draft"""
-        result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
-        draft = result.scalar_one_or_none()
-        
-        if draft:
-            await self.db.delete(draft)
-            await self.db.commit()
-            return True
-        return False
+        try:
+            result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
+            draft = result.scalar_one_or_none()
+            
+            if draft:
+                await self.db.delete(draft)
+                await self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ [EmailService] Error deleting draft: {e}")
+            return False
