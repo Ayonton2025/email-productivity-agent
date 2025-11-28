@@ -184,9 +184,10 @@ const PromptManager = () => {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+      {/* UPDATED: Added layout-fix and column-fix classes for independent column heights */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 prompt-manager-layout layout-fix">
         {/* Prompts List */}
-        <div className={`${selectedPrompt ? 'lg:w-2/5' : 'w-full'} flex flex-col`}>
+        <div className={`${selectedPrompt ? 'lg:w-2/5' : 'w-full'} flex flex-column column-fix`}>
           <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
@@ -214,7 +215,7 @@ const PromptManager = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200">
+          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200 prompt-list-column column-fix">
             {loading ? (
               <div className="text-center py-12 text-gray-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
@@ -348,8 +349,8 @@ const PromptManager = () => {
 
         {/* Prompt Editor */}
         {selectedPrompt && (
-          <div className="lg:w-3/5 flex flex-col">
-            <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
+          <div className="lg:w-3/5 flex flex-column column-fix">
+            <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-column prompt-editor-column column-fix">
               {/* Editor Header */}
               <div className="border-b border-gray-200 p-4">
                 <div className="flex justify-between items-start mb-4">
@@ -446,9 +447,9 @@ const PromptManager = () => {
               </div>
 
               {/* Editor Content */}
-              <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 flex flex-column min-h-0">
                 {isEditing ? (
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-column">
                     <div className="p-4 border-b border-gray-200">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Description
@@ -475,7 +476,7 @@ const PromptManager = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-column">
                     <div className="p-4 border-b border-gray-200">
                       <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
                       <p className="text-gray-900">
