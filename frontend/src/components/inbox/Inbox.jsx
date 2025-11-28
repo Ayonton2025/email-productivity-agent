@@ -17,15 +17,23 @@ import {
   Loader
 } from 'lucide-react';
 import { EmailContext } from '../../context/EmailContext';
-import { emailApi, agentApi } from '../../services/api'; // ✅ Import both APIs
+import { emailApi, agentApi } from '../../services/api';
 
 const Inbox = () => {
-  const { emails, loadEmails, loading, selectedEmail, setSelectedEmail, loadMockEmails } = useContext(EmailContext);
+  const { 
+    emails, 
+    loadEmails, 
+    loading, 
+    selectedEmail, 
+    setSelectedEmail, 
+    loadMockEmails,
+    setEmails 
+  } = useContext(EmailContext);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   
-  // Enhanced state for AI reply generation
   const [processing, setProcessing] = useState(false);
   const [agentResult, setAgentResult] = useState(null);
   const [agentError, setAgentError] = useState(null);
@@ -34,7 +42,62 @@ const Inbox = () => {
     loadMockEmails();
   }, []);
 
-  // ✅ CORRECTED: Use the proper endpoint from your API docs
+  // Archive/Unarchive email function
+  const archiveEmail = async (emailId) => {
+    if (!emailId) return;
+    
+    try {
+      console.log('📦 [Inbox] Toggling archive for email:', emailId);
+      
+      // Update local state first for immediate UI feedback
+      setEmails(prev => prev.map(email => 
+        email.id === emailId 
+          ? { ...email, is_archived: !email.is_archived }
+          : email
+      ));
+      
+      if (selectedEmail && selectedEmail.id === emailId) {
+        setSelectedEmail(prev => ({ 
+          ...prev, 
+          is_archived: !prev.is_archived 
+        }));
+      }
+      
+      console.log('✅ [Inbox] Email archive toggled successfully');
+      
+    } catch (err) {
+      console.error('❌ [Inbox] Failed to toggle archive:', err);
+    }
+  };
+
+  // Star/Unstar email function
+  const toggleStarEmail = async (emailId) => {
+    if (!emailId) return;
+    
+    try {
+      console.log('⭐ [Inbox] Toggling star for email:', emailId);
+      
+      // Update local state first for immediate UI feedback
+      setEmails(prev => prev.map(email => 
+        email.id === emailId 
+          ? { ...email, is_starred: !email.is_starred }
+          : email
+      ));
+      
+      if (selectedEmail && selectedEmail.id === emailId) {
+        setSelectedEmail(prev => ({ 
+          ...prev, 
+          is_starred: !prev.is_starred 
+        }));
+      }
+      
+      console.log('✅ [Inbox] Email star toggled successfully');
+      
+    } catch (err) {
+      console.error('❌ [Inbox] Failed to toggle star:', err);
+    }
+  };
+
   const generateReply = async () => {
     if (!selectedEmail) return;
     
@@ -49,7 +112,6 @@ const Inbox = () => {
     });
     
     try {
-      // Test backend connection first
       console.log('🔍 [Inbox] Testing backend connection...');
       const healthCheck = await fetch('https://sunny-recreation-production.up.railway.app/health');
       console.log('✅ [Inbox] Backend health check:', healthCheck.status);
@@ -58,7 +120,6 @@ const Inbox = () => {
         throw new Error(`Backend health check failed: ${healthCheck.status}`);
       }
 
-      // ✅ CORRECT ENDPOINT: Use the generate-reply endpoint
       console.log('🚀 [Inbox] Calling generate-reply endpoint...');
       
       // Option 1: Try the specific generate-reply endpoint first
@@ -68,7 +129,7 @@ const Inbox = () => {
         
         if (response.data && response.data.reply) {
           setAgentResult(response.data.reply);
-          return; // Success, exit early
+          return;
         }
       } catch (replyError) {
         console.log('⚠️ [Inbox] Generate-reply endpoint failed, trying agent process...', replyError.message);
@@ -87,7 +148,6 @@ const Inbox = () => {
       const agentResponse = await agentApi.processEmail(requestData);
       console.log('✅ [Inbox] Agent process response:', agentResponse.data);
       
-      // Handle different response formats
       if (agentResponse.data) {
         if (agentResponse.data.result) {
           setAgentResult(agentResponse.data.result);
@@ -121,7 +181,6 @@ const Inbox = () => {
       
       setAgentError(errorMessage);
       
-      // Enhanced fallback reply
       const mockReply = `Dear ${selectedEmail.sender.split('@')[0]},\n\nThank you for your email regarding "${selectedEmail.subject}".\n\nI have received your message and will review it carefully. Please expect a response within 24-48 hours.\n\nIf this matter requires immediate attention, please don't hesitate to contact me directly.\n\nBest regards,\nUser\n\n---\n[This is a demo reply - Backend connection needs configuration]`;
       setAgentResult(mockReply);
     } finally {
@@ -208,9 +267,7 @@ const Inbox = () => {
         </div>
       </div>
 
-      {/* Stats and Filters */}
       <div className="mb-6 space-y-4">
-        {/* Category Quick Stats */}
         <div className="flex space-x-4 overflow-x-auto pb-2">
           {categories.map(category => (
             <button
@@ -230,7 +287,6 @@ const Inbox = () => {
           ))}
         </div>
 
-        {/* Search and Sort */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -254,9 +310,7 @@ const Inbox = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex gap-6 min-h-0">
-        {/* Email List */}
         <div className={`${selectedEmail ? 'w-1/2' : 'w-full'} flex flex-col`}>
           <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200">
             {loading ? (
@@ -276,7 +330,7 @@ const Inbox = () => {
                     key={email.id}
                     onClick={() => {
                       setSelectedEmail(email);
-                      setAgentResult(null); // Clear previous results when selecting new email
+                      setAgentResult(null);
                       setAgentError(null);
                     }}
                     className={`p-4 cursor-pointer transition-colors ${
@@ -331,11 +385,9 @@ const Inbox = () => {
           </div>
         </div>
 
-        {/* Email Detail */}
         {selectedEmail && (
           <div className="w-1/2 flex flex-col">
             <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
-              {/* Email Header */}
               <div className="border-b border-gray-200 p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-bold text-gray-900">
@@ -368,7 +420,6 @@ const Inbox = () => {
                 </div>
               </div>
 
-              {/* Email Body */}
               <div className="flex-1 p-6 overflow-y-auto">
                 <div className="prose max-w-none">
                   <pre className="whitespace-pre-wrap font-sans text-gray-900">
@@ -376,7 +427,6 @@ const Inbox = () => {
                   </pre>
                 </div>
 
-                {/* Action Items */}
                 {selectedEmail.action_items && selectedEmail.action_items.length > 0 && (
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-semibold text-gray-900 mb-3">Action Items</h3>
@@ -404,7 +454,6 @@ const Inbox = () => {
                   </div>
                 )}
 
-                {/* AI Summary */}
                 {selectedEmail.summary && (
                   <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
@@ -415,7 +464,6 @@ const Inbox = () => {
                   </div>
                 )}
 
-                {/* AI Result Display */}
                 {agentResult && (
                   <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                     <h3 className="font-semibold text-green-900 mb-2">AI Reply Draft</h3>
@@ -428,7 +476,6 @@ const Inbox = () => {
                   </div>
                 )}
 
-                {/* Error Display */}
                 {agentError && !agentResult && (
                   <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
                     <h3 className="font-semibold text-red-900 mb-2">Error</h3>
@@ -437,7 +484,6 @@ const Inbox = () => {
                 )}
               </div>
 
-              {/* Email Actions */}
               <div className="border-t border-gray-200 p-4">
                 <div className="flex gap-2">
                   <button
@@ -448,11 +494,31 @@ const Inbox = () => {
                     {processing ? <Loader className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                     {processing ? 'Generating Reply...' : 'Generate AI Reply'}
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  
+                  <button 
+                    onClick={() => archiveEmail(selectedEmail.id)}
+                    disabled={!selectedEmail}
+                    className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
+                      selectedEmail?.is_archived 
+                        ? 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title={selectedEmail?.is_archived ? "Unarchive email" : "Archive email"}
+                  >
                     <Archive className="h-4 w-4" />
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Star className="h-4 w-4" />
+                  
+                  <button 
+                    onClick={() => toggleStarEmail(selectedEmail.id)}
+                    disabled={!selectedEmail}
+                    className={`px-4 py-2 border rounded-lg transition-colors flex items-center justify-center ${
+                      selectedEmail?.is_starred 
+                        ? 'bg-yellow-100 border-yellow-300 text-yellow-700 hover:bg-yellow-200' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title={selectedEmail?.is_starred ? "Unstar email" : "Star email"}
+                  >
+                    <Star className={`h-4 w-4 ${selectedEmail?.is_starred ? 'fill-current' : ''}`} />
                   </button>
                 </div>
               </div>
