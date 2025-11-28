@@ -84,6 +84,44 @@ async def get_user_prompts(
         print(f"Error getting user prompts: {e}")
         raise HTTPException(status_code=500, detail="Failed to get prompts")
 
+@router.post("/prompts/{prompt_id}/test")
+async def test_prompt(
+    prompt_id: str,
+    test_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Test a prompt with sample input"""
+    try:
+        from sqlalchemy import select
+        prompt_service = PromptService(db)
+        llm_service = LLMService()
+        
+        # Get the prompt
+        result = await db.execute(select(PromptTemplate).where(PromptTemplate.id == prompt_id))
+        prompt = result.scalar_one_or_none()
+        
+        if not prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
+        
+        # Get test input
+        email_content = test_data.get('email_content', '')
+        
+        # Process the prompt with the test input
+        result = await llm_service.process_prompt(prompt.template, email_content)
+        
+        return {
+            "prompt_id": prompt_id,
+            "prompt_name": prompt.name,
+            "input": email_content,
+            "output": result,
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error testing prompt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to test prompt: {str(e)}")
+
 @router.post("/emails/sync")
 async def sync_user_emails(
     current_user: User = Depends(get_current_user),
@@ -269,7 +307,7 @@ async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
     prompt_service = PromptService(db)
     return await prompt_service.create_prompt(prompt_data)
 
-@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
+@router.put("/prompts/{prompt_id}", response_model=Dict[str, Any]])
 async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
@@ -502,7 +540,8 @@ async def api_info():
                 "GET /prompts/my",
                 "POST /prompts",
                 "PUT /prompts/{prompt_id}",
-                "DELETE /prompts/{prompt_id}"
+                "DELETE /prompts/{prompt_id}",
+                "POST /prompts/{prompt_id}/test"
             ],
             "agent": [
                 "POST /agent/process",
