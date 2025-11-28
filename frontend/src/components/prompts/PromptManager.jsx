@@ -22,9 +22,11 @@ import {
   TestTube
 } from 'lucide-react';
 import { PromptContext } from '../../context/PromptContext';
+import { useAuth } from '../../context/AuthContext';
 
 const PromptManager = () => {
-  const { prompts, createPrompt, updatePrompt, deletePrompt } = useContext(PromptContext);
+  const { prompts, createPrompt, updatePrompt, deletePrompt, testPrompt } = useContext(PromptContext);
+  const { token } = useAuth();
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +42,8 @@ const PromptManager = () => {
   const [testInput, setTestInput] = useState('');
   const [testOutput, setTestOutput] = useState('');
   const [isTesting, setIsTesting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = [
     { id: 'categorization', name: 'Categorization', icon: Filter, color: 'bg-blue-100 text-blue-800' },
@@ -57,7 +61,7 @@ const PromptManager = () => {
 
   const filteredPrompts = prompts.filter(prompt => {
     const matchesSearch = prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prompt.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         prompt.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          prompt.template.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = filterCategory === 'all' || prompt.category === filterCategory;
@@ -71,6 +75,9 @@ const PromptManager = () => {
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
       await createPrompt(newPrompt);
       setNewPrompt({
@@ -80,26 +87,38 @@ const PromptManager = () => {
         category: 'categorization',
         is_active: true
       });
+      // Close the modal
+      document.getElementById('create-prompt-modal').close();
     } catch (error) {
       console.error('Failed to create prompt:', error);
-      alert('Failed to create prompt');
+      setError('Failed to create prompt: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSavePrompt = async () => {
     if (!selectedPrompt) return;
 
+    setLoading(true);
+    setError('');
+
     try {
       await updatePrompt(selectedPrompt.id, selectedPrompt);
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update prompt:', error);
-      alert('Failed to update prompt');
+      setError('Failed to update prompt: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeletePrompt = async (promptId) => {
     if (!confirm('Are you sure you want to delete this prompt?')) return;
+
+    setLoading(true);
+    setError('');
 
     try {
       await deletePrompt(promptId);
@@ -108,7 +127,9 @@ const PromptManager = () => {
       }
     } catch (error) {
       console.error('Failed to delete prompt:', error);
-      alert('Failed to delete prompt');
+      setError('Failed to delete prompt: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,21 +137,19 @@ const PromptManager = () => {
     if (!selectedPrompt || !testInput) return;
 
     setIsTesting(true);
+    setError('');
     setTestOutput('Testing prompt...');
 
-    // Simulate API call to test the prompt
-    setTimeout(() => {
-      const mockResponses = {
-        categorization: 'Important',
-        action_extraction: '{"tasks": [{"task": "Review project report", "deadline": "2024-01-12", "priority": "high"}]}',
-        reply_draft: 'Thank you for your email. I will review this and get back to you shortly.',
-        summary: 'This email discusses project review requirements and budget considerations for Q4.',
-        analysis: '{"sentiment": "professional", "urgency": "high", "key_topics": ["project review", "budget", "timeline"]}'
-      };
-
-      setTestOutput(mockResponses[selectedPrompt.category] || 'Test completed successfully.');
+    try {
+      const result = await testPrompt(selectedPrompt.id, testInput);
+      setTestOutput(result.output || 'No output generated');
+    } catch (error) {
+      console.error('Failed to test prompt:', error);
+      setError('Failed to test prompt: ' + (error.message || 'Unknown error'));
+      setTestOutput('Error: ' + (error.message || 'Failed to test prompt'));
+    } finally {
       setIsTesting(false);
-    }, 2000);
+    }
   };
 
   const getCategoryIcon = (categoryId) => {
@@ -154,6 +173,10 @@ const PromptManager = () => {
     });
   };
 
+  // Add system prompts section
+  const systemPrompts = prompts.filter(p => p.is_system);
+  const userPrompts = prompts.filter(p => !p.is_system);
+
   return (
     <div className="h-full flex flex-col space-y-6">
       {/* Header */}
@@ -170,6 +193,13 @@ const PromptManager = () => {
           New Prompt
         </button>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         {/* Prompts List */}
@@ -210,7 +240,16 @@ const PromptManager = () => {
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {filteredPrompts.map((prompt) => {
+                {/* System Prompts Section */}
+                {systemPrompts.length > 0 && (
+                  <div className="p-3 bg-gray-50 border-b">
+                    <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      System Prompts
+                    </h3>
+                  </div>
+                )}
+                {systemPrompts.map((prompt) => {
                   const CategoryIcon = getCategoryIcon(prompt.category);
                   return (
                     <div
@@ -237,10 +276,62 @@ const PromptManager = () => {
                           {prompt.is_active && (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           )}
-                          {prompt.is_system && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs">
-                              System
-                            </span>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 text-xs">
+                            System
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                        {prompt.description || 'No description'}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full ${getCategoryColor(prompt.category)}`}>
+                          {categories.find(c => c.id === prompt.category)?.name || prompt.category}
+                        </span>
+                        <span>v{prompt.version}</span>
+                      </div>
+                      
+                      <div className="mt-2 text-xs text-gray-400 font-mono">
+                        {formatTemplatePreview(prompt.template)}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* User Prompts Section */}
+                {userPrompts.length > 0 && (
+                  <div className="p-3 bg-gray-50 border-b border-t">
+                    <h3 className="text-sm font-medium text-gray-700">Your Prompts</h3>
+                  </div>
+                )}
+                {userPrompts.map((prompt) => {
+                  const CategoryIcon = getCategoryIcon(prompt.category);
+                  return (
+                    <div
+                      key={prompt.id}
+                      onClick={() => {
+                        setSelectedPrompt(prompt);
+                        setIsEditing(false);
+                        setShowTestPanel(false);
+                      }}
+                      className={`p-4 cursor-pointer transition-colors ${
+                        selectedPrompt?.id === prompt.id
+                          ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`} />
+                          <h3 className="font-semibold text-gray-900">
+                            {prompt.name}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {prompt.is_active && (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
                           )}
                         </div>
                       </div>
@@ -267,11 +358,11 @@ const PromptManager = () => {
           </div>
         </div>
 
-        {/* Prompt Editor */}
+        {/* Prompt Editor - Keep this section the same as before but add loading states */}
         {selectedPrompt && (
           <div className="lg:w-3/5 flex flex-col">
             <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
-              {/* Editor Header */}
+              {/* Editor Header - Same as before */}
               <div className="border-b border-gray-200 p-4">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -309,7 +400,8 @@ const PromptManager = () => {
                     {!selectedPrompt.is_system && (
                       <button
                         onClick={() => handleDeletePrompt(selectedPrompt.id)}
-                        className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50"
+                        disabled={loading}
+                        className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -365,55 +457,64 @@ const PromptManager = () => {
                 </div>
               </div>
 
-              {/* Editor Content */}
-              <div className="flex-1 flex flex-col min-h-0">
-                {isEditing ? (
-                  <div className="flex-1 flex flex-col">
-                    <div className="p-4 border-b border-gray-200">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
-                      </label>
-                      <textarea
-                        value={selectedPrompt.description}
-                        onChange={(e) => setSelectedPrompt(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe what this prompt does..."
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        rows="3"
-                      />
-                    </div>
-                    
-                    <div className="flex-1 p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Prompt Template
-                      </label>
-                      <textarea
-                        value={selectedPrompt.template}
-                        onChange={(e) => setSelectedPrompt(prev => ({ ...prev, template: e.target.value }))}
-                        placeholder="Enter your prompt template here..."
-                        className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                      />
-                    </div>
+              {/* Editor Content - Same as before but add loading state */}
+              {loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                    <p className="text-gray-600">Saving...</p>
                   </div>
-                ) : (
-                  <div className="flex-1 flex flex-col">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                      <p className="text-gray-900">
-                        {selectedPrompt.description || 'No description provided.'}
-                      </p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col min-h-0">
+                  {isEditing ? (
+                    <div className="flex-1 flex flex-col">
+                      <div className="p-4 border-b border-gray-200">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea
+                          value={selectedPrompt.description}
+                          onChange={(e) => setSelectedPrompt(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Describe what this prompt does..."
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="3"
+                        />
+                      </div>
+                      
+                      <div className="flex-1 p-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Prompt Template
+                        </label>
+                        <textarea
+                          value={selectedPrompt.template}
+                          onChange={(e) => setSelectedPrompt(prev => ({ ...prev, template: e.target.value }))}
+                          placeholder="Enter your prompt template here..."
+                          className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                        />
+                      </div>
                     </div>
-                    
-                    <div className="flex-1 p-4 overflow-y-auto">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Template</h3>
-                      <pre className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
-                        {selectedPrompt.template}
-                      </pre>
+                  ) : (
+                    <div className="flex-1 flex flex-col">
+                      <div className="p-4 border-b border-gray-200">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                        <p className="text-gray-900">
+                          {selectedPrompt.description || 'No description provided.'}
+                        </p>
+                      </div>
+                      
+                      <div className="flex-1 p-4 overflow-y-auto">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Template</h3>
+                        <pre className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
+                          {selectedPrompt.template}
+                        </pre>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
-              {/* Test Panel */}
+              {/* Test Panel - Same as before */}
               {showTestPanel && (
                 <div className="border-t border-gray-200">
                   <div className="p-4">
@@ -457,7 +558,7 @@ const PromptManager = () => {
                 </div>
               )}
 
-              {/* Editor Footer */}
+              {/* Editor Footer - Add loading state */}
               <div className="border-t border-gray-200 p-4">
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-600">
@@ -474,16 +575,27 @@ const PromptManager = () => {
                       <>
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          disabled={loading}
+                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSavePrompt}
-                          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                          disabled={loading}
+                          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
                         >
-                          <Save className="h-4 w-4 mr-2" />
-                          Save Prompt
+                          {loading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Save Prompt
+                            </>
+                          )}
                         </button>
                       </>
                     ) : (
@@ -505,7 +617,7 @@ const PromptManager = () => {
         )}
       </div>
 
-      {/* Create Prompt Modal */}
+      {/* Create Prompt Modal - Add loading state */}
       <dialog id="create-prompt-modal" className="modal">
         <div className="modal-box max-w-2xl">
           <h3 className="font-bold text-lg mb-4">Create New Prompt</h3>
@@ -570,14 +682,21 @@ const PromptManager = () => {
           
           <div className="modal-action">
             <form method="dialog">
-              <button className="btn btn-ghost mr-2">Cancel</button>
+              <button className="btn btn-ghost mr-2" disabled={loading}>Cancel</button>
             </form>
             <button
               onClick={handleCreatePrompt}
-              disabled={!newPrompt.name || !newPrompt.template}
+              disabled={!newPrompt.name || !newPrompt.template || loading}
               className="btn btn-primary"
             >
-              Create Prompt
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating...
+                </>
+              ) : (
+                'Create Prompt'
+              )}
             </button>
           </div>
         </div>
