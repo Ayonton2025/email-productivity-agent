@@ -7,24 +7,29 @@ from app.core.config import settings
 
 class LLMService:
     def __init__(self):
-        self.provider = settings.LLM_PROVIDER
-        self.model = settings.LLM_MODEL or "gpt-3.5-turbo"
+        self.provider = getattr(settings, 'LLM_PROVIDER', 'openai')
+        
+        # FIXED: Safe attribute access with fallbacks
+        self.model = getattr(settings, 'LLM_MODEL', 'gpt-3.5-turbo')
         self.openai_client = None
         self.anthropic_client = None
         
         print(f"🔧 [LLMService] Initializing with provider: {self.provider}, model: {self.model}")
         
         try:
-            if self.provider == "openai" and settings.OPENAI_API_KEY:
+            openai_api_key = getattr(settings, 'OPENAI_API_KEY', None)
+            anthropic_api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
+            
+            if self.provider == "openai" and openai_api_key:
                 # FIXED: Simple initialization without proxies issue
-                self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+                self.openai_client = AsyncOpenAI(api_key=openai_api_key)
                 print(f"✅ [LLMService] OpenAI client initialized successfully")
-            elif self.provider == "anthropic" and settings.ANTHROPIC_API_KEY:
-                self.anthropic_client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+            elif self.provider == "anthropic" and anthropic_api_key:
+                self.anthropic_client = AsyncAnthropic(api_key=anthropic_api_key)
                 print(f"✅ [LLMService] Anthropic client initialized successfully")
             else:
                 print(f"⚠️ [LLMService] No valid LLM provider configured - using mock mode")
-                print(f"🔍 [LLMService] Provider: {self.provider}, OpenAI Key: {bool(settings.OPENAI_API_KEY)}, Anthropic Key: {bool(settings.ANTHROPIC_API_KEY)}")
+                print(f"🔍 [LLMService] Provider: {self.provider}, OpenAI Key: {bool(openai_api_key)}, Anthropic Key: {bool(anthropic_api_key)}")
         except Exception as e:
             print(f"❌ [LLMService] Failed to initialize LLM client: {e}")
             import traceback
