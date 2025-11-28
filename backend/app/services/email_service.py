@@ -1,3 +1,4 @@
+# backend/app/services/email_service.py
 import json
 import asyncio
 from typing import List, Dict, Any, Optional
@@ -59,13 +60,19 @@ class EmailService:
         except:
             action_items_parsed = [{"task": action_items, "deadline": None}]
         
+        # Handle timestamp with 'Z' suffix
+        raw_ts = email_data.get('timestamp', datetime.utcnow().isoformat())
+        if isinstance(raw_ts, str) and raw_ts.endswith('Z'):
+            raw_ts = raw_ts.replace('Z', '+00:00')
+        timestamp = datetime.fromisoformat(raw_ts)
+        
         # Create email record - ADD user_id field
         email = Email(
             user_id=user_id,  # CRITICAL: Add user_id to associate email with user
             sender=email_data.get('sender', ''),
             subject=email_data.get('subject', ''),
             body=email_data.get('body', ''),
-            timestamp=datetime.fromisoformat(email_data.get('timestamp', datetime.utcnow().isoformat())),
+            timestamp=timestamp,
             category=category,
             action_items=action_items_parsed,
             summary=summary,
