@@ -43,3 +43,6 @@ email-validator==2.1.0
 
 # Migrations
 alembic==1.12.1
+
+
+pytz>=2023.3
