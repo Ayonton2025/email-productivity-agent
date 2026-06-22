@@ -1,0 +1,813 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flyoutIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-flyoutIn {
+    animation: flyoutIn 0.16s ease-out;
+    transform-origin: left top;
+  }
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Loading container - properly centered */
+.loading-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white; /* Explicitly set white text for loading screen */
+}
+
+.logo-loader {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  font-size: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+.loading-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #fff, #e0e7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loading-subtext {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  color: white; /* Ensure loading text is visible */
+}
+
+.loading-features {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.feature-pill {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white; /* Ensure feature text is visible */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Main app styling – professional neutral palette */
+.app-container {
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+/* Form and input styling – strong contrast */
+input, textarea, select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* CRITICAL: Border button styling - applies globally to all border-style buttons */
+/* Refresh buttons, Edit buttons, and other border-based secondary buttons */
+button.border,
+button[class*="border-slate"],
+button[class*="border-gray"],
+button[class*="border-red"] {
+  color: #1f2937 !important; /* Darkest gray text */
+  background-color: #ffffff !important; /* Ensure white background */
+}
+
+/* On hover state for border buttons */
+button.border:hover,
+button[class*="border-slate"]:hover,
+button[class*="border-gray"]:hover {
+  background-color: #f3f4f6 !important; /* Lighter gray on hover */
+  color: #1f2937 !important;
+}
+
+/* Red border buttons (delete/danger) */
+button[class*="border-red"] {
+  color: #dc2626 !important; /* Red text */
+}
+
+button[class*="border-red"]:hover {
+  background-color: #fef2f2 !important; /* Light red background */
+  color: #991b1b !important; /* Darker red on hover */
+}
+
+/* Ensure buttons and interactive elements have proper contrast */
+button {
+  color: inherit; /* Inherit color from parent */
+}
+
+/* Global button styling for default/secondary buttons */
+button:not([class*="bg-"]):not([class*="text-white"]):not([class*="text-indigo"]):not([class*="text-red"]):not([class*="text-green"]):not([class*="text-blue"]),
+.flex-1 button:not([class*="bg-"]):not([class*="text-white"]):not([class*="text-indigo"]):not([class*="text-red"]):not([class*="text-green"]):not([class*="text-blue"]) {
+  /* Handles border-only buttons like Refresh, Edit buttons */
+  color: #374151 !important; /* Dark gray text */
+}
+
+/* Buttons with border-slate classes - ensure text is visible */
+button[class*="border-slate"],
+button[class*="border-gray"] {
+  color: #374151 !important; /* Dark gray text for border buttons */
+}
+
+/* Handle button text inside flex containers */
+button.flex-1,
+button.flex {
+  color: #374151 !important;
+}
+
+/* Specific button style patterns for maximum compatibility */
+button:not(.text-white):not([class*="bg-indigo"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-orange"]):not([class*="bg-blue"]),
+button.hover\:bg-slate-50 {
+  color: #1f2937 !important; /* Darkest gray for maximum contrast */
+}
+
+/* Card and container styling */
+.card, .container, .panel {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+/* FIXED: Column layout improvements - CRITICAL CHANGES */
+.column-container {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start; /* Align columns to top */
+  min-height: auto; /* Remove fixed min-height */
+  height: auto; /* Let content determine height */
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: auto !important; /* CRITICAL: Let content determine height */
+  min-height: auto !important; /* Remove minimum height */
+  max-height: none !important; /* Remove maximum height constraint */
+  flex-shrink: 0; /* Prevent columns from shrinking */
+}
+
+.column-content {
+  flex: 1;
+  overflow: visible; /* Allow content to determine height */
+  min-height: auto;
+  height: auto; /* Let content determine height */
+}
+
+/* Specific fixes for common layouts */
+.prompt-manager-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  min-height: auto;
+  height: auto; /* Let content determine height */
+}
+
+.prompt-list-column {
+  flex: 0 0 40%;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  max-height: none !important; /* Remove max-height constraint */
+  overflow: visible; /* Allow content to flow naturally */
+}
+
+.prompt-editor-column {
+  flex: 1;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  height: auto !important; /* CRITICAL: Content-based height */
+  min-height: auto !important;
+  overflow: visible; /* Allow content to flow naturally */
+}
+
+.email-inbox-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  min-height: auto;
+  height: auto; /* Let content determine height */
+}
+
+.email-list-column {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible;
+}
+
+.email-detail-column {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible;
+}
+
+/* Compact inbox row – brief intro only */
+.inbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
+  min-height: 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inbox-row:hover {
+  background: #f8fafc;
+}
+
+.inbox-row.unread {
+  background: #eff6ff;
+}
+
+.inbox-row .inbox-icons {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.inbox-row .inbox-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.inbox-row .subject {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inbox-row .sender {
+  font-size: 0.8125rem;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inbox-row .preview {
+  color: #64748b;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inbox-row .meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.inbox-row .inbox-badge {
+  flex-shrink: 0;
+}
+
+/* Page content area – professional layout */
+.page-content {
+  background: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+/* Category badges – consistent contrast */
+.badge-important { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.badge-todo { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badge-newsletter { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-default { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* NEW: Content-based height classes */
+.content-based-height {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+.self-stretch {
+  align-self: stretch;
+}
+
+/* Fix for scrollable areas - only apply when needed */
+.scrollable-content {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Only use fixed height when explicitly needed */
+.fixed-height-scroll {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Content-based height utilities */
+.content-height {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+.auto-height {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+/* Remove unnecessary white space at bottom of columns */
+.no-extra-space {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+/* Ensure proper spacing in flex layouts */
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  height: auto; /* Let content determine height */
+}
+
+.flex-column > * {
+  flex-shrink: 0; /* Prevent items from shrinking */
+}
+
+/* NEW: Flex container that allows natural heights */
+.flex-natural {
+  display: flex;
+  align-items: flex-start;
+  height: auto;
+  min-height: auto;
+}
+
+/* NEW: Individual column styling for independent heights */
+.column-independent {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  align-self: flex-start;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #f9fafb; /* Light text for dark mode */
+  }
+  
+  .card, .container, .panel {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  input, textarea, select {
+    color: #1f2937 !important; /* Keep dark text in inputs even in dark mode */
+    background-color: white !important;
+  }
+
+  .column {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+
+  .prompt-list-column,
+  .prompt-editor-column,
+  .email-list-column,
+  .email-detail-column {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .loading-container {
+    padding: 2rem 1rem;
+    margin: 1rem;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-top: 2rem;
+  }
+
+  .loading-text {
+    font-size: 2rem;
+  }
+
+  .loading-features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-pill {
+    width: 200px;
+  }
+
+  /* Stack columns on mobile */
+  .column-container,
+  .prompt-manager-layout,
+  .email-inbox-layout {
+    flex-direction: column;
+    gap: 1rem;
+    height: auto;
+  }
+
+  .prompt-list-column,
+  .email-list-column {
+    flex: none;
+    width: 100%;
+    height: auto !important; /* Content-based height on mobile */
+    max-height: none !important; /* Remove max height constraint */
+  }
+
+  .prompt-editor-column,
+  .email-detail-column {
+    flex: none;
+    width: 100%;
+    height: auto !important; /* Content-based height on mobile */
+  }
+}
+
+/* Provider Connection Styles */
+.provider-connection {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  padding: var(--space-6);
+  color: #1f2937; /* Ensure dark text on white background */
+  height: auto; /* Content-based height */
+}
+
+.connection-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.connection-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.connection-header p {
+  color: var(--gray-600);
+}
+
+.providers-grid {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.provider-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all 0.2s;
+  color: #1f2937; /* Ensure dark text */
+  height: auto; /* Content-based height */
+}
+
+.provider-card:hover {
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.provider-icon {
+  font-size: 1.5rem;
+}
+
+.provider-info {
+  flex: 1;
+}
+
+.provider-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-1);
+}
+
+.provider-info p {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-connected {
+  background: var(--success-50);
+  color: var(--success-700);
+  border: 1px solid var(--success-200);
+}
+
+.status-disconnected {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+
+.provider-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.connection-info {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  color: #1f2937; /* Ensure dark text */
+  height: auto; /* Content-based height */
+}
+
+.connection-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.connection-info ul {
+  list-style-type: disc;
+  margin-left: var(--space-4);
+  color: var(--gray-600);
+}
+
+.connection-info li {
+  margin-bottom: var(--space-1);
+}
+
+/* Additional utility classes for text visibility */
+.text-dark {
+  color: #1f2937 !important;
+}
+
+.text-light {
+  color: #f9fafb !important;
+}
+
+.bg-light {
+  background-color: white !important;
+  color: #1f2937 !important;
+}
+
+/* New utility classes for content-based layouts */
+.h-fit {
+  height: fit-content !important;
+}
+
+.h-auto {
+  height: auto !important;
+}
+
+.min-h-0 {
+  min-height: 0 !important;
+}
+
+.min-h-auto {
+  min-height: auto !important;
+}
+
+.max-h-none {
+  max-height: none !important;
+}
+
+.flex-initial {
+  flex: 0 1 auto !important;
+}
+
+/* Remove extra padding and margins that cause white space */
+.compact {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.no-extra-padding {
+  padding: 0 !important;
+}
+
+.no-extra-margin {
+  margin: 0 !important;
+}
+
+/* NEW: Critical fixes for independent column heights */
+.column-fix {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.layout-fix {
+  height: auto !important;
+  min-height: auto !important;
+  align-items: flex-start;
+}
+
+/* Ensure background gradient shows through */
+.background-visible {
+  background: transparent !important;
+}
+
+/* Modal button styles - ensure visibility */
+.modal {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-box {
+  background: white;
+  color: #1f2937;
+}
+
+.modal-action button,
+.modal-action .btn {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-action button:hover,
+.modal-action .btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.modal-action button.btn-primary,
+.btn.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-action button.btn-primary:hover,
+.btn.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+.modal-action button.btn-primary:disabled,
+.btn.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modal-action button.btn-ghost {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.modal-action button.btn-ghost:hover {
+  background: #f3f4f6;
+}
+
+/* Ensure modal form has proper styling */
+form.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Loading text visibility - white on gradient */
+.loading-text,
+.loading-subtext {
+  color: white;
+}

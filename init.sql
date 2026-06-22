@@ -1,0 +1,4 @@
+-- PostgreSQL initialization script
+-- The POSTGRES_DB environment variable already creates email_agent_db
+-- This script just serves as verification
+-- No additional SQL needed since PostgreSQL creates the database from POSTGRES_DB

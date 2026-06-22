@@ -1,0 +1,591 @@
+/* Premium Prompt Modal Styles */
+.premium-prompt-overlay {
+  display: fixed;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.premium-prompt-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  overflow: hidden;
+  animation: slideUp 0.4s ease-out;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.close-btn:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+/* Header Section */
+.prompt-header {
+  padding: 40px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: white;
+  text-align: center;
+  flex-direction: column;
+}
+
+.prompt-header h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Content Section */
+.prompt-content {
+  padding: 40px;
+}
+
+.prompt-description {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  margin: 0 0 30px 0;
+  line-height: 1.6;
+}
+
+/* Upgrade Options Grid */
+.upgrade-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.option-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  background: #fafafa;
+}
+
+.option-card:hover {
+  border-color: #6366f1;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+  transform: translateY(-4px);
+}
+
+.option-card.highlighted {
+  border-color: #6366f1;
+  background: white;
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+  transform: scale(1.02);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.option-header {
+  margin-bottom: 20px;
+}
+
+.option-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.option-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.option-features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.option-features svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.option-card.highlighted .btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #6366f1;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 20px;
+  padding: 0;
+  transition: color 0.3s ease;
+  text-decoration: underline;
+}
+
+.link-btn:hover {
+  color: #8b5cf6;
+}
+
+/* Credit Warning Banner */
+.credit-warning-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border-left: 4px solid #f59e0b;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  animation: slideDownBanner 0.3s ease-out;
+}
+
+@keyframes slideDownBanner {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.banner-icon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.banner-text {
+  flex: 1;
+}
+
+.banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0;
+}
+
+.banner-subtitle {
+  font-size: 12px;
+  color: #b45309;
+  margin: 4px 0 0 0;
+}
+
+.banner-cta {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.banner-cta:hover {
+  background: #d97706;
+  transform: translateY(-2px);
+}
+
+.progress-bar {
+  height: 4px;
+  background: rgba(217, 119, 6, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  transition: width 0.3s ease;
+}
+
+/* Top non-blocking premium banner (shown when credits exhausted) */
+.premium-top-banner {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1100;
+  background: linear-gradient(90deg, #fff7ed 0%, #fff1e6 100%);
+  border: 1px solid rgba(217,119,6,0.12);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.premium-top-banner .banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.premium-top-banner .banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.premium-top-banner .banner-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.premium-top-banner .banner-title {
+  font-weight: 700;
+  color: #92400e;
+  font-size: 14px;
+}
+
+.premium-top-banner .banner-sub {
+  font-size: 12px;
+  color: #b45309;
+}
+
+.premium-top-banner .banner-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgba(15,23,42,0.06);
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-outline:hover {
+  background: rgba(15,23,42,0.02);
+}
+
+/* Subscribe Button Variants */
+.subscribe-button-floating {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.subscribe-button-floating:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+}
+
+.subscribe-button-inline {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.subscribe-button-inline:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+.subscribe-button-outline {
+  background: transparent;
+  color: #6366f1;
+  border: 2px solid #6366f1;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.subscribe-button-outline:hover {
+  background: #6366f1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Feature Lock Banner */
+.feature-lock-banner {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #1f2937;
+}
+
+.lock-icon {
+  color: #9ca3af;
+  margin-bottom: 16px;
+  animation: pulse 2s infinite;
+}
+
+.feature-lock-banner h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #374151;
+}
+
+.feature-lock-banner p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+}
+
+.feature-lock-banner .btn {
+  width: auto;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .premium-prompt-overlay {
+    padding: 10px;
+  }
+
+  .premium-prompt-modal {
+    border-radius: 16px;
+  }
+
+  .close-btn {
+    top: 10px;
+    right: 10px;
+  }
+
+  .prompt-header {
+    padding: 30px 20px;
+  }
+
+  .prompt-header h2 {
+    font-size: 24px;
+  }
+
+  .prompt-content {
+    padding: 20px;
+  }
+
+  .upgrade-options {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .option-card.highlighted {
+    transform: scale(1);
+  }
+
+  .banner-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .banner-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .subscribe-button-floating {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 16px;
+  }
+
+  .feature-lock-banner {
+    padding: 20px;
+    min-height: auto;
+  }
+
+  .feature-lock-banner h3 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .premium-prompt-modal {
+    border-radius: 12px;
+  }
+
+  .prompt-header h2 {
+    font-size: 20px;
+  }
+
+  .option-header h3 {
+    font-size: 18px;
+  }
+
+  .option-features li {
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}

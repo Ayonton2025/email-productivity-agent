@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@vitejs/plugin-legacy": "^7.2.1",
+    "bcryptjs": "^3.0.3"
+  }
+}

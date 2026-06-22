@@ -1,0 +1,264 @@
+name: email-productivity-agent
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: email_agent_postgres
+    environment:
+      POSTGRES_USER: email_agent
+      POSTGRES_PASSWORD: secure_password_change_in_prod
+      POSTGRES_DB: email_agent_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U email_agent -d email_agent_db || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - email_agent_network
+
+  # Redis for Celery and Caching
+  redis:
+    image: redis:7-alpine
+    container_name: email_agent_redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - email_agent_network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: email_agent_backend
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      FRONTEND_URL: http://localhost:3000
+      DEBUG: "true"
+      SKIP_DB_INIT: "true"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: email_agent
+      DB_NAME: email_agent_db
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
+      - attachment_storage:/app/storage/attachments
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
+    networks:
+      - email_agent_network
+
+  # One-off DB initialization (run after postgres is healthy)
+  init_db:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: email_agent_init_db
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "Running Alembic migrations (if configured)..."
+        # Only attempt alembic if an alembic config or directory exists; tolerate failures
+        if [ -f alembic.ini ] || [ -d alembic ]; then
+          if command -v alembic >/dev/null 2>&1; then
+            echo "Found alembic; attempting upgrade (errors will be ignored)..."
+            alembic upgrade head || echo "Alembic upgrade failed or is not configured correctly; continuing with init_db"
+          else
+            echo "Alembic binary not found in image; skipping alembic migrations"
+          fi
+        else
+          echo "No alembic configuration detected; skipping alembic"
+        fi
+        echo "Ensuring attachments storage directory exists and permissions are correct..."
+        mkdir -p /app/storage/attachments
+        chown -R 1000:1000 /app/storage/attachments || true
+        echo "Running application DB bootstrap..."
+        python -m app.scripts.init_db
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DEFAULT_ADMIN_EMAIL: admin@inboxai.com
+      DEFAULT_ADMIN_PASSWORD: admin123
+      INIT_DB_MAX_RETRIES: "60"
+      INIT_DB_RETRY_DELAY_SEC: "2"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: email_agent
+      DB_NAME: email_agent_db
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - attachment_storage:/app/storage/attachments
+    # Run this one-off init job as root so it can prepare mounted volumes (chown, mkdir)
+    user: root
+    # Allow retries on failure so transient errors won't permanently block the stack
+    restart: on-failure
+    networks:
+      - email_agent_network
+
+  # Celery Worker
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: email_agent_celery_worker
+    # Use solo pool for async SQLAlchemy/asyncpg safety (prefork can cause event-loop mismatch errors)
+    command: celery -A app.tasks.celery_app worker --pool=solo --loglevel=info --concurrency=1 --queues=email,ai,campaigns,workflows,integrations,billing,maintenance
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SKIP_DB_INIT: "true"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: email_agent
+      DB_NAME: email_agent_db
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - attachment_storage:/app/storage/attachments
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "tr '\\0' ' ' </proc/1/cmdline | grep -q 'celery .* worker' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - email_agent_network
+
+  # Celery Beat (Scheduler)
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: email_agent_celery_beat
+    # Use Celery's built-in beat scheduler; DO NOT use django_celery_beat in a FastAPI project
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SKIP_DB_INIT: "true"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: email_agent
+      DB_NAME: email_agent_db
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    healthcheck:
+      # Beat is a scheduler (not a worker), so check the beat process itself.
+      test: ["CMD-SHELL", "tr '\\0' ' ' </proc/1/cmdline | grep -q 'celery .* beat' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - email_agent_network
+
+  # Frontend (React/Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: email_agent_frontend
+    # Install deps on start if missing (helps when host mount overwrites built image) and then start dev server
+    command: sh -c "if [ ! -d /app/node_modules ] || [ -z \"$(ls -A /app/node_modules)\" ]; then npm ci --silent; fi && npm run dev"
+    environment:
+      # Point frontend API/WebSocket traffic to the backend service on the Docker network
+      VITE_API_URL: http://backend:8000
+      VITE_WS_URL: ws://backend:8000
+      # Use polling for file watchers on Windows/OneDrive
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app:cached
+      - frontend_node_modules:/app/node_modules
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 20s
+      timeout: 15s
+      start_period: 45s
+      retries: 5
+    networks:
+      - email_agent_network
+
+volumes:
+  postgres_data:
+    name: email-productivity-agent_postgres_data
+  redis_data:
+    name: email-productivity-agent_redis_data
+  frontend_node_modules:
+    name: email-productivity-agent_frontend_node_modules
+  attachment_storage:
+    name: email-productivity-agent_attachment_storage
+
+networks:
+  email_agent_network:
+    driver: bridge

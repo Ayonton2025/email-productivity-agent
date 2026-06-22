@@ -1,0 +1,434 @@
+/* Upgrade Button Styles */
+
+/* Base Upgrade Button Class */
+.upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Default Variant - Standard button in dashboards */
+.upgrade-btn-default {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 10px 18px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.upgrade-btn-default:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+.upgrade-btn-default:active {
+  transform: translateY(0);
+}
+
+/* Floating Variant - Action button that stands out */
+.upgrade-btn-floating {
+  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+  color: white;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-radius: 50px;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3);
+}
+
+.upgrade-btn-floating:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(236, 72, 153, 0.4);
+}
+
+/* Compact Variant - Small button for tight spaces */
+.upgrade-btn-compact {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.upgrade-btn-compact:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+/* Dashboard Variant - For dashboard headers/toolbars */
+.upgrade-btn-dashboard {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  padding: 10px 16px;
+  font-size: 13px;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+}
+
+.upgrade-btn-dashboard:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+}
+
+/* Upgrade Prompt Card Styles */
+.upgrade-prompt-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  background: white;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.upgrade-prompt-card:hover {
+  border-color: #6366f1;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+  transform: translateY(-4px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-icon {
+  width: 28px;
+  height: 28px;
+  color: #6366f1;
+}
+
+.card-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.card-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.card-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  text-align: left;
+}
+
+.card-features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+  padding: 6px 0;
+}
+
+.check-mark {
+  color: #10b981;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.btn-upgrade {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.btn-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+/* Upgrade Alert Styles */
+.upgrade-alert {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0;
+}
+
+.alert-detail {
+  font-size: 13px;
+  color: #b45309;
+  margin: 4px 0 0 0;
+}
+
+.alert-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-dismiss {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-dismiss:hover {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.btn-alert-upgrade {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-alert-upgrade:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+/* Premium Badge Styles */
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+  color: #78350f;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.premium-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(252, 211, 77, 0.3);
+}
+
+.premium-badge-small {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.premium-badge-large {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* Feature Comparison Hint Styles */
+.feature-comparison-hint {
+  background: linear-gradient(135deg, #ede9fe 0%, #f3e8ff 100%);
+  border: 2px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.hint-icon {
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  flex: 1;
+}
+
+.hint-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4c1d95;
+  margin: 0;
+}
+
+.hint-subtitle {
+  font-size: 12px;
+  color: #6b21a8;
+  margin: 4px 0 0 0;
+}
+
+.hint-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-hint-secondary {
+  background: white;
+  color: #7c3aed;
+  border: 1px solid #c4b5fd;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-hint-secondary:hover {
+  background: #ede9fe;
+  border-color: #a78bfa;
+}
+
+.btn-hint-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-hint-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .upgrade-alert {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .alert-buttons {
+    width: 100%;
+  }
+
+  .alert-buttons button {
+    flex: 1;
+  }
+
+  .feature-comparison-hint {
+    flex-direction: column;
+  }
+
+  .hint-buttons {
+    width: 100%;
+  }
+
+  .hint-buttons button {
+    flex: 1;
+  }
+
+  .upgrade-prompt-card {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .upgrade-btn-default,
+  .upgrade-btn-floating,
+  .upgrade-btn-dashboard {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .upgrade-alert {
+    font-size: 12px;
+  }
+
+  .alert-message {
+    font-size: 12px;
+  }
+
+  .upgrade-prompt-card {
+    padding: 16px;
+  }
+
+  .card-header {
+    gap: 8px;
+  }
+
+  .card-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .card-header h3 {
+    font-size: 16px;
+  }
+}
