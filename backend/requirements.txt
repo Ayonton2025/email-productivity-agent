@@ -72,7 +72,7 @@ anthropic==0.7.4
 
 # Pin protobuf and proto-plus to stable versions to avoid large source builds and OOM during image builds
 # Updated proto-plus to satisfy google-ai-generativelanguage dependency (>=1.22.3)
-proto-plus==1.28.4
+proto-plus==1.25.0
 protobuf==5.29.6
 
 # Timezone handling
