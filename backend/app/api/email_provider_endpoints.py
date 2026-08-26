@@ -136,9 +136,7 @@ async def authenticate_gmail_directly(auth_data: GmailTokenRequest, db: AsyncSes
 async def authenticate_gmail_legacy(credentials: GmailLegacyRequest, db: AsyncSession = Depends(get_db)):
     """Authenticate with Gmail (legacy method)"""
     try:
-        success = await email_provider_service.authenticate_gmail(
-            credentials.credentials_file, credentials.token_file
-        )
+        success = await email_provider_service.authenticate_gmail(credentials.credentials_file, credentials.token_file)
 
         if success:
             # Save provider config to database
