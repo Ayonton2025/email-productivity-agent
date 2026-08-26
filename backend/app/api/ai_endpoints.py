@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,9 +50,9 @@ def _is_super_admin(current_user: User) -> bool:
 
 
 class ClassifyEmailRequest(BaseModel):
-    sender: str
-    subject: str
-    body: str
+    sender: str = Field(..., min_length=1, max_length=320)
+    subject: str = Field(..., min_length=1, max_length=1000)
+    body: str = Field(..., min_length=1, max_length=100000)
 
 
 class ClassifyEmailResponse(BaseModel):
@@ -62,9 +62,9 @@ class ClassifyEmailResponse(BaseModel):
 
 
 class ExtractActionsRequest(BaseModel):
-    sender: str
-    subject: str
-    body: str
+    sender: str = Field(..., min_length=1, max_length=320)
+    subject: str = Field(..., min_length=1, max_length=1000)
+    body: str = Field(..., min_length=1, max_length=100000)
 
 
 class ActionItem(BaseModel):
@@ -79,7 +79,7 @@ class ExtractActionsResponse(BaseModel):
 
 
 class AnalyzeSentimentRequest(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=100000)
 
 
 class AnalyzeSentimentResponse(BaseModel):
@@ -89,20 +89,20 @@ class AnalyzeSentimentResponse(BaseModel):
 
 
 class SummarizeThreadRequest(BaseModel):
-    thread_content: str
+    thread_content: str = Field(..., min_length=1, max_length=200000)
 
 
 class AnalyzeRelationshipRequest(BaseModel):
-    sender: str
-    email_content: str
+    sender: str = Field(..., min_length=1, max_length=320)
+    email_content: str = Field(..., min_length=1, max_length=100000)
 
 
 class WorkspaceAssistRequest(BaseModel):
-    page: str
-    objective: str
-    mode: str = "draft"
-    context: Optional[dict] = None
-    draft: Optional[dict] = None
+    page: str = Field(..., min_length=1, max_length=120)
+    objective: str = Field(..., min_length=1, max_length=10000)
+    mode: str = Field(default="draft", min_length=1, max_length=40)
+    context: Optional[dict[str, object]] = None
+    draft: Optional[dict[str, object]] = None
     confirmed: bool = False
     confirmation_token: Optional[str] = None
 

@@ -23,6 +23,7 @@ from app.api.system_endpoints import RuntimeContext, create_system_router
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.monitoring import initialize_monitoring
+from app.core.request_logging import register_request_logging
 from app.core.router_loader import register_routers
 from app.models.database import AsyncSessionLocal, init_db
 from app.services.prompt_service import PromptService
@@ -247,7 +248,7 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
-
+register_request_logging(app)
 # ENHANCED CORS configuration
 app.add_middleware(
     CORSMiddleware,
