@@ -1,0 +1,83 @@
+{
+  "prompts": [
+    {
+      "name": "Smart Categorization",
+      "description": "Intelligently categorize emails into relevant categories",
+      "template": "Analyze the following email and categorize it into exactly one of these categories: Important, Newsletter, Spam, To-Do, Personal, Work, Finance, Travel.\n\nImportant: Urgent emails requiring immediate attention, from key contacts, or containing critical information.\nNewsletter: Mass distribution emails, marketing content, updates from services.\nSpam: Unsolicited commercial emails, scams, or irrelevant content.\nTo-Do: Emails containing specific tasks, action items, or requests that need completion.\nPersonal: Non-work related emails from friends, family, or personal services.\nWork: Professional communications related to projects, meetings, or work tasks.\nFinance: Banking, invoices, payments, or financial updates.\nTravel: Flight itineraries, hotel bookings, travel plans.\n\nEmail Content:\nFrom: {sender}\nSubject: {subject}\nBody: {body}\n\nRespond with only the category name. No explanations.",
+      "category": "categorization",
+      "is_system": true,
+      "is_active": true,
+      "parameters": {
+        "sender": {"type": "string", "required": true, "description": "Email sender address"},
+        "subject": {"type": "string", "required": true, "description": "Email subject line"},
+        "body": {"type": "string", "required": true, "description": "Email body content"}
+      }
+    },
+    {
+      "name": "Action Item Extractor",
+      "description": "Extract specific tasks and action items from emails",
+      "template": "Extract all actionable tasks, to-do items, or requests from this email. For each item, identify:\n- The specific task to be done\n- Any mentioned deadlines or due dates\n- The priority level (high, medium, low)\n- The person responsible (if mentioned)\n\nFormat your response as a JSON array of objects with these fields: task, deadline, priority, assigned_to.\n\nIf no clear action items are found, return an empty array.\n\nEmail Content:\n{email_content}\n\nRespond with valid JSON only.",
+      "category": "action_extraction",
+      "is_system": true,
+      "is_active": true,
+      "parameters": {
+        "email_content": {"type": "string", "required": true, "description": "Full email content including headers"}
+      },
+      "constraints": {
+        "output_format": "json",
+        "required_fields": ["task"],
+        "optional_fields": ["deadline", "priority", "assigned_to"]
+      }
+    },
+    {
+      "name": "Professional Reply Drafter",
+      "description": "Draft professional email responses",
+      "template": "Draft a professional email reply based on the original email. Follow these guidelines:\n\n1. Be polite and professional\n2. Address all points mentioned in the original email\n3. Maintain appropriate tone based on the sender's relationship\n4. If it's a meeting request, ask for an agenda\n5. If it's a task request, provide a realistic timeline\n6. Keep it concise but comprehensive\n7. Use proper email formatting\n\nOriginal Email:\nFrom: {sender}\nSubject: {subject}\nBody: {body}\n\nDraft your response as if you are the recipient. Include a proper subject line (usually 'Re: [original subject]') and salutation.",
+      "category": "reply_draft",
+      "is_system": true,
+      "is_active": true,
+      "parameters": {
+        "sender": {"type": "string", "required": true, "description": "Original email sender"},
+        "subject": {"type": "string", "required": true, "description": "Original email subject"},
+        "body": {"type": "string", "required": true, "description": "Original email body"}
+      }
+    },
+    {
+      "name": "Concise Summarizer",
+      "description": "Create brief, informative email summaries",
+      "template": "Provide a concise summary of this email in 2-3 sentences. Focus on:\n- The main purpose or key message\n- Any specific requests or action items\n- Important deadlines or dates\n- Key people or stakeholders mentioned\n\nKeep it brief but informative. Avoid unnecessary details.\n\nEmail Content:\n{email_content}\n\nProvide only the summary, no additional commentary.",
+      "category": "summary",
+      "is_system": true,
+      "is_active": true,
+      "parameters": {
+        "email_content": {"type": "string", "required": true, "description": "Full email content to summarize"}
+      }
+    },
+    {
+      "name": "Sentiment Analyzer",
+      "description": "Analyze the tone and sentiment of emails",
+      "template": "Analyze the tone and sentiment of this email. Consider:\n- Overall sentiment (positive, negative, neutral, mixed)\n- Emotional tone (urgent, friendly, formal, angry, appreciative, etc.)\n- Level of urgency (low, medium, high, critical)\n- Key emotional indicators in the language\n\nProvide your analysis in JSON format with these fields: sentiment, tone, urgency, confidence_score (0-1), key_emotional_phrases.\n\nEmail Content:\n{email_content}\n\nRespond with valid JSON only.",
+      "category": "analysis",
+      "is_system": true,
+      "is_active": true,
+      "parameters": {
+        "email_content": {"type": "string", "required": true, "description": "Email content to analyze"}
+      },
+      "constraints": {
+        "output_format": "json",
+        "required_fields": ["sentiment", "tone", "urgency", "confidence_score"]
+      }
+    },
+    {
+      "name": "Meeting Request Processor",
+      "description": "Specialized processing for meeting-related emails",
+      "template": "This email appears to be a meeting request. Extract the following information:\n\n- Proposed date and time\n- Duration\n- Location or platform\n- Meeting purpose/agenda\n- Attendees mentioned\n- Any preparation required\n\nIf any information is missing, note what's unclear.\n\nFormat your response as JSON with these fields: proposed_time, duration, location, purpose, attendees, preparation_required, missing_information.\n\nEmail Content:\n{email_content}\n\nRespond with valid JSON only.",
+      "category": "analysis",
+      "is_system": true,
+      "is_active": false,
+      "parameters": {
+        "email_content": {"type": "string", "required": true, "description": "Meeting request email content"}
+      }
+    }
+  ]
+}
