@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,8 +22,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
+class GmailPushMessage(BaseModel):
+    data: str = Field(..., min_length=1, max_length=16384)
+    messageId: str | None = Field(default=None, max_length=256)
+    publishTime: str | None = Field(default=None, max_length=128)
+
+
+class GmailPushRequest(BaseModel):
+    message: GmailPushMessage
+    subscription: str | None = Field(default=None, max_length=2048)
+
+
 @router.post("/gmail")
-async def gmail_push_notification(body: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def gmail_push_notification(
+    body: GmailPushRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
+):
     """
     Handle incoming Gmail push notifications from Google Pub/Sub.
 
@@ -43,12 +57,8 @@ async def gmail_push_notification(body: dict, background_tasks: BackgroundTasks,
         logger.info("📢 Received Gmail push notification")
 
         # Extract message data
-        if "message" not in body or "data" not in body["message"]:
-            logger.warning("⚠️ Invalid Gmail push payload")
-            return {"success": False, "error": "Invalid payload"}
-
         # Decode base64 data
-        message_data = body["message"]["data"]
+        message_data = body.message.data
         decoded = base64.b64decode(message_data).decode("utf-8")
         data = json.loads(decoded)
 
