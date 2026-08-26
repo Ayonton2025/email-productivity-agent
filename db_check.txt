@@ -1,0 +1,26 @@
+Tables in database:
+  - agent_activities
+  - agent_memory
+  - agents
+  - auto_reply_rules
+  - away_mode_settings
+  - campaign_sequences
+  - campaigns
+  - commitments
+  - companies
+  - contact_interactions
+  - contacts
+  - email_drafts
+  - email_provider_configs
+  - emails
+  - leads
+  - opportunities
+  - prompt_templates
+  - risks
+  - sync_history
+  - user_email_accounts
+  - users
+  - workflow_executions
+  - workflow_steps
+  - workflows
+Error: 'charmap' codec can't encode character '\u274c' in position 2: character maps to <undefined>
