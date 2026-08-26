@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, AlertTriangle, Calendar, TrendingDown, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
@@ -20,7 +21,7 @@ const RiskDetail = () => {
       const foundRisk = res.data.find((r) => r.id === riskId)
       setRisk(foundRisk)
     } catch (error) {
-      console.error('Failed to load risk:', error)
+      logger.error('Failed to load risk:', error)
     } finally {
       setLoading(false)
     }

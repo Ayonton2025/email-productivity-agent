@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -45,7 +46,7 @@ const InsightsDashboard = () => {
       setDeadlines(deadlinesRes.data || [])
       setRelationships(relationshipsRes.data)
     } catch (error) {
-      console.error('Failed to load insights:', error)
+      logger.error('Failed to load insights:', error)
     } finally {
       setLoading(false)
     }

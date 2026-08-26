@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { X, Plus, Trash2, ChevronDown, ChevronUp, Upload, Sparkles, Zap } from 'lucide-react'
 import { campaignsApi, aiApi } from '../../services/api'
@@ -66,7 +67,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
         setRecommendedSender(res.data.recommended)
       }
     } catch (error) {
-      console.error('Failed to load recommended sender:', error)
+      logger.error('Failed to load recommended sender:', error)
     }
   }
 
@@ -85,7 +86,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
       const res = await campaignsApi.getLeads(campaign.id)
       setLeads(res.data || [])
     } catch (error) {
-      console.error('Failed to load leads:', error)
+      logger.error('Failed to load leads:', error)
     }
   }
 
@@ -107,7 +108,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
         })
         setSequences([...sequences, sequence.data])
       } catch (error) {
-        console.error('Failed to create sequence:', error)
+        logger.error('Failed to create sequence:', error)
         alert('Failed to create sequence')
         return
       }
@@ -167,7 +168,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
         setShowLeadsImport(false)
         alert(`Imported ${importedLeads.length} leads`)
       } catch (error) {
-        console.error('Failed to import leads:', error)
+        logger.error('Failed to import leads:', error)
         alert('Failed to import leads')
       }
     } else {
@@ -207,7 +208,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
       onSave()
       onClose()
     } catch (error) {
-      console.error('Failed to save campaign:', error)
+      logger.error('Failed to save campaign:', error)
       alert('Failed to save campaign')
     } finally {
       setSaving(false)

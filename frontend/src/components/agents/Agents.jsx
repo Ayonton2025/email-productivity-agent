@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Bot, Plus, Play, Pause, Trash2, Edit, Settings, Activity, RefreshCw } from 'lucide-react'
 import { agentsApi } from '../../services/api'
@@ -19,7 +20,7 @@ const Agents = () => {
       const res = await agentsApi.getAgents()
       setAgents(res.data || [])
     } catch (error) {
-      console.error('Failed to load agents:', error)
+      logger.error('Failed to load agents:', error)
     } finally {
       setLoading(false)
     }
@@ -31,7 +32,7 @@ const Agents = () => {
       await agentsApi.deleteAgent(agentId)
       await loadAgents()
     } catch (error) {
-      console.error('Failed to delete agent:', error)
+      logger.error('Failed to delete agent:', error)
       alert('Failed to delete agent')
     }
   }
@@ -41,7 +42,7 @@ const Agents = () => {
       await agentsApi.updateAgent(agent.id, { is_active: !agent.is_active })
       await loadAgents()
     } catch (error) {
-      console.error('Failed to update agent:', error)
+      logger.error('Failed to update agent:', error)
     }
   }
 

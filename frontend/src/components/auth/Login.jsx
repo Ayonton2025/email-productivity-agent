@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
@@ -37,16 +38,16 @@ const Login = () => {
     setLoading(true)
     setError('')
 
-    console.log('🔑 [Login] Starting login process for:', formData.email)
+    logger.debug('🔑 [Login] Starting login process for:', formData.email)
     const result = await login(formData.email, formData.password)
 
-    console.log('🔍 [Login] Login result:', result)
+    logger.debug('🔍 [Login] Login result:', result)
 
     if (result.success) {
-      console.log('✅ [Login] Successful, redirecting to:', from)
+      logger.debug('✅ [Login] Successful, redirecting to:', from)
       navigate(from, { replace: true })
     } else {
-      console.error('❌ [Login] Failed:', result.error)
+      logger.error('❌ [Login] Failed:', result.error)
       setError(result.error)
     }
 

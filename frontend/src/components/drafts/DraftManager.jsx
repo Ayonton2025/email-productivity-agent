@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Plus, Save, Edit, Trash2, Send, Copy, Eye, EyeOff, Search, Clock, User, Mail, FileText } from 'lucide-react'
 import { draftApi } from '../../services/api'
@@ -41,7 +42,7 @@ const DraftManager = () => {
         return list.find((d) => d.id === prev.id) || list[0]
       })
     } catch (error) {
-      console.error('Failed to load drafts:', error)
+      logger.error('Failed to load drafts:', error)
       setDrafts([])
       setSelectedDraft(null)
     } finally {
@@ -87,7 +88,7 @@ const DraftManager = () => {
       setSelectedDraft(created)
       setIsEditing(true)
     } catch (error) {
-      console.error('Failed to create draft:', error)
+      logger.error('Failed to create draft:', error)
       alert('Failed to create draft')
     }
   }
@@ -116,7 +117,7 @@ const DraftManager = () => {
       setSelectedDraft(updated)
       setIsEditing(false)
     } catch (error) {
-      console.error('Failed to save draft:', error)
+      logger.error('Failed to save draft:', error)
       alert('Failed to save draft')
     }
   }
@@ -132,7 +133,7 @@ const DraftManager = () => {
         return remaining
       })
     } catch (error) {
-      console.error('Failed to delete draft:', error)
+      logger.error('Failed to delete draft:', error)
       alert('Failed to delete draft')
     }
   }

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Mail, Plus, Play, Pause, Trash2, Edit, BarChart3, Users, RefreshCw } from 'lucide-react'
@@ -27,7 +28,7 @@ const Campaigns = () => {
       const res = await campaignsApi.getCampaigns()
       setCampaigns(res.data || [])
     } catch (error) {
-      console.error('Failed to load campaigns:', error)
+      logger.error('Failed to load campaigns:', error)
     } finally {
       setLoading(false)
     }
@@ -39,7 +40,7 @@ const Campaigns = () => {
       await campaignsApi.deleteCampaign(campaignId)
       await loadCampaigns()
     } catch (error) {
-      console.error('Failed to delete campaign:', error)
+      logger.error('Failed to delete campaign:', error)
       alert('Failed to delete campaign')
     }
   }
@@ -49,7 +50,7 @@ const Campaigns = () => {
       await campaignsApi.startCampaign(campaignId)
       await loadCampaigns()
     } catch (error) {
-      console.error('Failed to start campaign:', error)
+      logger.error('Failed to start campaign:', error)
     }
   }
 
@@ -58,7 +59,7 @@ const Campaigns = () => {
       await campaignsApi.pauseCampaign(campaignId)
       await loadCampaigns()
     } catch (error) {
-      console.error('Failed to pause campaign:', error)
+      logger.error('Failed to pause campaign:', error)
     }
   }
 

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import AttachmentsSection from './AttachmentsSection'
 
@@ -127,7 +128,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
             className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
             onClick={() => {
               // Mark as read/unread
-              console.log('Toggle read status')
+              logger.debug('Toggle read status')
             }}
           >
             {email.is_read ? 'Mark Unread' : 'Mark Read'}
@@ -140,7 +141,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
             }`}
             onClick={() => {
               // Toggle flag
-              console.log('Toggle flag')
+              logger.debug('Toggle flag')
             }}
           >
             {email.is_flagged ? '★ Flagged' : '☆ Flag'}

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 /**
  * Contact Service - Handles contact form submissions
  * Sends emails to configured support email address
@@ -29,7 +30,7 @@ export const submitContactForm = async (data) => {
 
     return await response.json()
   } catch (error) {
-    console.error('Contact form submission error:', error)
+    logger.error('Contact form submission error:', error)
     // Fallback: Try to send via backend contact endpoint
     try {
       const fallbackResponse = await fetch(`${API_BASE}/contact`, {
@@ -50,7 +51,7 @@ export const submitContactForm = async (data) => {
         return await fallbackResponse.json()
       }
     } catch (fallbackError) {
-      console.error('Fallback contact submission error:', fallbackError)
+      logger.error('Fallback contact submission error:', fallbackError)
     }
 
     throw error

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Zap, Star, TrendingUp, AlertCircle, Loader, Info } from 'lucide-react'
@@ -52,7 +53,7 @@ const BillingUpgrade = () => {
         })
         setBackendStatus(response.ok ? 'available' : 'offline')
       } catch (err) {
-        console.warn('🔍 Backend health check failed:', err.message)
+        logger.warn('🔍 Backend health check failed:', err.message)
         setBackendStatus('offline')
       }
     }
@@ -80,7 +81,7 @@ const BillingUpgrade = () => {
         }))
         setPlans(serverPlans.length ? serverPlans : fallbackPlans)
       } catch (err) {
-        console.warn('Failed to load plans from backend, using fallback plans', err)
+        logger.warn('Failed to load plans from backend, using fallback plans', err)
         setPlans(fallbackPlans)
       }
     }
@@ -148,7 +149,7 @@ const BillingUpgrade = () => {
   ]
 
   const handleUpgrade = async (planId) => {
-    console.log(`🔄 [Billing] Attempting upgrade to plan: ${planId}`)
+    logger.debug(`🔄 [Billing] Attempting upgrade to plan: ${planId}`)
 
     if (planId === userPlan) {
       setError('You are already on this plan')
@@ -161,7 +162,7 @@ const BillingUpgrade = () => {
     }
 
     if (planId === 'enterprise') {
-      console.log('📧 [Billing] Redirecting to sales email')
+      logger.debug('📧 [Billing] Redirecting to sales email')
       window.location.href = 'mailto:sales@bylix.email?subject=Enterprise%20Plan%20Inquiry'
       return
     }
@@ -183,7 +184,7 @@ const BillingUpgrade = () => {
       setSelectedMethod(methods.length ? methods[0].id || 'card' : 'card')
       setShowMethodsModal(true)
     } catch (err) {
-      console.error('❌ [Billing] Could not load payment methods, falling back to default flow', err)
+      logger.error('❌ [Billing] Could not load payment methods, falling back to default flow', err)
       // Fallback: continue with original auto flow
       setIsProcessing(true)
       setShowMethodsModal(false)
@@ -221,7 +222,7 @@ const BillingUpgrade = () => {
         throw new Error('Invalid payment service response')
       }
     } catch (err) {
-      console.error('❌ [Billing] Confirm payment method error:', err)
+      logger.error('❌ [Billing] Confirm payment method error:', err)
       setError(err?.message || 'Failed to start payment')
     } finally {
       setIsProcessing(false)

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { FileText, Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import attachmentService from '../../services/attachmentService'
@@ -26,7 +27,7 @@ const AttachmentCard = ({ attachment, emailId, onAnalysisComplete = () => {} }) 
       await attachmentService.downloadAttachmentFile(attachment.id, attachment.filename)
     } catch (err) {
       setError('Download failed')
-      console.error('Download error:', err)
+      logger.error('Download error:', err)
     } finally {
       setDownloading(false)
     }
@@ -51,7 +52,7 @@ const AttachmentCard = ({ attachment, emailId, onAnalysisComplete = () => {} }) 
       }
     } catch (err) {
       setError('Failed to trigger analysis')
-      console.error('Analysis trigger error:', err)
+      logger.error('Analysis trigger error:', err)
       setLoading(false)
     }
   }
@@ -77,7 +78,7 @@ const AttachmentCard = ({ attachment, emailId, onAnalysisComplete = () => {} }) 
       }
     } catch (err) {
       setError('Could not fetch analysis results')
-      console.error('Fetch analysis error:', err)
+      logger.error('Fetch analysis error:', err)
       setLoading(false)
     }
     setLoading(false)

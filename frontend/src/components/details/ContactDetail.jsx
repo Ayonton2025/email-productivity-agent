@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Mail, Calendar, TrendingUp, TrendingDown, User, Building2, RefreshCw } from 'lucide-react'
@@ -21,7 +22,7 @@ const ContactDetail = () => {
       setContact(res.data.contact)
       setInteractions(res.data.recent_interactions || [])
     } catch (error) {
-      console.error('Failed to load contact details:', error)
+      logger.error('Failed to load contact details:', error)
     } finally {
       setLoading(false)
     }

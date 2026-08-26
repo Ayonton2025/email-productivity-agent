@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import React, { createContext, useState, useContext, useEffect } from 'react'
 import { emailApi } from '../services/api'
 import { useAuth } from './AuthContext'
@@ -25,10 +26,10 @@ export const EmailAccountsProvider = ({ children }) => {
     setError(null)
     try {
       const response = await emailApi.getAccounts()
-      console.log('✅ Loaded email accounts:', response.data)
+      logger.debug('✅ Loaded email accounts:', response.data)
       setAccounts(response.data?.accounts || [])
     } catch (error) {
-      console.error('❌ Failed to load email accounts:', error)
+      logger.error('❌ Failed to load email accounts:', error)
       setError(error.message)
       setAccounts([])
     } finally {

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Building2, Users, Mail, Calendar, TrendingUp, RefreshCw } from 'lucide-react'
@@ -21,7 +22,7 @@ const CompanyDetail = () => {
       setCompany(res.data.company)
       setContacts(res.data.contacts || [])
     } catch (error) {
-      console.error('Failed to load company details:', error)
+      logger.error('Failed to load company details:', error)
     } finally {
       setLoading(false)
     }

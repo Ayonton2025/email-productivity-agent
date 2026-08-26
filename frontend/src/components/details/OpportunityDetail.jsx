@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, TrendingUp, Calendar, DollarSign, Target, RefreshCw } from 'lucide-react'
@@ -20,7 +21,7 @@ const OpportunityDetail = () => {
       const foundOpp = res.data.find((o) => o.id === opportunityId)
       setOpportunity(foundOpp)
     } catch (error) {
-      console.error('Failed to load opportunity:', error)
+      logger.error('Failed to load opportunity:', error)
     } finally {
       setLoading(false)
     }
