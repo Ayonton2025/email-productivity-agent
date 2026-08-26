@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, AtSign } from 'lucide-react'
@@ -28,7 +29,7 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('🔍 [Register] User already authenticated, redirecting to dashboard')
+      logger.debug('🔍 [Register] User already authenticated, redirecting to dashboard')
       navigate('/')
     }
   }, [isAuthenticated, navigate])
@@ -106,37 +107,37 @@ const Register = () => {
     setError('')
     setSuccess('')
 
-    console.log('🔍 [Register] Starting registration process...')
-    console.log('📝 [Register] Form data:', {
+    logger.debug('🔍 [Register] Starting registration process...')
+    logger.debug('📝 [Register] Form data:', {
       email: formData.email,
       full_name: formData.full_name,
       password_length: formData.password?.length,
     })
 
     if (!validateForm()) {
-      console.log('❌ [Register] Form validation failed')
+      logger.debug('❌ [Register] Form validation failed')
       setLoading(false)
       return
     }
 
     const { confirmPassword, ...submitData } = formData
 
-    console.log('🚀 [Register] Calling register function...')
+    logger.debug('🚀 [Register] Calling register function...')
     const result = await register(submitData)
 
-    console.log('🔍 [Register] Registration result:', result)
+    logger.debug('🔍 [Register] Registration result:', result)
 
     if (result.success) {
       if (result.autoLoggedIn) {
         // User is automatically logged in - redirect to dashboard
-        console.log('✅ [Register] Auto-login successful, redirecting to dashboard')
+        logger.debug('✅ [Register] Auto-login successful, redirecting to dashboard')
         setSuccess('Registration successful! Welcome to Bylix Email.')
         setTimeout(() => {
           navigate('/', { replace: true })
         }, 1000)
       } else {
         // User needs to verify email or login manually
-        console.log('⚠️ [Register] Registration successful but no auto-login')
+        logger.debug('⚠️ [Register] Registration successful but no auto-login')
         setSuccess(result.message || 'Registration successful! Please login to continue.')
         setFormData({
           full_name: '',
@@ -151,7 +152,7 @@ const Register = () => {
         }, 2000)
       }
     } else {
-      console.error('❌ [Register] Registration failed:', result.error)
+      logger.error('❌ [Register] Registration failed:', result.error)
       setError(result.error || 'Registration failed. Please try again.')
     }
 

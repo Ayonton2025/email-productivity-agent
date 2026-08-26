@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { API_BASE_URL } from './services/api'
+import { logger } from './utils/logger'
 
 // Import global styles
 import './styles/globals.css'
@@ -58,7 +59,7 @@ class ErrorBoundary extends React.Component {
     })
 
     // Enhanced error logging with AI service context
-    console.error('Bylix Email Error Boundary caught an error:', {
+    logger.error('Bylix Email Error Boundary caught an error:', {
       error: error.toString(),
       errorType: this.state.errorType,
       componentStack: errorInfo.componentStack,
@@ -84,7 +85,7 @@ class ErrorBoundary extends React.Component {
         })
       }
     } catch (reportingError) {
-      console.warn('Error reporting failed:', reportingError)
+      logger.warn('Error reporting failed:', reportingError)
     }
   }
 
@@ -362,18 +363,18 @@ const withPerformanceMonitoring = (WrappedComponent) => {
         }))
 
         if (import.meta.env.DEV) {
-          console.log(`🚀 Bylix Email mounted in ${mountTime.toFixed(2)}ms`)
+          logger.debug(`🚀 Bylix Email mounted in ${mountTime.toFixed(2)}ms`)
 
           // Performance insights
           const aiOps = performanceMetrics.aiOperationTimes.length
           const authOps = performanceMetrics.authOperations.length
 
-          console.log(`📊 Performance Summary:`)
-          console.log(`   - AI Operations: ${aiOps}`)
-          console.log(`   - Auth Operations: ${authOps}`)
+          logger.debug(`📊 Performance Summary:`)
+          logger.debug(`   - AI Operations: ${aiOps}`)
+          logger.debug(`   - Auth Operations: ${authOps}`)
 
           if (mountTime > 1000) {
-            console.warn('⚠️  App mount time is high. Consider optimizing initial load.')
+            logger.warn('⚠️  App mount time is high. Consider optimizing initial load.')
           }
         }
 
@@ -406,16 +407,16 @@ const withPerformanceMonitoring = (WrappedComponent) => {
           })
 
           if (!authResponse.ok && authResponse.status !== 401) {
-            console.warn('⚠️  Auth service health check failed')
+            logger.warn('⚠️  Auth service health check failed')
           }
 
           // Check AI service health
           const aiResponse = await fetch(`${apiBaseUrl}/health/ai`)
           if (!aiResponse.ok) {
-            console.warn('⚠️  AI service health check failed')
+            logger.warn('⚠️  AI service health check failed')
           }
         } catch (error) {
-          console.warn('⚠️  Service health check failed:', error)
+          logger.warn('⚠️  Service health check failed:', error)
         }
       }
 
@@ -536,7 +537,7 @@ const renderApp = () => {
   const rootElement = document.getElementById('root')
 
   if (!rootElement) {
-    console.error('Root element not found!')
+    logger.error('Root element not found!')
 
     // Create fallback UI
     document.body.innerHTML = `
@@ -566,7 +567,7 @@ const renderApp = () => {
     )
 
     // Enhanced initialization logging with new features
-    console.log(`
+    logger.debug(`
     🚀 Bylix Email Initialized Successfully!
     
     New Features Available:
@@ -620,7 +621,7 @@ const renderApp = () => {
       }, 1000)
     }
   } catch (error) {
-    console.error('💥 Failed to initialize Bylix Email:', error)
+    logger.error('💥 Failed to initialize Bylix Email:', error)
 
     // Enhanced error UI with specific guidance
     let errorGuidance = 'Please refresh the page and try again.'
@@ -656,7 +657,7 @@ const initializeApp = () => {
   // Check if user has existing auth token
   const existingToken = localStorage.getItem('auth_token')
   if (existingToken) {
-    console.log('🔐 Found existing authentication token')
+    logger.debug('🔐 Found existing authentication token')
   }
 
   // Proceed with app initialization
@@ -670,7 +671,7 @@ const initializeApp = () => {
 // Enhanced Hot Module Replacement for development
 if (import.meta.hot) {
   import.meta.hot.accept('./App.jsx', () => {
-    console.log('🔁 Hot reloading Bylix Email App component...')
+    logger.debug('🔁 Hot reloading Bylix Email App component...')
 
     // Preserve auth state during hot reload
     const preservedAuthToken = localStorage.getItem('auth_token')
@@ -685,7 +686,7 @@ if (import.meta.hot) {
 
   // Handle hot reload errors
   import.meta.hot.dispose(() => {
-    console.log('🧹 Cleaning up before hot reload...')
+    logger.debug('🧹 Cleaning up before hot reload...')
   })
 }
 

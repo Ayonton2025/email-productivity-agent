@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 /**
  * Payment Processing Service
  * Handles Paystack payment flows
@@ -30,7 +31,7 @@ export const initiateUpgrade = async (planId, paymentMethod = 'auto', options = 
 
     return response.data
   } catch (error) {
-    console.error('Upgrade initiation error:', error.response?.data || error.message || error)
+    logger.error('Upgrade initiation error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -44,7 +45,7 @@ export const getSubscription = async () => {
     const response = await api.get('/billing/subscription')
     return response.data
   } catch (error) {
-    console.error('Subscription fetch error:', error.response?.data || error.message || error)
+    logger.error('Subscription fetch error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -58,7 +59,7 @@ export const getCreditUsage = async () => {
     const response = await api.get('/billing/credits')
     return response.data
   } catch (error) {
-    console.error('Credit usage fetch error:', error.response?.data || error.message || error)
+    logger.error('Credit usage fetch error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -68,7 +69,7 @@ export const getAvailablePlans = async () => {
     const response = await api.get('/billing/plans')
     return response.data
   } catch (error) {
-    console.error('Plans fetch error:', error.response?.data || error.message || error)
+    logger.error('Plans fetch error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -78,7 +79,7 @@ export const getAvailablePaymentMethods = async (countryCode = 'US') => {
     const response = await api.get(`/billing/payment-methods/${countryCode}`)
     return response.data
   } catch (error) {
-    console.error('Payment methods fetch error:', error.response?.data || error.message || error)
+    logger.error('Payment methods fetch error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -92,7 +93,7 @@ export const getAvailablePaymentMethods = async (countryCode = 'US') => {
  */
 export const processPaystackPayment = (paymentData, onSuccess, onError) => {
   if (!window.PaystackPop) {
-    console.error('Paystack not loaded')
+    logger.error('Paystack not loaded')
     onError(new Error('Paystack not loaded'))
     return
   }
@@ -123,7 +124,7 @@ export const cancelSubscription = async () => {
     const response = await api.post('/billing/cancel')
     return response.data
   } catch (error) {
-    console.error('Cancellation error:', error.response?.data || error.message || error)
+    logger.error('Cancellation error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -138,7 +139,7 @@ export const updatePaymentMethod = async (paymentMethod) => {
     const response = await api.put('/billing/payment-method', { payment_method: paymentMethod })
     return response.data
   } catch (error) {
-    console.error('Payment method update error:', error.response?.data || error.message || error)
+    logger.error('Payment method update error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -152,7 +153,7 @@ export const getBillingHistory = async () => {
     const response = await api.get('/billing/history')
     return response.data
   } catch (error) {
-    console.error('Billing history fetch error:', error.response?.data || error.message || error)
+    logger.error('Billing history fetch error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -167,7 +168,7 @@ export const validateCoupon = async (code) => {
     const response = await api.post('/billing/coupon/validate', { code })
     return response.data
   } catch (error) {
-    console.error('Coupon validation error:', error.response?.data || error.message || error)
+    logger.error('Coupon validation error:', error.response?.data || error.message || error)
     throw error
   }
 }
@@ -182,7 +183,7 @@ export const applyCoupon = async (code) => {
     const response = await api.post('/billing/coupon/apply', { code })
     return response.data
   } catch (error) {
-    console.error('Coupon apply error:', error.response?.data || error.message || error)
+    logger.error('Coupon apply error:', error.response?.data || error.message || error)
     throw error
   }
 }

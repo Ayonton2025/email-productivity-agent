@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { X, Send, AlertCircle, CheckCircle, Loader } from 'lucide-react'
 import { submitContactForm, getContactEmail } from '../../services/contactService'
@@ -70,7 +71,7 @@ const ContactSalesForm = ({ isOpen, onClose }) => {
       }, 3000)
     } catch (err) {
       setError('Failed to send message. Please try emailing us directly at ' + contactEmail)
-      console.error('Contact form error:', err)
+      logger.error('Contact form error:', err)
     } finally {
       setLoading(false)
     }

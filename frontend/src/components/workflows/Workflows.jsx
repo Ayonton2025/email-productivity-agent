@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Workflow, Plus, Play, Pause, Trash2, Edit, ChevronRight, Zap, RefreshCw } from 'lucide-react'
@@ -27,7 +28,7 @@ const Workflows = () => {
       const res = await workflowsApi.getWorkflows()
       setWorkflows(res.data || [])
     } catch (error) {
-      console.error('Failed to load workflows:', error)
+      logger.error('Failed to load workflows:', error)
     } finally {
       setLoading(false)
     }
@@ -39,7 +40,7 @@ const Workflows = () => {
       await workflowsApi.deleteWorkflow(workflowId)
       await loadWorkflows()
     } catch (error) {
-      console.error('Failed to delete workflow:', error)
+      logger.error('Failed to delete workflow:', error)
       alert('Failed to delete workflow')
     }
   }
@@ -49,7 +50,7 @@ const Workflows = () => {
       await workflowsApi.updateWorkflow(workflow.id, { is_active: !workflow.is_active })
       await loadWorkflows()
     } catch (error) {
-      console.error('Failed to update workflow:', error)
+      logger.error('Failed to update workflow:', error)
     }
   }
 

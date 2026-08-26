@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -106,7 +107,7 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
         // Display mock warning if present
         if (res.data?.mock_warning) {
           setMockWarning(res.data.mock_warning)
-          console.warn('⚠️ Mock reply warning:', res.data.mock_warning)
+          logger.warn('⚠️ Mock reply warning:', res.data.mock_warning)
         }
         return
       }

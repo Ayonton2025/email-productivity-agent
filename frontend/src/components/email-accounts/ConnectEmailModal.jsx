@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { X, Mail, Lock, AlertCircle, CheckCircle, Loader, LogIn, Key } from 'lucide-react'
 import { emailApi } from '../../services/api'
@@ -129,7 +130,7 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to connect account')
-      console.error('Connection error:', err)
+      logger.error('Connection error:', err)
     } finally {
       setLoading(false)
     }

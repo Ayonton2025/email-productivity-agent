@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import apiClient from './api'
 
 /**
@@ -16,10 +17,10 @@ class AttachmentService {
   async getAttachmentInfo(attachmentId) {
     try {
       const response = await apiClient.get(`/attachments/${attachmentId}/info`)
-      console.log('✅ [AttachmentService] Retrieved attachment info:', attachmentId)
+      logger.debug('✅ [AttachmentService] Retrieved attachment info:', attachmentId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error getting attachment info:', error)
+      logger.error('❌ [AttachmentService] Error getting attachment info:', error)
       throw this._handleError(error)
     }
   }
@@ -34,10 +35,10 @@ class AttachmentService {
       const response = await apiClient.get(`/attachments/${attachmentId}/download`, {
         responseType: 'blob', // Request as blob for file download
       })
-      console.log('✅ [AttachmentService] Downloaded attachment:', attachmentId)
+      logger.debug('✅ [AttachmentService] Downloaded attachment:', attachmentId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error downloading attachment:', error)
+      logger.error('❌ [AttachmentService] Error downloading attachment:', error)
       throw this._handleError(error)
     }
   }
@@ -51,10 +52,10 @@ class AttachmentService {
   async getAttachmentAnalysis(attachmentId) {
     try {
       const response = await apiClient.get(`/attachments/${attachmentId}/analysis`)
-      console.log('✅ [AttachmentService] Retrieved attachment analysis:', attachmentId)
+      logger.debug('✅ [AttachmentService] Retrieved attachment analysis:', attachmentId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error getting attachment analysis:', error)
+      logger.error('❌ [AttachmentService] Error getting attachment analysis:', error)
       throw this._handleError(error)
     }
   }
@@ -67,10 +68,10 @@ class AttachmentService {
   async triggerAttachmentAnalysis(attachmentId) {
     try {
       const response = await apiClient.post(`/attachments/${attachmentId}/analyze`)
-      console.log('✅ [AttachmentService] Triggered attachment analysis:', attachmentId)
+      logger.debug('✅ [AttachmentService] Triggered attachment analysis:', attachmentId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error triggering attachment analysis:', error)
+      logger.error('❌ [AttachmentService] Error triggering attachment analysis:', error)
       throw this._handleError(error)
     }
   }
@@ -87,10 +88,10 @@ class AttachmentService {
     try {
       const params = includeAnalysis ? { include_analysis: true } : {}
       const response = await apiClient.get(`/emails/${emailId}/attachments`, { params })
-      console.log('✅ [AttachmentService] Retrieved email attachments:', emailId)
+      logger.debug('✅ [AttachmentService] Retrieved email attachments:', emailId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error getting email attachments:', error)
+      logger.error('❌ [AttachmentService] Error getting email attachments:', error)
       throw this._handleError(error)
     }
   }
@@ -103,10 +104,10 @@ class AttachmentService {
   async getEmailAttachmentCount(emailId) {
     try {
       const response = await apiClient.get(`/emails/${emailId}/attachments/count`)
-      console.log('✅ [AttachmentService] Retrieved attachment count:', emailId)
+      logger.debug('✅ [AttachmentService] Retrieved attachment count:', emailId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error getting attachment count:', error)
+      logger.error('❌ [AttachmentService] Error getting attachment count:', error)
       throw this._handleError(error)
     }
   }
@@ -119,10 +120,10 @@ class AttachmentService {
   async analyzeEmailAttachments(emailId) {
     try {
       const response = await apiClient.post(`/emails/${emailId}/attachments/analyze-all`)
-      console.log('✅ [AttachmentService] Triggered batch email analysis:', emailId)
+      logger.debug('✅ [AttachmentService] Triggered batch email analysis:', emailId)
       return response.data
     } catch (error) {
-      console.error('❌ [AttachmentService] Error analyzing email attachments:', error)
+      logger.error('❌ [AttachmentService] Error analyzing email attachments:', error)
       throw this._handleError(error)
     }
   }
@@ -164,9 +165,9 @@ class AttachmentService {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      console.log('✅ [AttachmentService] File download initiated:', filename)
+      logger.debug('✅ [AttachmentService] File download initiated:', filename)
     } catch (error) {
-      console.error('❌ [AttachmentService] Error initiating download:', error)
+      logger.error('❌ [AttachmentService] Error initiating download:', error)
       throw error
     }
   }

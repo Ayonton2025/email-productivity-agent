@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import React from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -8,14 +9,14 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation()
 
   React.useEffect(() => {
-    console.log('🔒 [ProtectedRoute] Checking authentication:', {
+    logger.debug('🔒 [ProtectedRoute] Checking authentication:', {
       isAuthenticated,
       loading,
       currentPath: location.pathname,
     })
 
     if (!loading && !isAuthenticated) {
-      console.log('🚫 [ProtectedRoute] User not authenticated, redirecting to login')
+      logger.debug('🚫 [ProtectedRoute] User not authenticated, redirecting to login')
       // Store the attempted URL for redirect after login
       const redirectUrl = location.pathname + location.search
       if (redirectUrl !== '/login') {
@@ -50,7 +51,7 @@ const ProtectedRoute = ({ children }) => {
     )
   }
 
-  console.log('✅ [ProtectedRoute] User authenticated, rendering children')
+  logger.debug('✅ [ProtectedRoute] User authenticated, rendering children')
   return children
 }
 

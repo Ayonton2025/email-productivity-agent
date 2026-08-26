@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useMemo, useState, useEffect } from 'react'
 import { getUserAccessProfile, updateUserAccessProfile, getFeatureTemplates } from '../../services/adminService'
 
@@ -20,7 +21,7 @@ const SuperAdminFeatureRules = () => {
           setTemplates(response.templates)
         }
       } catch (e) {
-        console.warn('Failed to fetch feature templates:', e)
+        logger.warn('Failed to fetch feature templates:', e)
         // Fallback: set empty templates (users can still manually toggle)
         setTemplates({})
       }
@@ -58,7 +59,7 @@ const SuperAdminFeatureRules = () => {
   const applyTemplate = (templateName) => {
     const template = templates[templateName]
     if (!template || !template.features) {
-      console.error(`Template ${templateName} not found`)
+      logger.error(`Template ${templateName} not found`)
       return
     }
 

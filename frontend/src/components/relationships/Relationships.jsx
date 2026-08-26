@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, Building2, Search, Filter, Mail, Calendar, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
@@ -21,7 +22,7 @@ const Relationships = () => {
       const res = await insightsApi.getRelationships()
       setRelationships(res.data)
     } catch (error) {
-      console.error('Failed to load relationships:', error)
+      logger.error('Failed to load relationships:', error)
     } finally {
       setLoading(false)
     }

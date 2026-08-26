@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect, useContext } from 'react'
 import {
   Plus,
@@ -91,7 +92,7 @@ const PromptManager = () => {
       // Close the modal
       document.getElementById('create-prompt-modal').close()
     } catch (error) {
-      console.error('Failed to create prompt:', error)
+      logger.error('Failed to create prompt:', error)
       setError('Failed to create prompt: ' + (error.message || 'Unknown error'))
     }
   }
@@ -105,7 +106,7 @@ const PromptManager = () => {
       await updatePrompt(selectedPrompt.id, selectedPrompt)
       setIsEditing(false)
     } catch (error) {
-      console.error('Failed to update prompt:', error)
+      logger.error('Failed to update prompt:', error)
       setError('Failed to update prompt: ' + (error.message || 'Unknown error'))
     }
   }
@@ -121,7 +122,7 @@ const PromptManager = () => {
         setSelectedPrompt(filteredPrompts.find((p) => p.id !== promptId) || null)
       }
     } catch (error) {
-      console.error('Failed to delete prompt:', error)
+      logger.error('Failed to delete prompt:', error)
       setError('Failed to delete prompt: ' + (error.message || 'Unknown error'))
     }
   }
@@ -137,7 +138,7 @@ const PromptManager = () => {
       const result = await testPrompt(selectedPrompt.id, testInput)
       setTestOutput(result.output || 'No output generated')
     } catch (error) {
-      console.error('Failed to test prompt:', error)
+      logger.error('Failed to test prompt:', error)
       setError('Failed to test prompt: ' + (error.message || 'Unknown error'))
       setTestOutput('Error: ' + (error.message || 'Failed to test prompt'))
     } finally {

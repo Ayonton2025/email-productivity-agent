@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { X, Sparkles } from 'lucide-react'
 import { agentsApi, aiApi } from '../../services/api'
@@ -132,7 +133,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
       onSave()
       onClose()
     } catch (error) {
-      console.error('Failed to save agent:', error)
+      logger.error('Failed to save agent:', error)
       alert('Failed to save agent')
     } finally {
       setSaving(false)

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import React, { createContext, useState, useContext, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 
@@ -26,17 +27,17 @@ export const EmailProvider = ({ children }) => {
 
   // Email loading is now handled per-account in Inbox component
   const loadEmails = async () => {
-    console.log('ℹ️ [EmailContext] Email loading is handled per-account in Inbox component')
+    logger.debug('ℹ️ [EmailContext] Email loading is handled per-account in Inbox component')
     return
   }
 
   const syncEmails = async () => {
-    console.log('⚠️ [EmailContext] Sync is handled per-account in Inbox component')
+    logger.debug('⚠️ [EmailContext] Sync is handled per-account in Inbox component')
     return { success: false, error: 'Use account-specific sync' }
   }
 
   const updateEmailCategory = async (emailId, category) => {
-    console.log('⚠️ [EmailContext] Category update moved to backend AI pipeline')
+    logger.debug('⚠️ [EmailContext] Category update moved to backend AI pipeline')
     setEmails((prev) => prev.map((email) => (email.id === emailId ? { ...email, ai_category: category } : email)))
 
     if (selectedEmail && selectedEmail.id === emailId) {

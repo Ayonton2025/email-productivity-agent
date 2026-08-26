@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { Mail, ExternalLink, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 
@@ -46,7 +47,7 @@ const ProviderConnection = () => {
         setConnectionStatus((prev) => ({ ...prev, [provider]: 'connected' }))
       }
     } catch (error) {
-      console.error('Connection failed:', error)
+      logger.error('Connection failed:', error)
     } finally {
       setIsConnecting(false)
     }
@@ -63,7 +64,7 @@ const ProviderConnection = () => {
         window.location.reload()
       }
     } catch (error) {
-      console.error('Sync failed:', error)
+      logger.error('Sync failed:', error)
     }
   }
 

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   getAdminOverview,
@@ -301,7 +302,7 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                   await resetPremiumDismissals()
                   alert('Global premium prompt dismissals reset. Local dismissals will clear shortly.')
                 } catch (e) {
-                  console.error(e)
+                  logger.error(e)
                   alert('Failed to reset dismissals')
                 }
               }}

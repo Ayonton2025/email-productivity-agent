@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import React, { createContext, useState, useContext } from 'react'
 import { useAuth } from './AuthContext'
 import { API_BASE_URL } from '../services/api'
@@ -40,7 +41,7 @@ export const PromptProvider = ({ children }) => {
       setPrompts(data)
       return data
     } catch (error) {
-      console.error('Error fetching prompts:', error)
+      logger.error('Error fetching prompts:', error)
       throw error
     } finally {
       setLoading(false)
@@ -65,7 +66,7 @@ export const PromptProvider = ({ children }) => {
       setSystemPrompts(data)
       return data
     } catch (error) {
-      console.error('Error fetching system prompts:', error)
+      logger.error('Error fetching system prompts:', error)
       throw error
     }
   }
@@ -90,7 +91,7 @@ export const PromptProvider = ({ children }) => {
       setPrompts((prev) => [newPrompt, ...prev])
       return newPrompt
     } catch (error) {
-      console.error('Error creating prompt:', error)
+      logger.error('Error creating prompt:', error)
       throw error
     } finally {
       setLoading(false)
@@ -117,7 +118,7 @@ export const PromptProvider = ({ children }) => {
       setPrompts((prev) => prev.map((prompt) => (prompt.id === promptId ? updatedPrompt : prompt)))
       return updatedPrompt
     } catch (error) {
-      console.error('Error updating prompt:', error)
+      logger.error('Error updating prompt:', error)
       throw error
     } finally {
       setLoading(false)
@@ -141,7 +142,7 @@ export const PromptProvider = ({ children }) => {
       setPrompts((prev) => prev.filter((prompt) => prompt.id !== promptId))
       return { success: true }
     } catch (error) {
-      console.error('Error deleting prompt:', error)
+      logger.error('Error deleting prompt:', error)
       throw error
     } finally {
       setLoading(false)
@@ -167,7 +168,7 @@ export const PromptProvider = ({ children }) => {
       const result = await response.json()
       return result
     } catch (error) {
-      console.error('Error testing prompt:', error)
+      logger.error('Error testing prompt:', error)
       throw error
     } finally {
       setLoading(false)

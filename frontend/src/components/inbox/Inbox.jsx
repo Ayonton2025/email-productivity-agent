@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, RefreshCw, Mail, Clock, AlertCircle, CheckCircle, MessageSquare, Paperclip } from 'lucide-react'
@@ -62,7 +63,7 @@ const Inbox = () => {
         loadInbox(first.id)
       }
     } catch (err) {
-      console.error('Failed to load email accounts:', err)
+      logger.error('Failed to load email accounts:', err)
     }
   }
 
@@ -73,7 +74,7 @@ const Inbox = () => {
       const list = res.data?.emails || []
       setEmails(list)
     } catch (err) {
-      console.error('Failed to load inbox:', err)
+      logger.error('Failed to load inbox:', err)
       const timedOut =
         err?.code === 'ECONNABORTED' ||
         String(err?.message || '')

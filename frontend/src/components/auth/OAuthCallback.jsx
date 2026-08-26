@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -26,13 +27,13 @@ const OAuthCallback = () => {
         const error = searchParams.get('error')
 
         if (error) {
-          console.error('OAuth error:', error)
+          logger.error('OAuth error:', error)
           navigate('/login?error=oauth_failed')
           return
         }
 
         if (!code) {
-          console.error('No authorization code received')
+          logger.error('No authorization code received')
           navigate('/login?error=no_code')
           return
         }
@@ -97,7 +98,7 @@ const OAuthCallback = () => {
           navigate('/login?error=no_token')
         }
       } catch (error) {
-        console.error('OAuth callback error:', error)
+        logger.error('OAuth callback error:', error)
         const existingToken = localStorage.getItem('auth_token')
         if (existingToken) {
           navigate('/inbox?error=oauth_link_failed', { replace: true })

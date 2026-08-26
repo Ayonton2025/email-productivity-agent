@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { X, Plus, Trash2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { workflowsApi, aiApi } from '../../services/api'
@@ -126,7 +127,7 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
       onSave()
       onClose()
     } catch (error) {
-      console.error('Failed to save workflow:', error)
+      logger.error('Failed to save workflow:', error)
       alert('Failed to save workflow')
     } finally {
       setSaving(false)

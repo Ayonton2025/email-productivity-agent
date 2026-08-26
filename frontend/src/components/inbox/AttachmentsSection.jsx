@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Loader2, AlertCircle, FileIcon } from 'lucide-react'
 import AttachmentCard from './AttachmentCard'
@@ -32,7 +33,7 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
       }
     } catch (err) {
       setError('Failed to load attachments')
-      console.error('Fetch attachments error:', err)
+      logger.error('Fetch attachments error:', err)
     } finally {
       setLoading(false)
     }
@@ -51,7 +52,7 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
       }
     } catch (err) {
       setError('Failed to trigger batch analysis')
-      console.error('Batch analysis error:', err)
+      logger.error('Batch analysis error:', err)
     } finally {
       setAnalyzingAll(false)
     }

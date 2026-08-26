@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import {
   Send,
@@ -85,7 +86,7 @@ const EmailAgent = () => {
         return
       }
     } catch (error) {
-      console.error('Agent chat backend call failed, using local fallback:', error)
+      logger.error('Agent chat backend call failed, using local fallback:', error)
     }
 
     // Fallback local response logic
