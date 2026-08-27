@@ -2,7 +2,14 @@ import pytest
 from pydantic import ValidationError
 
 from app.api.billing.schemas import CreditTopupRequest, UpgradeRequest
-from app.api.schemas import RegisterRequest, ResetPasswordRequest
+from app.api.schemas import (
+    AgentChatRequest,
+    AgentProcessRequest,
+    DraftCreateRequest,
+    PromptCreateRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+)
 
 
 @pytest.mark.parametrize("email", ["missing-at.example.com", "person@localhost", ""])
@@ -43,3 +50,21 @@ def test_upgrade_rejects_unknown_payment_method():
 def test_reset_password_uses_same_complexity_policy():
     with pytest.raises(ValidationError):
         ResetPasswordRequest(token="x" * 16, new_password="weak-password")
+
+
+def test_prompt_request_requires_nonempty_template():
+    with pytest.raises(ValidationError):
+        PromptCreateRequest(name="Summary", template="", category="summary")
+
+
+def test_draft_request_validates_recipient_and_allows_blank_recipient():
+    assert DraftCreateRequest(subject="Draft", recipient="").recipient is None
+    with pytest.raises(ValidationError):
+        DraftCreateRequest(subject="Draft", recipient="not-an-email")
+
+
+def test_agent_requests_reject_empty_or_missing_content():
+    with pytest.raises(ValidationError):
+        AgentChatRequest(message="")
+    with pytest.raises(ValidationError):
+        AgentProcessRequest(email_id="email-1", prompt_type="")
