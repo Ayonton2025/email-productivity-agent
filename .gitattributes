@@ -1,0 +1,7 @@
+# Linux container entrypoints and automation must remain executable as scripts.
+*.sh text eol=lf
+
+# Make recipes and environment/documentation files use stable line endings.
+Makefile text eol=lf
+*.env.example text eol=lf
+*.md text eol=lf

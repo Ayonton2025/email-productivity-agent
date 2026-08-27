@@ -14,24 +14,32 @@ A full-stack email productivity platform with AI assistance, multi-provider emai
 ### Prerequisites
 
 - Git
-- Python 3.11
-- Node.js 20 and npm
-- Docker Desktop with Compose v2 for the isolated stack
+- Docker Desktop with Docker Compose
 
 ### Offline development
 
 The default local path requires no provider accounts. It uses SQLite and deterministic mock billing, AI, email, FX, and GeoIP services.
 
-```powershell
-Copy-Item .env.example .env
-docker compose -f docker-compose.test.yml up --build
+```sh
+git clone https://github.com/Ayonton2025/email-productivity-agent.git
+cd email-productivity-agent
+cp .env.example .env
+docker compose up --build
 ```
 
-Open `http://localhost:3000` for the frontend and `http://localhost:8000/health` for backend health. Stop the stack with:
+No provider credentials are required for the default mock-mode configuration.
+Wait for the services to become healthy, then open `http://localhost:3000` and
+verify the backend at `http://localhost:8000/health`. From another terminal, run:
 
-```powershell
-docker compose -f docker-compose.test.yml down
+```sh
+make health
 ```
+
+Stop the stack with `docker compose down`. If `make` is unavailable, run
+`./scripts/healthcheck.sh` directly from Git Bash, WSL, or another Bash shell.
+
+The first build downloads the application dependencies. Later starts reuse the
+Docker build cache.
 
 ### Local backend
 
@@ -89,7 +97,9 @@ The GitHub Actions workflow runs these checks on every push and pull request. De
 4. Provide a production PostgreSQL `DATABASE_URL` and Redis URLs when Celery is enabled.
 5. Configure only the OAuth, email, AI, and payment providers required by the deployment.
 6. Set `ALLOWED_ORIGINS` to trusted HTTPS origins and configure `SENTRY_DSN` if monitoring is desired.
-7. Start the connected stack with `docker compose up -d` after preparing `backend/.env`.
+7. Start the connected stack with `docker compose --profile connected up -d`
+   after preparing the root `.env` file. The profile enables PostgreSQL, Redis,
+   database initialization, and Celery services in addition to the application.
 
 Never commit `.env`, credentials, tokens, private keys, database files, dependency directories, or build output.
 

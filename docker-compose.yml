@@ -3,6 +3,7 @@ name: email-productivity-agent
 services:
   # PostgreSQL Database
   postgres:
+    profiles: ["connected"]
     image: postgres:15-alpine
     container_name: email_agent_postgres
     environment:
@@ -23,6 +24,7 @@ services:
 
   # Redis for Celery and Caching
   redis:
+    profiles: ["connected"]
     image: redis:7-alpine
     container_name: email_agent_redis
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
@@ -45,29 +47,9 @@ services:
       dockerfile: Dockerfile
     container_name: email_agent_backend
     env_file:
-      - ./backend/.env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      FRONTEND_URL: http://localhost:3000
-      DEBUG: "true"
-      SKIP_DB_INIT: "true"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: email_agent
-      DB_NAME: email_agent_db
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
+      - ./.env
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      init_db:
-        condition: service_completed_successfully
     volumes:
       - ./backend:/app
       - attachment_storage:/app/storage/attachments
@@ -82,6 +64,7 @@ services:
 
   # One-off DB initialization (run after postgres is healthy)
   init_db:
+    profiles: ["connected"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -109,7 +92,7 @@ services:
         echo "Running application DB bootstrap..."
         python -m app.scripts.init_db
     env_file:
-      - ./backend/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -136,6 +119,7 @@ services:
 
   # Celery Worker
   celery_worker:
+    profiles: ["connected"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -143,7 +127,7 @@ services:
     # Use solo pool for async SQLAlchemy/asyncpg safety (prefork can cause event-loop mismatch errors)
     command: celery -A app.tasks.celery_app worker --pool=solo --loglevel=info --concurrency=1 --queues=email,ai,campaigns,workflows,integrations,billing,maintenance
     env_file:
-      - ./backend/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -178,6 +162,7 @@ services:
 
   # Celery Beat (Scheduler)
   celery_beat:
+    profiles: ["connected"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -185,7 +170,7 @@ services:
     # Use Celery's built-in beat scheduler; DO NOT use django_celery_beat in a FastAPI project
     command: celery -A app.tasks.celery_app beat --loglevel=info
     env_file:
-      - ./backend/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql+asyncpg://email_agent:secure_password_change_in_prod@postgres:5432/email_agent_db
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -228,14 +213,16 @@ services:
     command: sh -c "if [ ! -d /app/node_modules ] || [ -z \"$(ls -A /app/node_modules)\" ]; then npm ci --silent; fi && npm run dev"
     environment:
       # Point frontend API/WebSocket traffic to the backend service on the Docker network
-      VITE_API_URL: http://backend:8000
-      VITE_WS_URL: ws://backend:8000
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8000}
+      VITE_APP_NAME: ${VITE_APP_NAME:-Bylix Email}
       # Use polling for file watchers on Windows/OneDrive
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     volumes:
       - ./frontend:/app:cached
       - frontend_node_modules:/app/node_modules
