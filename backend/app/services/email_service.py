@@ -772,6 +772,8 @@ Best regards,
     async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update a draft"""
         try:
+            if "metadata" in draft_data:
+                draft_data["draft_metadata"] = draft_data.pop("metadata")
             result = await self.db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
             draft = result.scalar_one_or_none()
 
