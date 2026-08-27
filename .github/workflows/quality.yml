@@ -21,7 +21,7 @@ jobs:
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m mypy
-      - run: python -m pytest tests --cov=app --cov-report=term-missing -q
+      - run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=30 -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -71,3 +71,10 @@ jobs:
       - name: Audit frontend dependencies
         working-directory: frontend
         run: npm audit --audit-level=high
+
+  deployment-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated deployment images
+        run: docker compose -f docker-compose.test.yml build
