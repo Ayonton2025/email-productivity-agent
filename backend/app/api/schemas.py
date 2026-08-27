@@ -114,6 +114,61 @@ class ResetPasswordRequest(BaseModel):
         return validate_password_complexity(value)
 
 
+class PromptCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    template: str = Field(..., min_length=1, max_length=100000)
+    category: str = Field(..., min_length=1, max_length=100)
+    is_active: bool = True
+    metadata: dict = Field(default_factory=dict)
+
+
+class PromptUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    template: Optional[str] = Field(default=None, min_length=1, max_length=100000)
+    category: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    is_active: Optional[bool] = None
+    metadata: Optional[dict] = None
+
+
+class DraftCreateRequest(BaseModel):
+    subject: str = Field(..., min_length=1, max_length=1000)
+    body: str = Field(default="", max_length=100000)
+    recipient: Optional[EmailStr] = None
+    context_email_id: Optional[str] = Field(default=None, max_length=255)
+    metadata: dict = Field(default_factory=dict)
+
+    @field_validator("recipient", mode="before")
+    @classmethod
+    def blank_recipient_is_none(cls, value: object) -> object:
+        return None if value == "" else value
+
+
+class DraftUpdateRequest(BaseModel):
+    subject: Optional[str] = Field(default=None, min_length=1, max_length=1000)
+    body: Optional[str] = Field(default=None, max_length=100000)
+    recipient: Optional[EmailStr] = None
+    context_email_id: Optional[str] = Field(default=None, max_length=255)
+    metadata: Optional[dict] = None
+
+    @field_validator("recipient", mode="before")
+    @classmethod
+    def blank_recipient_is_none(cls, value: object) -> object:
+        return None if value == "" else value
+
+
+class AgentProcessRequest(BaseModel):
+    email_id: str = Field(..., min_length=1, max_length=255)
+    prompt_type: str = Field(..., min_length=1, max_length=100)
+    custom_prompt: Optional[str] = Field(default=None, min_length=1, max_length=100000)
+    system_prompt: Optional[str] = Field(default=None, min_length=1, max_length=255)
+
+
+class AgentChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=100000)
+
+
 class TokenResponse(BaseModel):
     """Token response schema"""
 
@@ -133,6 +188,15 @@ class EmailAccountRequest(BaseModel):
     provider: str = Field(..., description="Email provider (gmail, outlook, yahoo)")
     access_token: str = Field(..., description="OAuth access token")
     refresh_token: Optional[str] = Field(None, description="OAuth refresh token")
+
+
+class GmailConnectionRequest(BaseModel):
+    """Request schema for connecting a Gmail account with OAuth tokens."""
+
+    email: EmailStr
+    access_token: str = Field(..., min_length=1, max_length=8192)
+    refresh_token: Optional[str] = Field(default=None, max_length=8192)
+    token_expiry: Optional[datetime] = None
 
 
 class EmailAccountResponse(BaseModel):

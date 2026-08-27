@@ -5,6 +5,16 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.schemas import (
+    AgentChatRequest,
+    AgentProcessRequest,
+    DraftCreateRequest,
+    DraftUpdateRequest,
+    GmailConnectionRequest,
+    PromptCreateRequest,
+    PromptUpdateRequest,
+)
+
 # Import the proper authentication dependency
 from app.core.security import get_current_user
 from app.models.database import get_db
@@ -179,7 +189,7 @@ async def get_user_email_accounts_simple(
 
 @router.post("/email-accounts/gmail")
 async def connect_gmail_simple(
-    auth_data: dict, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    auth_data: GmailConnectionRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Connect Gmail account"""
     try:
@@ -189,7 +199,7 @@ async def connect_gmail_simple(
         email_provider_service = EmailProviderService()
 
         success = await email_provider_service.authenticate_gmail_with_token(
-            auth_data.get("access_token"), auth_data.get("refresh_token")
+            auth_data.access_token, auth_data.refresh_token
         )
 
         if success:
@@ -197,10 +207,10 @@ async def connect_gmail_simple(
             email_account = UserEmailAccount(
                 user_id=current_user.id,
                 provider="gmail",
-                email=auth_data.get("email"),
-                access_token=auth_data.get("access_token"),
-                refresh_token=auth_data.get("refresh_token"),
-                token_expiry=auth_data.get("token_expiry"),
+                email=auth_data.email,
+                access_token=auth_data.access_token,
+                refresh_token=auth_data.refresh_token,
+                token_expiry=auth_data.token_expiry,
                 is_primary=True,
             )
 
@@ -333,17 +343,17 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/prompts", response_model=Dict[str, Any])
-async def create_prompt(prompt_data: dict, db: AsyncSession = Depends(get_db)):
+async def create_prompt(prompt_data: PromptCreateRequest, db: AsyncSession = Depends(get_db)):
     """Create a new prompt"""
     prompt_service = PromptService(db)
-    return await prompt_service.create_prompt(prompt_data)
+    return await prompt_service.create_prompt(prompt_data.model_dump())
 
 
 @router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
-async def update_prompt(prompt_id: str, prompt_data: dict, db: AsyncSession = Depends(get_db)):
+async def update_prompt(prompt_id: str, prompt_data: PromptUpdateRequest, db: AsyncSession = Depends(get_db)):
     """Update a prompt"""
     prompt_service = PromptService(db)
-    updated = await prompt_service.update_prompt(prompt_id, prompt_data)
+    updated = await prompt_service.update_prompt(prompt_id, prompt_data.model_dump(exclude_unset=True))
     if not updated:
         raise HTTPException(status_code=404, detail="Prompt not found")
     return updated
@@ -369,18 +379,18 @@ async def get_drafts(current_user: User = Depends(get_current_user), db: AsyncSe
 
 @router.post("/drafts", response_model=Dict[str, Any])
 async def create_draft(
-    draft_data: dict, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    draft_data: DraftCreateRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Create a draft for current user"""
     email_service = EmailService(db)
-    return await email_service.create_draft(draft_data, user_id=current_user.id)
+    return await email_service.create_draft(draft_data.model_dump(mode="json"), user_id=current_user.id)
 
 
 @router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
-async def update_draft(draft_id: str, draft_data: dict, db: AsyncSession = Depends(get_db)):
+async def update_draft(draft_id: str, draft_data: DraftUpdateRequest, db: AsyncSession = Depends(get_db)):
     """Update a draft"""
     email_service = EmailService(db)
-    updated = await email_service.update_draft(draft_id, draft_data)
+    updated = await email_service.update_draft(draft_id, draft_data.model_dump(mode="json", exclude_unset=True))
     if not updated:
         raise HTTPException(status_code=404, detail="Draft not found")
     return updated
@@ -479,7 +489,7 @@ async def generate_email_reply(
 # Agent endpoints
 @router.post("/agent/process")
 async def process_with_agent(
-    request: dict, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: AgentProcessRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Process email with agent using system prompts"""
     try:
@@ -487,10 +497,10 @@ async def process_with_agent(
         llm_service = LLMService()
         prompt_service = PromptService(db)
 
-        email_id = request.get("email_id")
-        prompt_type = request.get("prompt_type")
-        custom_prompt = request.get("custom_prompt")
-        system_prompt_name = request.get("system_prompt")  # Get system prompt name from request
+        email_id = request.email_id
+        prompt_type = request.prompt_type
+        custom_prompt = request.custom_prompt
+        system_prompt_name = request.system_prompt
 
         # ✅ REMOVED: Don't automatically ensure user has emails here
         # await email_service.ensure_user_has_emails(current_user.id)
@@ -538,11 +548,9 @@ async def process_with_agent(
 
 
 @router.post("/agent/chat")
-async def chat_with_agent(request: dict, db: AsyncSession = Depends(get_db)):
+async def chat_with_agent(request: AgentChatRequest, db: AsyncSession = Depends(get_db)):
     """Chat with agent"""
-    message = request.get("message")
-    if not message:
-        raise HTTPException(status_code=400, detail="Message is required")
+    message = request.message
 
     llm_service = LLMService()
     response = await llm_service.process_prompt(
