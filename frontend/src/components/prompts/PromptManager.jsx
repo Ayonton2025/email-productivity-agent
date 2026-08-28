@@ -1,25 +1,11 @@
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect, useContext } from 'react'
-import {
-  Plus,
-  Save,
-  Edit,
-  Trash2,
-  Copy,
-  CheckCircle,
-  Search,
-  Filter,
-  Zap,
-  Brain,
-  MessageSquare,
-  FileText,
-  Settings,
-  Play,
-  TestTube,
-  Sparkles,
-} from 'lucide-react'
+import { Plus, Filter, Zap, Brain, MessageSquare, FileText, Settings } from 'lucide-react'
 import { PromptContext } from '../../context/PromptContext'
 import { aiApi } from '../../services/api'
+import PromptAIDraft from './PromptAIDraft'
+import PromptEditor from './PromptEditor'
+import PromptList from './PromptList'
 
 const PromptManager = () => {
   const { prompts, createPrompt, updatePrompt, deletePrompt, testPrompt, loading } = useContext(PromptContext)
@@ -229,455 +215,57 @@ const PromptManager = () => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
       )}
 
-      <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-indigo-600" />
-          <p className="text-sm font-semibold text-indigo-900">AI Prompt Generator</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {aiQuickPrompts.map((prompt) => (
-            <button
-              key={prompt}
-              onClick={() => {
-                setAiGoal(prompt)
-                handleGeneratePromptDraft(prompt)
-              }}
-              className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-100"
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={aiGoal}
-            onChange={(e) => setAiGoal(e.target.value)}
-            placeholder="Describe the prompt you want..."
-            className="flex-1 rounded-lg border border-indigo-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
-          />
-          <button
-            onClick={() => handleGeneratePromptDraft(aiGoal)}
-            disabled={!aiGoal.trim() || aiLoading}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-          >
-            {aiLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      <PromptAIDraft
+        goal={aiGoal}
+        loading={aiLoading}
+        meta={aiMeta}
+        quickPrompts={aiQuickPrompts}
+        onGoalChange={setAiGoal}
+        onGenerate={(goal) => {
+          setAiGoal(goal)
+          handleGeneratePromptDraft(goal)
+        }}
+      />
 
       {/* UPDATED: Added layout-fix and column-fix classes for independent column heights */}
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 prompt-manager-layout layout-fix">
-        {/* Prompts List */}
-        <div className={`${selectedPrompt ? 'lg:w-2/5' : 'w-full'} flex flex-column column-fix`}>
-          <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search prompts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200 prompt-list-column column-fix">
-            {loading ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                <p>Loading prompts...</p>
-              </div>
-            ) : filteredPrompts.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No prompts found</p>
-                <p className="text-sm">Create your first prompt to get started</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {/* System Prompts Section */}
-                {systemPrompts.length > 0 && (
-                  <div className="p-3 bg-gray-50 border-b">
-                    <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      System Prompts
-                    </h3>
-                  </div>
-                )}
-                {systemPrompts.map((prompt) => {
-                  const CategoryIcon = getCategoryIcon(prompt.category)
-                  return (
-                    <div
-                      key={prompt.id}
-                      onClick={() => {
-                        setSelectedPrompt(prompt)
-                        setIsEditing(false)
-                        setShowTestPanel(false)
-                      }}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        selectedPrompt?.id === prompt.id
-                          ? 'bg-indigo-50 border-l-4 border-indigo-500'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`} />
-                          <h3 className="font-semibold text-gray-900">{prompt.name}</h3>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {prompt.is_active && <CheckCircle className="h-4 w-4 text-green-500" />}
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 text-xs">
-                            System
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                        {prompt.description || 'No description'}
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full ${getCategoryColor(prompt.category)}`}
-                        >
-                          {categories.find((c) => c.id === prompt.category)?.name || prompt.category}
-                        </span>
-                        <span>v{prompt.version}</span>
-                      </div>
-
-                      <div className="mt-2 text-xs text-gray-400 font-mono">
-                        {formatTemplatePreview(prompt.template)}
-                      </div>
-                    </div>
-                  )
-                })}
-
-                {/* User Prompts Section */}
-                {userPrompts.length > 0 && (
-                  <div className="p-3 bg-gray-50 border-b border-t">
-                    <h3 className="text-sm font-medium text-gray-700">Your Prompts</h3>
-                  </div>
-                )}
-                {userPrompts.map((prompt) => {
-                  const CategoryIcon = getCategoryIcon(prompt.category)
-                  return (
-                    <div
-                      key={prompt.id}
-                      onClick={() => {
-                        setSelectedPrompt(prompt)
-                        setIsEditing(false)
-                        setShowTestPanel(false)
-                      }}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        selectedPrompt?.id === prompt.id
-                          ? 'bg-indigo-50 border-l-4 border-indigo-500'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`} />
-                          <h3 className="font-semibold text-gray-900">{prompt.name}</h3>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {prompt.is_active && <CheckCircle className="h-4 w-4 text-green-500" />}
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                        {prompt.description || 'No description'}
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full ${getCategoryColor(prompt.category)}`}
-                        >
-                          {categories.find((c) => c.id === prompt.category)?.name || prompt.category}
-                        </span>
-                        <span>v{prompt.version}</span>
-                      </div>
-
-                      <div className="mt-2 text-xs text-gray-400 font-mono">
-                        {formatTemplatePreview(prompt.template)}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Prompt Editor */}
-        {selectedPrompt && (
-          <div className="lg:w-3/5 flex flex-column column-fix">
-            <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-column prompt-editor-column column-fix">
-              {/* Editor Header */}
-              <div className="border-b border-gray-200 p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={selectedPrompt.name}
-                        onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, name: e.target.value }))}
-                        className="w-full text-lg font-semibold border-b border-gray-300 focus:border-indigo-500 focus:outline-none pb-1"
-                      />
-                    ) : (
-                      <h2 className="text-lg font-semibold text-gray-900">{selectedPrompt.name}</h2>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowTestPanel(!showTestPanel)}
-                      className={`inline-flex items-center px-3 py-1 rounded-lg text-sm ${
-                        showTestPanel ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <TestTube className="h-4 w-4 mr-1" />
-                      Test
-                    </button>
-                    <button
-                      onClick={() => copyToClipboard(selectedPrompt.template)}
-                      className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                    {!selectedPrompt.is_system && (
-                      <button
-                        onClick={() => handleDeletePrompt(selectedPrompt.id)}
-                        aria-label="Delete prompt"
-                        disabled={loading}
-                        className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">Category:</span>
-                    {isEditing ? (
-                      <select
-                        value={selectedPrompt.category}
-                        onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, category: e.target.value }))}
-                        className="border border-gray-300 rounded px-2 py-1"
-                      >
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full ${getCategoryColor(selectedPrompt.category)}`}
-                      >
-                        {categories.find((c) => c.id === selectedPrompt.category)?.name || selectedPrompt.category}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">Status:</span>
-                    {isEditing ? (
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedPrompt.is_active}
-                          onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, is_active: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span>Active</span>
-                      </label>
-                    ) : (
-                      <span
-                        className={`inline-flex items-center ${selectedPrompt.is_active ? 'text-green-600' : 'text-gray-400'}`}
-                      >
-                        {selectedPrompt.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">Version:</span>
-                    <span className="text-gray-900">v{selectedPrompt.version}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Editor Content */}
-              <div className="flex-1 flex flex-column min-h-0">
-                {isEditing ? (
-                  <div className="flex-1 flex flex-column">
-                    <div className="p-4 border-b border-gray-200">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                      <textarea
-                        value={selectedPrompt.description}
-                        onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe what this prompt does..."
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        rows="3"
-                      />
-                    </div>
-
-                    <div className="flex-1 p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Prompt Template</label>
-                      <textarea
-                        value={selectedPrompt.template}
-                        onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, template: e.target.value }))}
-                        placeholder="Enter your prompt template here..."
-                        className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-column">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                      <p className="text-gray-900">{selectedPrompt.description || 'No description provided.'}</p>
-                    </div>
-
-                    <div className="flex-1 p-4 overflow-y-auto">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Template</h3>
-                      <pre className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
-                        {selectedPrompt.template}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Test Panel */}
-              {showTestPanel && (
-                <div className="border-t border-gray-200">
-                  <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Test Prompt</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Test Input</label>
-                        <textarea
-                          value={testInput}
-                          onChange={(e) => setTestInput(e.target.value)}
-                          placeholder="Enter test email content..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                          rows="3"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Output</label>
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 min-h-[100px]">
-                          {isTesting ? (
-                            <div className="flex items-center gap-2 text-gray-500">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                              Testing prompt...
-                            </div>
-                          ) : (
-                            <pre className="font-mono text-sm whitespace-pre-wrap">
-                              {testOutput || 'Run test to see output...'}
-                            </pre>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleTestPrompt}
-                        disabled={!testInput || isTesting}
-                        className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Run Test
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Editor Footer */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    {selectedPrompt.is_system && (
-                      <span className="inline-flex items-center text-orange-600">
-                        <Settings className="h-4 w-4 mr-1" />
-                        System Prompt
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    {isEditing ? (
-                      <>
-                        <button
-                          onClick={() => setIsEditing(false)}
-                          disabled={loading}
-                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSavePrompt}
-                          disabled={loading}
-                          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                        >
-                          {loading ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-4 w-4 mr-2" />
-                              Save Prompt
-                            </>
-                          )}
-                        </button>
-                      </>
-                    ) : (
-                      !selectedPrompt.is_system && (
-                        <button
-                          onClick={() => setIsEditing(true)}
-                          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Prompt
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <PromptList
+          selectedPrompt={selectedPrompt}
+          setSelectedPrompt={setSelectedPrompt}
+          setIsEditing={setIsEditing}
+          setShowTestPanel={setShowTestPanel}
+          filteredPrompts={filteredPrompts}
+          systemPrompts={systemPrompts}
+          userPrompts={userPrompts}
+          loading={loading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
+          categories={categories}
+          getCategoryColor={getCategoryColor}
+          getCategoryIcon={getCategoryIcon}
+          formatTemplatePreview={formatTemplatePreview}
+        />
+        <PromptEditor
+          prompt={selectedPrompt}
+          setPrompt={setSelectedPrompt}
+          editing={isEditing}
+          setEditing={setIsEditing}
+          showTestPanel={showTestPanel}
+          setShowTestPanel={setShowTestPanel}
+          testInput={testInput}
+          setTestInput={setTestInput}
+          testOutput={testOutput}
+          testing={isTesting}
+          onTest={handleTestPrompt}
+          onCopy={copyToClipboard}
+          onDelete={handleDeletePrompt}
+          onSave={handleSavePrompt}
+          loading={loading}
+          categories={categories}
+          getCategoryColor={getCategoryColor}
+        />
       </div>
 
       {/* Create Prompt Modal */}

@@ -12,9 +12,9 @@ specific workarounds.
 
 | Measure | Phase 0 baseline | Phase 2 current | Target |
 | --- | ---: | ---: | ---: |
-| Quality score | 31/100 | 48/100 | 100/100 |
-| Backend statement coverage | 30.77% | 31% (rounded report) | 80% |
-| Frontend statement coverage | Not collected | 15.42% | 70% |
+| Quality score | 31/100 | 57/100 | 100/100 |
+| Backend statement coverage | 30.77% | 31.72% | 80% |
+| Frontend statement coverage | Not collected | 15.99% | 70% |
 | Clean-clone Compose startup | Fail | Pass | Pass |
 | Backend health endpoint | Unavailable | HTTP 200 | HTTP 200 |
 | Frontend application | Unavailable | HTTP 200 | HTTP 200 |
@@ -217,6 +217,80 @@ coverage exclusions.
 4. Frontend application routing/context plus inbox list and account connection.
 5. Billing/webhook contract tests and empty-database migration tests.
 
+## Phase 3: Architecture Decomposition
+
+Implemented on **2026-08-28**. The quality score increased by 9 points, from
+48/100 to 57/100, for replacing four buyer-risk monoliths with explicit,
+tested module boundaries. The refactor preserves legacy import paths and public
+component exports, so API endpoints, background tasks, tests, and external
+integrators can migrate without a flag day.
+
+### Measured result
+
+| Original boundary | Before | Compatibility file after | Largest extracted implementation |
+| --- | ---: | ---: | ---: |
+| `llm_orchestration_service.py` | 976 lines | 8 lines | 268 lines |
+| `email_service.py` | 923 lines | 8 lines | 340 lines |
+| `PromptManager.jsx` | 769 lines | 365 lines | 244 lines |
+| `App.jsx` | 757 lines | 9 lines | 238 lines |
+
+All 36 files governed by the Phase 3 architecture check are below 400 lines.
+The guard counts blank lines and comments, preventing superficial formatting or
+comment changes from hiding renewed growth.
+
+### Backend boundaries
+
+- [x] Created `app.services.llm` with separate model and prompt registries,
+  usage persistence, provider calls, health diagnostics, structured workflows,
+  exceptions, and a 256-line coordinator.
+- [x] Kept `app.services.llm_orchestration_service` as an eight-line facade that
+  re-exports the exact class, singleton, and registries used by existing code.
+- [x] Created `app.services.email` with validation, duplicate detection, mock
+  catalog, persistence, intelligence, provider adapters, and a 211-line service.
+- [x] Added a strict normalized inbound `process_email` pipeline: validate,
+  check duplicate, and only then process/persist.
+- [x] Added Gmail and Outlook adapter boundaries behind a common abstract
+  provider contract while retaining the established delivery implementation.
+- [x] Kept `app.services.email_service` as an eight-line compatibility facade.
+- [x] Added tests proving old and new import paths resolve to the same classes
+  and that the new email validation boundary normalizes or rejects input.
+
+### Frontend boundaries
+
+- [x] Reduced `App.jsx` to rendering `AppRouter` and retaining the historical
+  `AppContent` named export used by `Home` and tests.
+- [x] Moved route composition and access guards into `routes/router.jsx` and
+  `routes/protectedRoutes.jsx`; navigation metadata has its own module.
+- [x] Added explicit application-level `AuthProvider` and `ThemeProvider`
+  composition boundaries without duplicating context state.
+- [x] Moved the authenticated shell and sidebar into focused layout modules.
+- [x] Split Prompt Manager into AI drafting, list, editor, testing, and history
+  components while preserving its existing context contract and interactions.
+- [x] Added frontend tests that enforce the 400-line ceiling on critical files.
+
+### Regression safeguards
+
+- `python scripts/check_architecture_sizes.py` checks all Phase 3 modules and is
+  enforced by a dedicated CI job.
+- Backend compatibility and validation tests protect old imports and the new
+  processing boundary.
+- Existing Prompt Manager, protected-route, dashboard, LLM, and email behavior
+  suites are used as contract tests during the move.
+- New modules remain inside existing coverage collection; no coverage exclusion
+  was introduced to make the architecture metrics look better.
+
+### Phase 3 verification
+
+- Backend complete suite: 119/119 passed with the enforced 31% gate.
+- Backend complete-source coverage: 31.72%.
+- Frontend complete suite: 23/23 files and 57/57 tests passed.
+- Frontend complete-source coverage: 15.99% statements, 46.07% branches,
+  21.86% functions, and 15.99% lines.
+- Frontend production build and TypeScript check passed.
+- Full frontend lint passed with 110 pre-existing warnings, down from the
+  previous 112-warning allowance and with zero errors.
+- Focused backend Ruff checks passed with zero errors.
+
 ## Planned remediation
 
 ### P0: Restore one-command startup
@@ -262,6 +336,9 @@ coverage exclusions.
 | 2026-08-28 | Email provider dispatch validates recipients and can fail over between configured Gmail and Outlook adapters | Keep validation and resilience at the external-provider boundary | Three email service boundary tests pass |
 | 2026-08-28 | API response interceptor behavior is exported as deterministic handlers | Make authentication expiry and friendly errors independently testable without changing Axios consumers | Four interceptor tests pass |
 | 2026-08-28 | Frontend tests produce V8 coverage reports in local Compose and CI | Establish a measurable cross-stack quality ratchet | 47 frontend tests pass with text, JSON, and HTML coverage reporters |
+| 2026-08-28 | LLM orchestration split into coordinator, registries, usage, provider gateway/health, workflows, and exceptions | Separate policy, persistence, provider protocol, and business workflow ownership | Legacy import identity and LLM behavior tests pass; all files below 400 lines |
+| 2026-08-28 | Email service split into coordinator, validation, duplicate, persistence, intelligence, mock catalog, and provider adapters | Make the inbound pipeline and external provider boundaries independently testable | Email service and compatibility tests pass; all files below 400 lines |
+| 2026-08-28 | Application routing/providers/layout and Prompt Manager panels extracted into focused modules | Reduce UI change blast radius while preserving context and named-export contracts | Production build plus routing and Prompt Manager tests pass |
 
 Future entries must name affected boundaries, migration or compatibility impact,
 and the tests that demonstrate the change. Architecture work should prefer clear
