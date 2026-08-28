@@ -10,30 +10,28 @@ Routes:
 - POST /api/v1/billing/webhook/paystack - Paystack webhook handler
 """
 
-import hashlib
-import hmac
-import json
 from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.billing.schemas import (
     AvailablePlansResponse,
-    CouponRequest,
-    CreditsResponse,
-    CreditTopupRequest,
     PaymentMethodUpdateRequest,
     SubscriptionResponse,
     UpgradeRequest,
 )
 from app.core.config import settings
 from app.core.security import get_current_user, logger
-from app.models.billing_models import CREDIT_PACK_PRICING_USD, SUBSCRIPTION_PLANS, PaymentTransaction
+from app.models.billing_models import SUBSCRIPTION_PLANS
 from app.models.database import User, get_db
-from app.services.billing_service import CreditService, FeatureGatingService, PaymentService, SubscriptionService
+from app.services.billing_service import (
+    CreditService,
+    FeatureGatingService,
+    PaymentService,
+    SubscriptionService,
+)
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 
@@ -44,16 +42,21 @@ gating_service = FeatureGatingService()
 _IP_REQUEST_LOG = {}
 
 
-def _enforce_ip_rate_limit(request: Request, key: str, max_requests: int = 20, window_seconds: int = 60) -> None:
+def _enforce_ip_rate_limit(
+    request: Request, key: str, max_requests: int = 20, window_seconds: int = 60
+) -> None:
     xff = request.headers.get("x-forwarded-for", "")
-    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    ip = (
+        xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    )
     now = datetime.utcnow().timestamp()
     bucket_key = f"{key}:{ip}"
     events = _IP_REQUEST_LOG.get(bucket_key, [])
     events = [ts for ts in events if now - ts <= window_seconds]
     if len(events) >= max_requests:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests, please retry shortly."
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests, please retry shortly.",
         )
     events.append(now)
     _IP_REQUEST_LOG[bucket_key] = events
@@ -77,7 +80,9 @@ def _is_super_admin(user: User) -> bool:
 
 
 @router.get("/subscription", response_model=Optional[SubscriptionResponse])
-async def get_subscription(current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)):
+async def get_subscription(
+    current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+):
     """Get user's current subscription"""
     try:
         subscription = await subscription_service.get_subscription(current_user.id, session)
@@ -101,7 +106,10 @@ async def get_subscription(current_user: User = Depends(get_current_user), sessi
 
     except Exception as e:
         logger.error(f"Error getting subscription: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve subscription")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve subscription",
+        )
 
 
 @router.post("/upgrade")
@@ -125,7 +133,9 @@ async def upgrade_subscription(
 
         if request.plan_id not in SUBSCRIPTION_PLANS:
             logger.error(f"❌ [Billing] Invalid plan: {request.plan_id}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid plan: {request.plan_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid plan: {request.plan_id}"
+            )
 
         plan = SUBSCRIPTION_PLANS[request.plan_id]
         logger.info(f"✅ [Billing] Plan found: {plan.get('name')} (${plan.get('price', 0)})")
@@ -133,7 +143,9 @@ async def upgrade_subscription(
         # If plan is free, immediately upgrade without payment
         if plan.get("price", 0) == 0:
             logger.info(f"🔄 [Billing] Free upgrade to {request.plan_id}")
-            subscription = await subscription_service.upgrade_subscription(current_user.id, request.plan_id, session)
+            subscription = await subscription_service.upgrade_subscription(
+                current_user.id, request.plan_id, session
+            )
             await session.commit()
             return {
                 "success": True,
@@ -163,7 +175,11 @@ async def upgrade_subscription(
         country_code = (request.country_code or "").upper()
         if not country_code:
             xff = http_request.headers.get("x-forwarded-for", "")
-            client_ip = xff.split(",")[0].strip() if xff else (http_request.client.host if http_request.client else "")
+            client_ip = (
+                xff.split(",")[0].strip()
+                if xff
+                else (http_request.client.host if http_request.client else "")
+            )
             country_code = await payment_service.detect_country_code_from_ip(client_ip)
 
         logger.info(
@@ -185,7 +201,9 @@ async def upgrade_subscription(
 
         if not result:
             logger.error("❌ [Billing] Payment service returned None")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment service error")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Payment service error"
+            )
 
         # Persist transaction if created inside service
         await session.commit()
@@ -225,7 +243,9 @@ async def upgrade_subscription(
         raise
     except Exception as e:
         logger.error(f"❌ [Billing] Upgrade error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to initiate upgrade")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to initiate upgrade"
+        )
 
 
 @router.get("/plans", response_model=AvailablePlansResponse)
@@ -254,7 +274,10 @@ async def get_payment_methods(country_code: str = "US"):
         }
     except Exception as e:
         logger.error(f"Error getting payment methods: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get payment methods")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get payment methods",
+        )
 
 
 @router.get("/payment-methods")
@@ -265,11 +288,16 @@ async def get_default_payment_methods():
         return {"success": True, "payment_methods": methods}
     except Exception as e:
         logger.error(f"Error getting payment methods: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get payment methods")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get payment methods",
+        )
 
 
 @router.post("/cancel")
-async def cancel_subscription(current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)):
+async def cancel_subscription(
+    current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+):
     """Compatibility endpoint used by frontend paymentService.cancelSubscription."""
     try:
         subscription = await subscription_service.cancel_subscription(current_user.id, session)
@@ -288,7 +316,10 @@ async def cancel_subscription(current_user: User = Depends(get_current_user), se
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error cancelling subscription: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to cancel subscription")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to cancel subscription",
+        )
 
 
 @router.put("/payment-method")
@@ -314,4 +345,7 @@ async def update_payment_method(
         raise
     except Exception as e:
         logger.error(f"Error updating payment method: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update payment method")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update payment method",
+        )

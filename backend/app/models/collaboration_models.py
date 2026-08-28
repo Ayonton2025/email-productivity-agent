@@ -40,7 +40,9 @@ class SharedInboxMember(Base):
     __tablename__ = "shared_inbox_members"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    inbox_id = Column(String, ForeignKey("shared_inboxes.id", ondelete="CASCADE"), nullable=False, index=True)
+    inbox_id = Column(
+        String, ForeignKey("shared_inboxes.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     role = Column(String, default="member")  # owner, admin, member
     joined_at = Column(DateTime, default=datetime.utcnow)
@@ -61,8 +63,12 @@ class SharedInboxEmail(Base):
     __tablename__ = "shared_inbox_emails"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    inbox_id = Column(String, ForeignKey("shared_inboxes.id", ondelete="CASCADE"), nullable=False, index=True)
-    email_id = Column(String, ForeignKey("emails.id", ondelete="CASCADE"), nullable=False, index=True)
+    inbox_id = Column(
+        String, ForeignKey("shared_inboxes.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    email_id = Column(
+        String, ForeignKey("emails.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     added_by_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     status = Column(String, default="open", index=True)  # open, in_progress, resolved
     assigned_to_user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)

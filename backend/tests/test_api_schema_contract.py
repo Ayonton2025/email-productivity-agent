@@ -5,7 +5,9 @@ from app.api.schemas import BulkEmailActionRequest, RegisterRequest
 
 
 def test_registration_schema_enforces_password_policy():
-    request = RegisterRequest(email="user@example.com", password="StrongPass1!", full_name="Test User")
+    request = RegisterRequest(
+        email="user@example.com", password="StrongPass1!", full_name="Test User"
+    )
     assert str(request.email) == "user@example.com"
 
 

@@ -42,7 +42,11 @@ class AgentService:
 
         # Send response back
         await self.websocket.send_json(
-            {"type": "chat_response", "message": response, "conversation_id": data.get("conversation_id")}
+            {
+                "type": "chat_response",
+                "message": response,
+                "conversation_id": data.get("conversation_id"),
+            }
         )
 
     async def handle_email_processing(self, data: Dict[str, Any]):
@@ -55,12 +59,16 @@ class AgentService:
             await self.websocket.send_json({"type": "error", "message": "Email not found"})
             return
 
-        email_content = f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
+        email_content = (
+            f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
+        )
 
         if action == "summarize":
             prompt = "Provide a concise summary of this email, highlighting key points and required actions."
         elif action == "extract_tasks":
-            prompt = "Extract all actionable tasks from this email with their deadlines and priorities."
+            prompt = (
+                "Extract all actionable tasks from this email with their deadlines and priorities."
+            )
         elif action == "categorize":
             prompt = "Categorize this email and explain your reasoning."
         else:
@@ -97,7 +105,11 @@ class AgentService:
             "body": draft_content,
             "recipient": context_email["sender"] if context_email else "",
             "context_email_id": context_email_id,
-            "metadata": {"tone": tone, "ai_generated": True, "custom_instructions": custom_instructions},
+            "metadata": {
+                "tone": tone,
+                "ai_generated": True,
+                "custom_instructions": custom_instructions,
+            },
         }
 
         draft = await self.email_service.create_draft(draft_data)

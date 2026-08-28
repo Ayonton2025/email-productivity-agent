@@ -71,7 +71,9 @@ ROUTERS: tuple[RouterSpec, ...] = (
     RouterSpec("app.api.simulator_endpoints", prefix="/api/v1"),
     RouterSpec("app.api.support_endpoints", prefix="/api/v1"),
     RouterSpec("app.api.attachment_endpoints", prefix="/api/v1"),
-    RouterSpec("app.api.attachment_endpoints", attribute="email_attachment_router", prefix="/api/v1"),
+    RouterSpec(
+        "app.api.attachment_endpoints", attribute="email_attachment_router", prefix="/api/v1"
+    ),
 )
 
 

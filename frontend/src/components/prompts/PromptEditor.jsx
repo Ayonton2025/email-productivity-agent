@@ -1,8 +1,8 @@
-import React from 'react'
-import { Copy, Edit, Save, Settings, TestTube, Trash2 } from 'lucide-react'
+import React from 'react';
+import { Copy, Edit, Save, Settings, TestTube, Trash2 } from 'lucide-react';
 
-import PromptHistory from './PromptHistory'
-import PromptTestPanel from './PromptTestPanel'
+import PromptHistory from './PromptHistory';
+import PromptTestPanel from './PromptTestPanel';
 
 const PromptEditor = ({
   prompt,
@@ -23,16 +23,16 @@ const PromptEditor = ({
   categories,
   getCategoryColor,
 }) => {
-  if (!prompt) return null
-  const selectedPrompt = prompt
-  const setSelectedPrompt = setPrompt
-  const isEditing = editing
-  const setIsEditing = setEditing
-  const handleTestPrompt = onTest
-  const copyToClipboard = onCopy
-  const handleDeletePrompt = onDelete
-  const handleSavePrompt = onSave
-  const isTesting = testing
+  if (!prompt) return null;
+  const selectedPrompt = prompt;
+  const setSelectedPrompt = setPrompt;
+  const isEditing = editing;
+  const setIsEditing = setEditing;
+  const handleTestPrompt = onTest;
+  const copyToClipboard = onCopy;
+  const handleDeletePrompt = onDelete;
+  const handleSavePrompt = onSave;
+  const isTesting = testing;
 
   return (
     <div className="lg:w-3/5 flex flex-column column-fix">
@@ -56,7 +56,9 @@ const PromptEditor = ({
               <button
                 onClick={() => setShowTestPanel(!showTestPanel)}
                 className={`inline-flex items-center px-3 py-1 rounded-lg text-sm ${
-                  showTestPanel ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  showTestPanel
+                    ? 'bg-purple-100 text-purple-800'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 <TestTube className="h-4 w-4 mr-1" />
@@ -87,7 +89,9 @@ const PromptEditor = ({
               {isEditing ? (
                 <select
                   value={selectedPrompt.category}
-                  onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, category: e.target.value }))}
+                  onChange={(e) =>
+                    setSelectedPrompt((prev) => ({ ...prev, category: e.target.value }))
+                  }
                   className="border border-gray-300 rounded px-2 py-1"
                 >
                   {categories.map((category) => (
@@ -100,7 +104,8 @@ const PromptEditor = ({
                 <span
                   className={`inline-flex items-center px-2 py-1 rounded-full ${getCategoryColor(selectedPrompt.category)}`}
                 >
-                  {categories.find((c) => c.id === selectedPrompt.category)?.name || selectedPrompt.category}
+                  {categories.find((c) => c.id === selectedPrompt.category)?.name ||
+                    selectedPrompt.category}
                 </span>
               )}
             </div>
@@ -112,7 +117,9 @@ const PromptEditor = ({
                   <input
                     type="checkbox"
                     checked={selectedPrompt.is_active}
-                    onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, is_active: e.target.checked }))}
+                    onChange={(e) =>
+                      setSelectedPrompt((prev) => ({ ...prev, is_active: e.target.checked }))
+                    }
                     className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span>Active</span>
@@ -138,7 +145,9 @@ const PromptEditor = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={selectedPrompt.description}
-                  onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setSelectedPrompt((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   placeholder="Describe what this prompt does..."
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   rows="3"
@@ -146,10 +155,14 @@ const PromptEditor = ({
               </div>
 
               <div className="flex-1 p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Prompt Template</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Prompt Template
+                </label>
                 <textarea
                   value={selectedPrompt.template}
-                  onChange={(e) => setSelectedPrompt((prev) => ({ ...prev, template: e.target.value }))}
+                  onChange={(e) =>
+                    setSelectedPrompt((prev) => ({ ...prev, template: e.target.value }))
+                  }
                   placeholder="Enter your prompt template here..."
                   className="w-full h-full p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                 />
@@ -159,7 +172,9 @@ const PromptEditor = ({
             <div className="flex-1 flex flex-column">
               <div className="p-4 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                <p className="text-gray-900">{selectedPrompt.description || 'No description provided.'}</p>
+                <p className="text-gray-900">
+                  {selectedPrompt.description || 'No description provided.'}
+                </p>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto">
@@ -238,7 +253,7 @@ const PromptEditor = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PromptEditor
+export default PromptEditor;

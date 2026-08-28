@@ -1,70 +1,74 @@
-import { logger } from '../../utils/logger.js'
-import React, { useMemo, useState, useEffect } from 'react'
-import { getUserAccessProfile, updateUserAccessProfile, getFeatureTemplates } from '../../services/adminService'
+import { logger } from '../../utils/logger.js';
+import React, { useMemo, useState, useEffect } from 'react';
+import {
+  getUserAccessProfile,
+  updateUserAccessProfile,
+  getFeatureTemplates,
+} from '../../services/adminService';
 
 const SuperAdminFeatureRules = () => {
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [data, setData] = useState(null)
-  const [featureOverrides, setFeatureOverrides] = useState({})
-  const [query, setQuery] = useState('')
-  const [templates, setTemplates] = useState({}) // NEW: Store fetched templates
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [data, setData] = useState(null);
+  const [featureOverrides, setFeatureOverrides] = useState({});
+  const [query, setQuery] = useState('');
+  const [templates, setTemplates] = useState({}); // NEW: Store fetched templates
 
   // NEW: Fetch templates on mount
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await getFeatureTemplates()
+        const response = await getFeatureTemplates();
         if (response.success && response.templates) {
-          setTemplates(response.templates)
+          setTemplates(response.templates);
         }
       } catch (e) {
-        logger.warn('Failed to fetch feature templates:', e)
+        logger.warn('Failed to fetch feature templates:', e);
         // Fallback: set empty templates (users can still manually toggle)
-        setTemplates({})
+        setTemplates({});
       }
-    }
-    fetchTemplates()
-  }, [])
+    };
+    fetchTemplates();
+  }, []);
 
   const loadProfile = async () => {
-    setError('')
+    setError('');
     if (!email.trim()) {
-      setError('Enter user email')
-      return
+      setError('Enter user email');
+      return;
     }
     try {
-      setLoading(true)
-      const res = await getUserAccessProfile(email.trim())
-      setData(res)
-      setFeatureOverrides({ ...(res?.override?.feature_overrides || {}) })
+      setLoading(true);
+      const res = await getUserAccessProfile(email.trim());
+      setData(res);
+      setFeatureOverrides({ ...(res?.override?.feature_overrides || {}) });
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to load user profile')
+      setError(e?.response?.data?.detail || e.message || 'Failed to load user profile');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const featureList = useMemo(() => {
-    const fromAccess = Object.keys(data?.feature_access || {})
-    const fromPlan = Object.keys(data?.subscription?.features || {})
-    const merged = Array.from(new Set([...fromAccess, ...fromPlan])).sort()
-    if (!query.trim()) return merged
-    const q = query.toLowerCase()
-    return merged.filter((x) => x.toLowerCase().includes(q))
-  }, [data, query])
+    const fromAccess = Object.keys(data?.feature_access || {});
+    const fromPlan = Object.keys(data?.subscription?.features || {});
+    const merged = Array.from(new Set([...fromAccess, ...fromPlan])).sort();
+    if (!query.trim()) return merged;
+    const q = query.toLowerCase();
+    return merged.filter((x) => x.toLowerCase().includes(q));
+  }, [data, query]);
 
   const applyTemplate = (templateName) => {
-    const template = templates[templateName]
+    const template = templates[templateName];
     if (!template || !template.features) {
-      logger.error(`Template ${templateName} not found`)
-      return
+      logger.error(`Template ${templateName} not found`);
+      return;
     }
 
-    const selected = template.features
-    const merged = {}
+    const selected = template.features;
+    const merged = {};
     const knownFeatures = Array.from(
       new Set([
         ...Object.keys(data?.feature_access || {}),
@@ -72,19 +76,19 @@ const SuperAdminFeatureRules = () => {
         ...Object.keys(featureOverrides || {}),
         ...Object.keys(selected),
       ])
-    )
+    );
 
     for (const f of knownFeatures) {
-      merged[f] = !!selected[f]
+      merged[f] = !!selected[f];
     }
-    setFeatureOverrides(merged)
-  }
+    setFeatureOverrides(merged);
+  };
 
   const saveFeatureRules = async () => {
-    if (!data?.user?.email) return
+    if (!data?.user?.email) return;
     try {
-      setSaving(true)
-      setError('')
+      setSaving(true);
+      setError('');
       await updateUserAccessProfile(data.user.email, {
         allow_all: !!data?.override?.allow_all,
         block_all: !!data?.override?.block_all,
@@ -92,26 +96,26 @@ const SuperAdminFeatureRules = () => {
         is_active: !!data?.user?.is_active,
         status_note: data?.override?.status_note || '',
         feature_overrides: featureOverrides,
-      })
-      await loadProfile()
+      });
+      await loadProfile();
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to save feature rules')
+      setError(e?.response?.data?.detail || e.message || 'Failed to save feature rules');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const setRule = (feature, allowed) => {
-    setFeatureOverrides((prev) => ({ ...prev, [feature]: !!allowed }))
-  }
+    setFeatureOverrides((prev) => ({ ...prev, [feature]: !!allowed }));
+  };
 
   const clearRule = (feature) => {
     setFeatureOverrides((prev) => {
-      const next = { ...prev }
-      delete next[feature]
-      return next
-    })
-  }
+      const next = { ...prev };
+      delete next[feature];
+      return next;
+    });
+  };
 
   return (
     <div className="p-6 space-y-6 text-slate-900">
@@ -177,8 +181,8 @@ const SuperAdminFeatureRules = () => {
             {featureList.map((feature) => {
               const rule = Object.prototype.hasOwnProperty.call(featureOverrides, feature)
                 ? featureOverrides[feature]
-                : null
-              const effective = data?.feature_access?.[feature]
+                : null;
+              const effective = data?.feature_access?.[feature];
               return (
                 <div key={feature} className="border border-slate-200 rounded p-3">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
@@ -214,9 +218,11 @@ const SuperAdminFeatureRules = () => {
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
-            {featureList.length === 0 && <p className="text-sm text-slate-500">No features available for this user.</p>}
+            {featureList.length === 0 && (
+              <p className="text-sm text-slate-500">No features available for this user.</p>
+            )}
           </div>
 
           <div className="pt-2">
@@ -231,7 +237,7 @@ const SuperAdminFeatureRules = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default SuperAdminFeatureRules
+export default SuperAdminFeatureRules;

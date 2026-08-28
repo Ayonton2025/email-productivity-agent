@@ -16,7 +16,9 @@ class ScalarResult:
 
 @pytest.mark.asyncio
 async def test_duplicate_email_is_returned_without_creating_a_second_record(mocker):
-    existing = SimpleNamespace(to_dict=mocker.Mock(return_value={"id": "existing", "subject": "Quarterly review"}))
+    existing = SimpleNamespace(
+        to_dict=mocker.Mock(return_value={"id": "existing", "subject": "Quarterly review"})
+    )
     db = SimpleNamespace(execute=mocker.AsyncMock(return_value=ScalarResult(existing)))
     service = EmailService(db)
 
@@ -35,8 +37,12 @@ async def test_gmail_failure_calls_configured_outlook_fallback(mocker):
     service = EmailProviderService()
     service.gmail_service = object()
     service.outlook_access_token = "outlook-token"
-    gmail = mocker.patch.object(service, "_send_gmail_reply", new=mocker.AsyncMock(return_value=False))
-    outlook = mocker.patch.object(service, "_send_outlook_reply", new=mocker.AsyncMock(return_value=True))
+    gmail = mocker.patch.object(
+        service, "_send_gmail_reply", new=mocker.AsyncMock(return_value=False)
+    )
+    outlook = mocker.patch.object(
+        service, "_send_outlook_reply", new=mocker.AsyncMock(return_value=True)
+    )
     draft = {"recipient": "Customer@Example.com", "subject": "Re: Hello", "body": "Thanks"}
 
     sent = await service.send_email_reply("gmail", "message-1", draft)

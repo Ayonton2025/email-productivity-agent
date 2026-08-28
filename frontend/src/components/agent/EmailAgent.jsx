@@ -1,5 +1,5 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect, useRef, useContext } from 'react'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   Send,
   Bot,
@@ -14,17 +14,17 @@ import {
   ThumbsDown,
   Copy,
   Download,
-} from 'lucide-react'
-import { EmailContext } from '../../context/EmailContext'
-import { agentApi } from '../../services/api'
+} from 'lucide-react';
+import { EmailContext } from '../../context/EmailContext';
+import { agentApi } from '../../services/api';
 
 const EmailAgent = () => {
-  const { emails, selectedEmail, setSelectedEmail } = useContext(EmailContext)
-  const [messages, setMessages] = useState([])
-  const [inputMessage, setInputMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [conversationHistory, setConversationHistory] = useState([])
-  const messagesEndRef = useRef(null)
+  const { emails, selectedEmail, setSelectedEmail } = useContext(EmailContext);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const messagesEndRef = useRef(null);
 
   // Sample conversation starters
   const conversationStarters = [
@@ -33,15 +33,15 @@ const EmailAgent = () => {
     'Draft a reply to the most important email',
     'Show me emails from this week',
     'Categorize my unread emails',
-  ]
+  ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -53,26 +53,26 @@ const EmailAgent = () => {
           "Hello! I'm your Bylix Email assistant. I can help you prioritize conversations, summarize emails, extract tasks, and draft context-aware replies. How can I assist you today?",
         timestamp: new Date().toISOString(),
       },
-    ])
-  }, [])
+    ]);
+  }, []);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim()) return;
 
     const userMessage = {
       id: Date.now(),
       type: 'user',
       content: inputMessage,
       timestamp: new Date().toISOString(),
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInputMessage('')
-    setIsLoading(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
 
     try {
-      const response = await agentApi.chatWithAgent(inputMessage)
-      const apiMessage = response?.data?.response
+      const response = await agentApi.chatWithAgent(inputMessage);
+      const apiMessage = response?.data?.response;
       if (apiMessage) {
         const agentMessage = {
           id: Date.now() + 1,
@@ -80,13 +80,13 @@ const EmailAgent = () => {
           content: apiMessage,
           timestamp: new Date().toISOString(),
           suggestions: getResponseSuggestions(inputMessage),
-        }
-        setMessages((prev) => [...prev, agentMessage])
-        setIsLoading(false)
-        return
+        };
+        setMessages((prev) => [...prev, agentMessage]);
+        setIsLoading(false);
+        return;
       }
     } catch (error) {
-      logger.error('Agent chat backend call failed, using local fallback:', error)
+      logger.error('Agent chat backend call failed, using local fallback:', error);
     }
 
     // Fallback local response logic
@@ -104,7 +104,9 @@ ${
   emails
     .filter((e) => e.action_items && e.action_items.length > 0)
     .map((email) =>
-      email.action_items.map((item) => `• ${item.task} (Priority: ${item.priority || 'medium'})`).join('\n')
+      email.action_items
+        .map((item) => `• ${item.task} (Priority: ${item.priority || 'medium'})`)
+        .join('\n')
     )
     .join('\n') || 'No specific tasks found in your emails.'
 }`,
@@ -122,16 +124,19 @@ ${
 • Inbox management suggestions
 
 What specific assistance would you like?`,
-      }
+      };
 
-      let responseContent = responses.default
+      let responseContent = responses.default;
 
       if (inputMessage.toLowerCase().includes('summarize')) {
-        responseContent = responses.summarize
+        responseContent = responses.summarize;
       } else if (inputMessage.toLowerCase().includes('task')) {
-        responseContent = responses.tasks
-      } else if (inputMessage.toLowerCase().includes('draft') || inputMessage.toLowerCase().includes('reply')) {
-        responseContent = responses.draft
+        responseContent = responses.tasks;
+      } else if (
+        inputMessage.toLowerCase().includes('draft') ||
+        inputMessage.toLowerCase().includes('reply')
+      ) {
+        responseContent = responses.draft;
       }
 
       const agentMessage = {
@@ -140,40 +145,44 @@ What specific assistance would you like?`,
         content: responseContent,
         timestamp: new Date().toISOString(),
         suggestions: getResponseSuggestions(inputMessage),
-      }
+      };
 
-      setMessages((prev) => [...prev, agentMessage])
-      setIsLoading(false)
-    }, 1500)
-  }
+      setMessages((prev) => [...prev, agentMessage]);
+      setIsLoading(false);
+    }, 1500);
+  };
 
   const getResponseSuggestions = (userMessage) => {
     if (userMessage.toLowerCase().includes('summarize')) {
-      return ['Show me only urgent emails', 'What are my action items?', 'Summarize emails from today']
+      return [
+        'Show me only urgent emails',
+        'What are my action items?',
+        'Summarize emails from today',
+      ];
     } else if (userMessage.toLowerCase().includes('task')) {
-      return ['Show tasks with deadlines', "What's most urgent?", 'Create a task list']
+      return ['Show tasks with deadlines', "What's most urgent?", 'Create a task list'];
     }
-    return ['Summarize my inbox', 'What needs my attention?', 'Draft a meeting response']
-  }
+    return ['Summarize my inbox', 'What needs my attention?', 'Draft a meeting response'];
+  };
 
   const handleQuickAction = (action) => {
-    setInputMessage(action)
-  }
+    setInputMessage(action);
+  };
 
   const handleSuggestionClick = (suggestion) => {
-    setInputMessage(suggestion)
-  }
+    setInputMessage(suggestion);
+  };
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }
+    });
+  };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-  }
+    navigator.clipboard.writeText(text);
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -189,7 +198,9 @@ What specific assistance would you like?`,
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded-full ${isLoading ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+          <div
+            className={`w-3 h-3 rounded-full ${isLoading ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}
+          ></div>
           <span className="text-sm text-gray-600">{isLoading ? 'Thinking...' : 'Online'}</span>
         </div>
       </div>
@@ -215,7 +226,10 @@ What specific assistance would you like?`,
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
-              <div key={message.id} className={`flex gap-3 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div
+                key={message.id}
+                className={`flex gap-3 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
+              >
                 {/* Avatar */}
                 <div
                   className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -224,14 +238,20 @@ What specific assistance would you like?`,
                       : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
                   }`}
                 >
-                  {message.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  {message.type === 'user' ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
                 </div>
 
                 {/* Message Content */}
                 <div className={`flex-1 max-w-3xl ${message.type === 'user' ? 'text-right' : ''}`}>
                   <div
                     className={`inline-block rounded-2xl px-4 py-2 ${
-                      message.type === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-900'
+                      message.type === 'user'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-900'
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{message.content}</p>
@@ -268,10 +288,16 @@ What specific assistance would you like?`,
                         >
                           <Copy className="h-3 w-3" />
                         </button>
-                        <button className="p-1 text-gray-400 hover:text-green-600 rounded" title="Helpful">
+                        <button
+                          className="p-1 text-gray-400 hover:text-green-600 rounded"
+                          title="Helpful"
+                        >
                           <ThumbsUp className="h-3 w-3" />
                         </button>
-                        <button className="p-1 text-gray-400 hover:text-red-600 rounded" title="Not helpful">
+                        <button
+                          className="p-1 text-gray-400 hover:text-red-600 rounded"
+                          title="Not helpful"
+                        >
                           <ThumbsDown className="h-3 w-3" />
                         </button>
                       </div>
@@ -344,7 +370,9 @@ What specific assistance would you like?`,
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="font-semibold text-gray-900 truncate">{selectedEmail.subject}</h4>
+                    <h4 className="font-semibold text-gray-900 truncate">
+                      {selectedEmail.subject}
+                    </h4>
                     <p className="text-sm text-gray-600">{selectedEmail.sender}</p>
                   </div>
                   <span
@@ -417,7 +445,7 @@ What specific assistance would you like?`,
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EmailAgent
+export default EmailAgent;

@@ -1,7 +1,7 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { X, Plus, Trash2, ChevronDown, ChevronUp, Upload, Sparkles, Zap } from 'lucide-react'
-import { campaignsApi, aiApi } from '../../services/api'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, ChevronDown, ChevronUp, Upload, Sparkles, Zap } from 'lucide-react';
+import { campaignsApi, aiApi } from '../../services/api';
 
 const CampaignBuilder = ({ campaign, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -20,9 +20,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
     ab_test_enabled: campaign?.ab_test_enabled ?? false,
     ab_test_split: campaign?.ab_test_split || 0.5,
     tags: campaign?.tags || [],
-  })
+  });
 
-  const [sequences, setSequences] = useState(campaign?.sequences || [])
+  const [sequences, setSequences] = useState(campaign?.sequences || []);
   const [newSequence, setNewSequence] = useState({
     name: '',
     subject_template: '',
@@ -33,71 +33,71 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
     send_if_clicked: false,
     send_if_replied: false,
     stop_if_replied: true,
-  })
+  });
 
-  const [leads, setLeads] = useState([])
-  const [showAddSequence, setShowAddSequence] = useState(false)
-  const [showLeadsImport, setShowLeadsImport] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('basic') // basic, sequences, leads
-  const [aiGoal, setAiGoal] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState('')
-  const [aiMeta, setAiMeta] = useState({ provider: null, model: null })
-  const [loadingRecommended, setLoadingRecommended] = useState(false)
-  const [recommendedSender, setRecommendedSender] = useState(null)
+  const [leads, setLeads] = useState([]);
+  const [showAddSequence, setShowAddSequence] = useState(false);
+  const [showLeadsImport, setShowLeadsImport] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic'); // basic, sequences, leads
+  const [aiGoal, setAiGoal] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiMeta, setAiMeta] = useState({ provider: null, model: null });
+  const [loadingRecommended, setLoadingRecommended] = useState(false);
+  const [recommendedSender, setRecommendedSender] = useState(null);
 
   const aiQuickPrompts = [
     'Create a 3-step cold outreach campaign for SaaS founders',
     'Build a follow-up campaign for warm leads with 2 sequences',
-  ]
+  ];
 
   useEffect(() => {
     if (campaign?.id) {
-      loadLeads()
+      loadLeads();
     }
     // Load recommended sender on mount
-    loadRecommendedSender()
-  }, [campaign?.id])
+    loadRecommendedSender();
+  }, [campaign?.id]);
 
   const loadRecommendedSender = async () => {
     try {
-      const res = await campaignsApi.getRecommendedSender()
+      const res = await campaignsApi.getRecommendedSender();
       if (res.data?.success && res.data?.recommended) {
-        setRecommendedSender(res.data.recommended)
+        setRecommendedSender(res.data.recommended);
       }
     } catch (error) {
-      logger.error('Failed to load recommended sender:', error)
+      logger.error('Failed to load recommended sender:', error);
     }
-  }
+  };
 
   const applyRecommendedSender = () => {
-    if (!recommendedSender) return
+    if (!recommendedSender) return;
     setFormData((prev) => ({
       ...prev,
       from_email: recommendedSender.email,
       from_name: recommendedSender.from_name,
       reply_to: recommendedSender.reply_to,
-    }))
-  }
+    }));
+  };
 
   const loadLeads = async () => {
     try {
-      const res = await campaignsApi.getLeads(campaign.id)
-      setLeads(res.data || [])
+      const res = await campaignsApi.getLeads(campaign.id);
+      setLeads(res.data || []);
     } catch (error) {
-      logger.error('Failed to load leads:', error)
+      logger.error('Failed to load leads:', error);
     }
-  }
+  };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const addSequence = async () => {
     if (!newSequence.name || !newSequence.subject_template || !newSequence.body_template) {
-      alert('Please fill in all required sequence fields')
-      return
+      alert('Please fill in all required sequence fields');
+      return;
     }
 
     if (campaign?.id) {
@@ -105,20 +105,20 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
         const sequence = await campaignsApi.createSequence(campaign.id, {
           ...newSequence,
           step_order: sequences.length + 1,
-        })
-        setSequences([...sequences, sequence.data])
+        });
+        setSequences([...sequences, sequence.data]);
       } catch (error) {
-        logger.error('Failed to create sequence:', error)
-        alert('Failed to create sequence')
-        return
+        logger.error('Failed to create sequence:', error);
+        alert('Failed to create sequence');
+        return;
       }
     } else {
       const sequence = {
         ...newSequence,
         step_order: sequences.length + 1,
         id: `temp-${Date.now()}`,
-      }
-      setSequences([...sequences, sequence])
+      };
+      setSequences([...sequences, sequence]);
     }
 
     setNewSequence({
@@ -131,94 +131,97 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
       send_if_clicked: false,
       send_if_replied: false,
       stop_if_replied: true,
-    })
-    setShowAddSequence(false)
-  }
+    });
+    setShowAddSequence(false);
+  };
 
   const removeSequence = async (index, sequenceId) => {
     if (sequenceId && !sequenceId.toString().startsWith('temp-')) {
       // TODO: Delete from API if needed
     }
-    setSequences(sequences.filter((_, i) => i !== index))
-  }
+    setSequences(sequences.filter((_, i) => i !== index));
+  };
 
   const handleBulkImport = async (csvText) => {
     // Parse CSV
-    const lines = csvText.split('\n').filter((line) => line.trim())
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase())
-    const importedLeads = []
+    const lines = csvText.split('\n').filter((line) => line.trim());
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const importedLeads = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map((v) => v.trim())
+      const values = lines[i].split(',').map((v) => v.trim());
       const lead = {
         email: values[headers.indexOf('email')] || '',
-        first_name: values[headers.indexOf('first_name')] || values[headers.indexOf('firstname')] || '',
-        last_name: values[headers.indexOf('last_name')] || values[headers.indexOf('lastname')] || '',
+        first_name:
+          values[headers.indexOf('first_name')] || values[headers.indexOf('firstname')] || '',
+        last_name:
+          values[headers.indexOf('last_name')] || values[headers.indexOf('lastname')] || '',
         company: values[headers.indexOf('company')] || '',
-        job_title: values[headers.indexOf('job_title')] || values[headers.indexOf('jobtitle')] || '',
+        job_title:
+          values[headers.indexOf('job_title')] || values[headers.indexOf('jobtitle')] || '',
         custom_fields: {},
-      }
-      if (lead.email) importedLeads.push(lead)
+      };
+      if (lead.email) importedLeads.push(lead);
     }
 
     if (campaign?.id && importedLeads.length > 0) {
       try {
-        await campaignsApi.bulkCreateLeads(campaign.id, importedLeads)
-        await loadLeads()
-        setShowLeadsImport(false)
-        alert(`Imported ${importedLeads.length} leads`)
+        await campaignsApi.bulkCreateLeads(campaign.id, importedLeads);
+        await loadLeads();
+        setShowLeadsImport(false);
+        alert(`Imported ${importedLeads.length} leads`);
       } catch (error) {
-        logger.error('Failed to import leads:', error)
-        alert('Failed to import leads')
+        logger.error('Failed to import leads:', error);
+        alert('Failed to import leads');
       }
     } else {
-      setLeads([...leads, ...importedLeads])
-      setShowLeadsImport(false)
+      setLeads([...leads, ...importedLeads]);
+      setShowLeadsImport(false);
     }
-  }
+  };
 
   const handleSave = async () => {
     if (!formData.name || !formData.from_email) {
-      alert('Please fill in required fields (Name and From Email)')
-      return
+      alert('Please fill in required fields (Name and From Email)');
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
-      let savedCampaign
+      let savedCampaign;
       if (campaign?.id) {
-        savedCampaign = await campaignsApi.updateCampaign(campaign.id, formData)
+        savedCampaign = await campaignsApi.updateCampaign(campaign.id, formData);
       } else {
-        savedCampaign = await campaignsApi.createCampaign(formData)
+        savedCampaign = await campaignsApi.createCampaign(formData);
 
         // Create sequences
         for (const seq of sequences) {
           await campaignsApi.createSequence(savedCampaign.id, {
             ...seq,
             campaign_id: savedCampaign.id,
-          })
+          });
         }
 
         // Import leads if any
         if (leads.length > 0) {
-          await campaignsApi.bulkCreateLeads(savedCampaign.id, leads)
+          await campaignsApi.bulkCreateLeads(savedCampaign.id, leads);
         }
       }
 
-      onSave()
-      onClose()
+      onSave();
+      onClose();
     } catch (error) {
-      logger.error('Failed to save campaign:', error)
-      alert('Failed to save campaign')
+      logger.error('Failed to save campaign:', error);
+      alert('Failed to save campaign');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleGenerateAIDraft = async (goal) => {
-    if (!goal?.trim()) return
-    setAiLoading(true)
-    setAiError('')
+    if (!goal?.trim()) return;
+    setAiLoading(true);
+    setAiError('');
     try {
       const res = await aiApi.assistWorkspace({
         page: 'campaigns',
@@ -229,31 +232,35 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
           existing_leads: leads.length,
           current_form: formData,
         },
-      })
-      const draft = res.data?.draft || {}
-      setAiMeta({ provider: res.data?.provider, model: res.data?.model })
+      });
+      const draft = res.data?.draft || {};
+      setAiMeta({ provider: res.data?.provider, model: res.data?.model });
       if (draft.campaign) {
-        setFormData((prev) => ({ ...prev, ...draft.campaign }))
+        setFormData((prev) => ({ ...prev, ...draft.campaign }));
       }
       if (Array.isArray(draft.sequences) && draft.sequences.length > 0) {
         setSequences(
-          draft.sequences.map((seq, idx) => ({ ...seq, step_order: idx + 1, id: `temp-ai-${Date.now()}-${idx}` }))
-        )
+          draft.sequences.map((seq, idx) => ({
+            ...seq,
+            step_order: idx + 1,
+            id: `temp-ai-${Date.now()}-${idx}`,
+          }))
+        );
       }
       if (Array.isArray(draft.leads) && draft.leads.length > 0) {
-        setLeads(draft.leads)
+        setLeads(draft.leads);
       }
     } catch (error) {
       const detail =
         error?.response?.data?.detail ||
         error?.response?.data?.error ||
         error?.message ||
-        'Failed to generate campaign draft'
-      setAiError(detail)
+        'Failed to generate campaign draft';
+      setAiError(detail);
     } finally {
-      setAiLoading(false)
+      setAiLoading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -297,8 +304,8 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                 <button
                   key={prompt}
                   onClick={() => {
-                    setAiGoal(prompt)
-                    handleGenerateAIDraft(prompt)
+                    setAiGoal(prompt);
+                    handleGenerateAIDraft(prompt);
                   }}
                   className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-100"
                 >
@@ -343,7 +350,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
           {activeTab === 'basic' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Campaign Name *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Campaign Name *
+                </label>
                 <input
                   type="text"
                   value={formData.name}
@@ -353,7 +362,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Campaign Type</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Campaign Type
+                </label>
                 <select
                   value={formData.campaign_type}
                   onChange={(e) => handleInputChange('campaign_type', e.target.value)}
@@ -369,7 +380,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-blue-900">Recommended Sender Account</p>
+                      <p className="text-sm font-medium text-blue-900">
+                        Recommended Sender Account
+                      </p>
                       <p className="text-sm text-blue-700 mt-1">{recommendedSender.email}</p>
                       {!recommendedSender.send_cap_ok && (
                         <p className="text-xs text-orange-600 mt-1">⚠️ Daily send limit reached</p>
@@ -387,7 +400,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">From Email *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  From Email *
+                </label>
                 <input
                   type="email"
                   value={formData.from_email}
@@ -408,20 +423,28 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Daily Send Limit</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Daily Send Limit
+                  </label>
                   <input
                     type="number"
                     value={formData.daily_send_limit}
-                    onChange={(e) => handleInputChange('daily_send_limit', parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange('daily_send_limit', parseInt(e.target.value) || 0)
+                    }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Send Delay (minutes)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Send Delay (minutes)
+                  </label>
                   <input
                     type="number"
                     value={formData.send_delay_minutes}
-                    onChange={(e) => handleInputChange('send_delay_minutes', parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange('send_delay_minutes', parseInt(e.target.value) || 0)
+                    }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                   />
                 </div>
@@ -446,7 +469,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
               {showAddSequence && (
                 <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Sequence Name *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Sequence Name *
+                    </label>
                     <input
                       type="text"
                       value={newSequence.name}
@@ -456,11 +481,15 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Subject Template *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Subject Template *
+                    </label>
                     <input
                       type="text"
                       value={newSequence.subject_template}
-                      onChange={(e) => setNewSequence({ ...newSequence, subject_template: e.target.value })}
+                      onChange={(e) =>
+                        setNewSequence({ ...newSequence, subject_template: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       placeholder="e.g., Quick question about {company}"
                     />
@@ -469,10 +498,14 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Body Template *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Body Template *
+                    </label>
                     <textarea
                       value={newSequence.body_template}
-                      onChange={(e) => setNewSequence({ ...newSequence, body_template: e.target.value })}
+                      onChange={(e) =>
+                        setNewSequence({ ...newSequence, body_template: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       rows="6"
                       placeholder="Hi {name}, ..."
@@ -480,20 +513,34 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Delay (days)</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Delay (days)
+                      </label>
                       <input
                         type="number"
                         value={newSequence.delay_days}
-                        onChange={(e) => setNewSequence({ ...newSequence, delay_days: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setNewSequence({
+                            ...newSequence,
+                            delay_days: parseInt(e.target.value) || 0,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Delay (hours)</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Delay (hours)
+                      </label>
                       <input
                         type="number"
                         value={newSequence.delay_hours}
-                        onChange={(e) => setNewSequence({ ...newSequence, delay_hours: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setNewSequence({
+                            ...newSequence,
+                            delay_hours: parseInt(e.target.value) || 0,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       />
                     </div>
@@ -521,7 +568,9 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-slate-500">Step {index + 1}</span>
+                          <span className="text-sm font-medium text-slate-500">
+                            Step {index + 1}
+                          </span>
                           <span className="font-semibold text-slate-900">{seq.name}</span>
                         </div>
                         <p className="text-sm text-slate-600 mb-1">
@@ -565,14 +614,16 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
 
               {showLeadsImport && (
                 <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Paste CSV Data</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Paste CSV Data
+                  </label>
                   <textarea
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-sm"
                     rows="10"
                     placeholder="email,first_name,last_name,company,job_title&#10;john@example.com,John,Doe,Acme Inc,CEO"
                     onBlur={(e) => {
                       if (e.target.value.trim()) {
-                        handleBulkImport(e.target.value)
+                        handleBulkImport(e.target.value);
                       }
                     }}
                   />
@@ -645,7 +696,7 @@ const CampaignBuilder = ({ campaign, onClose, onSave }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CampaignBuilder
+export default CampaignBuilder;

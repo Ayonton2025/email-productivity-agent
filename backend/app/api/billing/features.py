@@ -10,30 +10,21 @@ Routes:
 - POST /api/v1/billing/webhook/paystack - Paystack webhook handler
 """
 
-import hashlib
-import hmac
-import json
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.billing.schemas import (
-    AvailablePlansResponse,
-    CouponRequest,
-    CreditsResponse,
-    CreditTopupRequest,
-    PaymentMethodUpdateRequest,
-    SubscriptionResponse,
-    UpgradeRequest,
-)
 from app.core.config import settings
 from app.core.security import get_current_user, logger
-from app.models.billing_models import CREDIT_PACK_PRICING_USD, SUBSCRIPTION_PLANS, PaymentTransaction
+from app.models.billing_models import SUBSCRIPTION_PLANS
 from app.models.database import User, get_db
-from app.services.billing_service import CreditService, FeatureGatingService, PaymentService, SubscriptionService
+from app.services.billing_service import (
+    CreditService,
+    FeatureGatingService,
+    PaymentService,
+    SubscriptionService,
+)
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 
@@ -44,16 +35,21 @@ gating_service = FeatureGatingService()
 _IP_REQUEST_LOG = {}
 
 
-def _enforce_ip_rate_limit(request: Request, key: str, max_requests: int = 20, window_seconds: int = 60) -> None:
+def _enforce_ip_rate_limit(
+    request: Request, key: str, max_requests: int = 20, window_seconds: int = 60
+) -> None:
     xff = request.headers.get("x-forwarded-for", "")
-    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    ip = (
+        xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    )
     now = datetime.utcnow().timestamp()
     bucket_key = f"{key}:{ip}"
     events = _IP_REQUEST_LOG.get(bucket_key, [])
     events = [ts for ts in events if now - ts <= window_seconds]
     if len(events) >= max_requests:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests, please retry shortly."
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests, please retry shortly.",
         )
     events.append(now)
     _IP_REQUEST_LOG[bucket_key] = events
@@ -78,7 +74,9 @@ def _is_super_admin(user: User) -> bool:
 
 @router.get("/features/{feature_name}")
 async def check_feature_access(
-    feature_name: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    feature_name: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Check if user can access a specific feature"""
     try:
@@ -95,7 +93,10 @@ async def check_feature_access(
 
     except Exception as e:
         logger.error(f"Error checking feature access: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to check feature access")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to check feature access",
+        )
 
 
 @router.get("/features")
@@ -109,7 +110,12 @@ async def get_available_features(
             for _, cfg in SUBSCRIPTION_PLANS.items():
                 for k, v in (cfg.get("features") or {}).items():
                     merged[k] = bool(v) or merged.get(k, False)
-            return {"plan": "super_admin", "plan_name": "Super Admin", "features": merged, "payment_bypass": True}
+            return {
+                "plan": "super_admin",
+                "plan_name": "Super Admin",
+                "features": merged,
+                "payment_bypass": True,
+            }
 
         subscription = await subscription_service.get_subscription(current_user.id, session)
 
@@ -119,8 +125,14 @@ async def get_available_features(
         plan = SUBSCRIPTION_PLANS.get(subscription.plan_id, {})
         features = plan.get("features", {})
 
-        return {"plan": subscription.plan_id, "plan_name": subscription.plan_name, "features": features}
+        return {
+            "plan": subscription.plan_id,
+            "plan_name": subscription.plan_name,
+            "features": features,
+        }
 
     except Exception as e:
         logger.error(f"Error getting features: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve features")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve features"
+        )

@@ -109,7 +109,9 @@ class MailcowHostedProviderClient(BaseHostedProviderClient):
                 first = data[0]
                 if isinstance(first, dict):
                     ref = first.get("id") or first.get("reference")
-            return ProvisionResult(True, str(ref) if ref else None, data if isinstance(data, dict) else {"raw": data})
+            return ProvisionResult(
+                True, str(ref) if ref else None, data if isinstance(data, dict) else {"raw": data}
+            )
         except Exception as e:
             return ProvisionResult(False, None, {}, error=str(e))
 
@@ -151,7 +153,9 @@ class HostedEmailProviderService:
         return "".join(secrets.choice(alphabet) for _ in range(length))
 
     async def check_address_available(self, email: str, session: AsyncSession) -> bool:
-        result = await session.execute(select(UserEmailAccount.id).where(UserEmailAccount.email == email))
+        result = await session.execute(
+            select(UserEmailAccount.id).where(UserEmailAccount.email == email)
+        )
         return result.scalar_one_or_none() is None
 
     async def provision_mailbox_for_user(

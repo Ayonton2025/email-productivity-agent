@@ -1,27 +1,11 @@
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import PaymentError
 from app.core.security import logger
-from app.models.billing_models import (
-    AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
-    SUBSCRIPTION_PLANS,
-    AICredits,
-    CreditTransaction,
-    OutboundCredits,
-    Payment,
-    PaymentTransaction,
-    Subscription,
-    UsageLog,
-)
-from app.models.database import SystemSetting, User
 
 
 class PaymentRequiredError(PaymentError):
@@ -42,7 +26,9 @@ class PaystackService:
             logger.warning(
                 "⚠️ [PaystackService] PAYSTACK_SECRET_KEY not configured in environment - using PAYSTACK_API_KEY as fallback"
             )
-            logger.warning("⚠️ [PaystackService] CRITICAL: Payment operations will fail without valid SECRET key (sk_*)")
+            logger.warning(
+                "⚠️ [PaystackService] CRITICAL: Payment operations will fail without valid SECRET key (sk_*)"
+            )
         else:
             # Log first 10 chars for verification
             key_type = "SECRET" if self.api_key.startswith("sk_") else "unknown"
@@ -78,9 +64,14 @@ class PaystackService:
 
             return mock_payment(reference, amount, currency, email)
         try:
-            logger.info(f"🔄 [PaystackService] Initialize payment - email={email}, amount={amount}, ref={reference}")
+            logger.info(
+                f"🔄 [PaystackService] Initialize payment - email={email}, amount={amount}, ref={reference}"
+            )
 
-            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
 
             payload = {
                 "email": email,
@@ -94,7 +85,9 @@ class PaystackService:
 
             logger.debug(f"🔄 [PaystackService] Payload: {payload}")
 
-            response = await self.client.post(f"{self.base_url}/transaction/initialize", json=payload, headers=headers)
+            response = await self.client.post(
+                f"{self.base_url}/transaction/initialize", json=payload, headers=headers
+            )
 
             logger.info(f"🔄 [PaystackService] Response status: {response.status_code}")
 
@@ -102,14 +95,22 @@ class PaystackService:
                 response.raise_for_status()
             except Exception as http_err:
                 # Log HTTP error details
-                logger.error(f"❌ [PaystackService] HTTP error {response.status_code}: {str(http_err)}")
+                logger.error(
+                    f"❌ [PaystackService] HTTP error {response.status_code}: {str(http_err)}"
+                )
                 try:
                     error_data = response.json()
                     logger.error(f"❌ [PaystackService] Error response: {error_data}")
-                    return {"success": False, "message": error_data.get("message", f"HTTP {response.status_code}")}
+                    return {
+                        "success": False,
+                        "message": error_data.get("message", f"HTTP {response.status_code}"),
+                    }
                 except:
                     logger.error(f"❌ [PaystackService] Response body: {response.text}")
-                    return {"success": False, "message": f"HTTP {response.status_code}: {response.text[:200]}"}
+                    return {
+                        "success": False,
+                        "message": f"HTTP {response.status_code}: {response.text[:200]}",
+                    }
 
             data = response.json()
 
@@ -136,7 +137,9 @@ class PaystackService:
         """Typed boundary for payment callers migrating away from result dictionaries."""
         result = await self.initialize_payment(*args, **kwargs)
         if not result.get("success"):
-            raise PaymentError(str(result.get("message") or "Payment initialization failed"), details=result)
+            raise PaymentError(
+                str(result.get("message") or "Payment initialization failed"), details=result
+            )
         return result
 
     async def verify_payment(self, reference: str) -> Dict[str, Any]:
@@ -164,7 +167,9 @@ class PaystackService:
                 "Authorization": f"Bearer {self.api_key}",
             }
 
-            response = await self.client.get(f"{self.base_url}/transaction/verify/{reference}", headers=headers)
+            response = await self.client.get(
+                f"{self.base_url}/transaction/verify/{reference}", headers=headers
+            )
 
             response.raise_for_status()
             data = response.json()
@@ -193,7 +198,9 @@ class PaystackService:
         """Get details of a payment"""
         try:
             headers = {"Authorization": f"Bearer {self.api_key}"}
-            response = await self.client.get(f"{self.base_url}/transaction/{reference}", headers=headers)
+            response = await self.client.get(
+                f"{self.base_url}/transaction/{reference}", headers=headers
+            )
             response.raise_for_status()
             return response.json().get("data")
         except Exception as e:

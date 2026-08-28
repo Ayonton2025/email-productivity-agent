@@ -34,7 +34,9 @@ def extract_email_domain(email: str) -> Optional[str]:
     return email.split("@")[1].lower().strip()
 
 
-def extract_name_from_email(email: str, display_name: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+def extract_name_from_email(
+    email: str, display_name: Optional[str] = None
+) -> Tuple[Optional[str], Optional[str]]:
     """Extract first and last name from email or display name"""
     if display_name:
         parts = display_name.strip().split()
@@ -75,7 +77,9 @@ class RelationshipService:
         domain = extract_email_domain(sender_email)
 
         # Get or create contact
-        contact = await self.get_or_create_contact(user_id=email.user_id, email=sender_email, display_name=email.sender)
+        contact = await self.get_or_create_contact(
+            user_id=email.user_id, email=sender_email, display_name=email.sender
+        )
 
         # Get or create company
         company = None
@@ -121,7 +125,9 @@ class RelationshipService:
             "extracted_data": extracted_data,
         }
 
-    async def get_or_create_contact(self, user_id: str, email: str, display_name: Optional[str] = None) -> Contact:
+    async def get_or_create_contact(
+        self, user_id: str, email: str, display_name: Optional[str] = None
+    ) -> Contact:
         """Get existing contact or create new one"""
         result = await self.db.execute(
             select(Contact).where(and_(Contact.user_id == user_id, Contact.email == email.lower()))
@@ -144,10 +150,14 @@ class RelationshipService:
 
         return contact
 
-    async def get_or_create_company(self, user_id: str, domain: str, name: Optional[str] = None) -> Company:
+    async def get_or_create_company(
+        self, user_id: str, domain: str, name: Optional[str] = None
+    ) -> Company:
         """Get existing company or create new one"""
         result = await self.db.execute(
-            select(Company).where(and_(Company.user_id == user_id, Company.domain == domain.lower()))
+            select(Company).where(
+                and_(Company.user_id == user_id, Company.domain == domain.lower())
+            )
         )
         company = result.scalar_one_or_none()
 
@@ -164,7 +174,9 @@ class RelationshipService:
 
         return company
 
-    async def extract_contact_intelligence(self, email: Email, contact: Contact) -> Optional[Dict[str, Any]]:
+    async def extract_contact_intelligence(
+        self, email: Email, contact: Contact
+    ) -> Optional[Dict[str, Any]]:
         """Use AI to extract person role, company, sentiment, urgency from email"""
         try:
             email_content = (
@@ -212,7 +224,9 @@ Return only valid JSON."""
             logger.error(f"⚠️ [RelationshipService] Failed to extract intelligence: {e}")
             return None
 
-    async def update_contact_from_extraction(self, contact: Contact, extracted_data: Dict[str, Any]):
+    async def update_contact_from_extraction(
+        self, contact: Contact, extracted_data: Dict[str, Any]
+    ):
         """Update contact with extracted intelligence"""
         if extracted_data.get("person_role"):
             contact.job_title = extracted_data["person_role"]
@@ -226,7 +240,9 @@ Return only valid JSON."""
 
         if extracted_data.get("sentiment"):
             sentiment = extracted_data["sentiment"].lower()
-            contact.last_sentiment_score = 0.5 if sentiment == "positive" else -0.5 if sentiment == "negative" else 0.0
+            contact.last_sentiment_score = (
+                0.5 if sentiment == "positive" else -0.5 if sentiment == "negative" else 0.0
+            )
             contact.overall_sentiment = sentiment
 
     async def record_interaction(
@@ -249,7 +265,11 @@ Return only valid JSON."""
             direction=direction,
             subject=subject,
             sentiment=sentiment,
-            sentiment_score=0.5 if sentiment == "positive" else -0.5 if sentiment == "negative" else 0.0,
+            sentiment_score=0.5
+            if sentiment == "positive"
+            else -0.5
+            if sentiment == "negative"
+            else 0.0,
             interaction_date=interaction_date,
         )
         self.db.add(interaction)
@@ -259,12 +279,18 @@ Return only valid JSON."""
         # Count interactions
         sent_count = await self.db.execute(
             select(func.count(ContactInteraction.id)).where(
-                and_(ContactInteraction.contact_id == contact.id, ContactInteraction.direction == "outbound")
+                and_(
+                    ContactInteraction.contact_id == contact.id,
+                    ContactInteraction.direction == "outbound",
+                )
             )
         )
         received_count = await self.db.execute(
             select(func.count(ContactInteraction.id)).where(
-                and_(ContactInteraction.contact_id == contact.id, ContactInteraction.direction == "inbound")
+                and_(
+                    ContactInteraction.contact_id == contact.id,
+                    ContactInteraction.direction == "inbound",
+                )
             )
         )
 
@@ -284,7 +310,9 @@ Return only valid JSON."""
 
         # Calculate relationship status
         days_since_last_contact = (
-            (datetime.utcnow() - contact.last_contact_date).days if contact.last_contact_date else 999
+            (datetime.utcnow() - contact.last_contact_date).days
+            if contact.last_contact_date
+            else 999
         )
 
         total_interactions = contact.total_emails_sent + contact.total_emails_received

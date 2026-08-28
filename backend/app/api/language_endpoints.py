@@ -34,7 +34,11 @@ async def translate_text(
 ):
     del current_user
     translated = AdvancedFeaturesService.translate_text(body.text, body.target_language)
-    return {"success": True, "translated_text": translated, "provider_hint": "DeepL or Google Translate"}
+    return {
+        "success": True,
+        "translated_text": translated,
+        "provider_hint": "DeepL or Google Translate",
+    }
 
 
 @router.put("/preferred-language", response_model=Dict[str, Any])

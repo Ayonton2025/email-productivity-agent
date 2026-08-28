@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { getUpgradeSuggestion, canAccessFeature, getPlanLimits } from '../utils/subscriptionUtils'
-import { getDismissalResetInfo } from '../services/adminService'
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getUpgradeSuggestion, canAccessFeature, getPlanLimits } from '../utils/subscriptionUtils';
+import { getDismissalResetInfo } from '../services/adminService';
 
 /**
  * useSubscription Hook
@@ -10,50 +10,53 @@ import { getDismissalResetInfo } from '../services/adminService'
  * @returns {object} Subscription management object
  */
 export const useSubscription = () => {
-  const { user } = useAuth()
-  const isSuperAdmin = useMemo(() => Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser), [user])
-  const [showPremiumPrompt, setShowPremiumPrompt] = useState(false)
-  const [promptType, setPromptType] = useState('credits') // credits, emails, contacts, workflows
-  const [creditWarning, setCreditWarning] = useState(false)
+  const { user } = useAuth();
+  const isSuperAdmin = useMemo(
+    () => Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser),
+    [user]
+  );
+  const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
+  const [promptType, setPromptType] = useState('credits'); // credits, emails, contacts, workflows
+  const [creditWarning, setCreditWarning] = useState(false);
   const [dismissedPrompts, setDismissedPrompts] = useState(() => {
     try {
-      const raw = sessionStorage.getItem('dismissedPremiumPrompts')
-      return raw ? new Set(JSON.parse(raw)) : new Set()
+      const raw = sessionStorage.getItem('dismissedPremiumPrompts');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
     } catch (e) {
-      return new Set()
+      return new Set();
     }
-  })
+  });
 
   // On mount, check server-side dismissal reset timestamp and clear session dismissals if needed
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const res = await getDismissalResetInfo()
-        const serverReset = res?.reset_at || null
-        if (!serverReset) return
+        const res = await getDismissalResetInfo();
+        const serverReset = res?.reset_at || null;
+        if (!serverReset) return;
 
-        const localSeen = sessionStorage.getItem('dismissedPremiumPromptsResetAt') || null
+        const localSeen = sessionStorage.getItem('dismissedPremiumPromptsResetAt') || null;
         if (!localSeen || new Date(serverReset) > new Date(localSeen)) {
           // Clear local dismissals
-          sessionStorage.removeItem('dismissedPremiumPrompts')
-          sessionStorage.setItem('dismissedPremiumPromptsResetAt', serverReset)
-          if (mounted) setDismissedPrompts(new Set())
+          sessionStorage.removeItem('dismissedPremiumPrompts');
+          sessionStorage.setItem('dismissedPremiumPromptsResetAt', serverReset);
+          if (mounted) setDismissedPrompts(new Set());
         }
       } catch (e) {
         // ignore network/errors
       }
-    })()
+    })();
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   // Get user's current plan and limits
   const userPlan = useMemo(() => {
-    if (isSuperAdmin) return 'enterprise'
-    return user?.subscription?.plan || user?.plan || 'personal'
-  }, [isSuperAdmin, user])
+    if (isSuperAdmin) return 'enterprise';
+    return user?.subscription?.plan || user?.plan || 'personal';
+  }, [isSuperAdmin, user]);
 
   const planLimits = useMemo(() => {
     const limits = {
@@ -85,94 +88,94 @@ export const useSubscription = () => {
         contacts: Infinity,
         workflowAutomations: Infinity,
       },
-    }
-    return limits[userPlan] || limits.personal
-  }, [userPlan])
+    };
+    return limits[userPlan] || limits.personal;
+  }, [userPlan]);
 
   // Check credit limit
   const checkCreditLimit = useCallback(
     (creditsUsed) => {
-      if (isSuperAdmin) return true
+      if (isSuperAdmin) return true;
       if (creditsUsed >= planLimits.aiCredits) {
-        setPromptType('credits')
+        setPromptType('credits');
         // only show if user hasn't dismissed this prompt type for the session
         if (!dismissedPrompts.has('credits')) {
-          setShowPremiumPrompt(true)
+          setShowPremiumPrompt(true);
         }
-        return false
+        return false;
       }
       // If usage returned below limit, clear any previous dismissal so future overages will re-show prompt
       if (dismissedPrompts.has('credits') && creditsUsed < planLimits.aiCredits) {
         setDismissedPrompts((prev) => {
-          const next = new Set(prev)
-          next.delete('credits')
+          const next = new Set(prev);
+          next.delete('credits');
           try {
-            sessionStorage.setItem('dismissedPremiumPrompts', JSON.stringify(Array.from(next)))
+            sessionStorage.setItem('dismissedPremiumPrompts', JSON.stringify(Array.from(next)));
           } catch (e) {
             // Storage can be unavailable in privacy-restricted browsers.
           }
-          return next
-        })
+          return next;
+        });
       }
 
       // Show warning at 80%
       if (creditsUsed >= planLimits.aiCredits * 0.8) {
-        setCreditWarning(true)
-        return true
+        setCreditWarning(true);
+        return true;
       }
 
-      setCreditWarning(false)
-      return true
+      setCreditWarning(false);
+      return true;
     },
     [isSuperAdmin, planLimits.aiCredits, dismissedPrompts]
-  )
+  );
 
   // Check email account limit
   const checkEmailAccountLimit = useCallback(
     (accountsUsed) => {
-      if (isSuperAdmin) return true
+      if (isSuperAdmin) return true;
       if (accountsUsed >= planLimits.emailAccounts) {
-        setPromptType('emails')
-        setShowPremiumPrompt(true)
-        return false
+        setPromptType('emails');
+        setShowPremiumPrompt(true);
+        return false;
       }
-      return true
+      return true;
     },
     [isSuperAdmin, planLimits.emailAccounts]
-  )
+  );
 
   // Check contact limit
   const checkContactLimit = useCallback(
     (contactsUsed) => {
-      if (isSuperAdmin) return true
+      if (isSuperAdmin) return true;
       if (contactsUsed >= planLimits.contacts) {
-        setPromptType('contacts')
-        setShowPremiumPrompt(true)
-        return false
+        setPromptType('contacts');
+        setShowPremiumPrompt(true);
+        return false;
       }
-      return true
+      return true;
     },
     [isSuperAdmin, planLimits.contacts]
-  )
+  );
 
   // Check workflow limit
   const checkWorkflowLimit = useCallback(
     (workflowsUsed) => {
-      if (isSuperAdmin) return true
+      if (isSuperAdmin) return true;
       if (workflowsUsed >= planLimits.workflowAutomations) {
-        setPromptType('workflows')
-        setShowPremiumPrompt(true)
-        return false
+        setPromptType('workflows');
+        setShowPremiumPrompt(true);
+        return false;
       }
-      return true
+      return true;
     },
     [isSuperAdmin, planLimits.workflowAutomations]
-  )
+  );
 
   // Check if feature is accessible
   const hasFeatureAccess = useCallback(
     (featureName) => {
-      if (isSuperAdmin) return true
+      if (isSuperAdmin) return true;
       const features = {
         personal: ['basicInbox', 'emailSync'],
         plus: ['basicInbox', 'emailSync', 'basicInsights', 'advancedWorkflows', 'campaigns'],
@@ -188,13 +191,13 @@ export const useSubscription = () => {
           'webhooks',
         ],
         enterprise: ['*'], // all features
-      }
+      };
 
-      const planFeatures = features[userPlan] || features.personal
-      return planFeatures.includes('*') || planFeatures.includes(featureName)
+      const planFeatures = features[userPlan] || features.personal;
+      return planFeatures.includes('*') || planFeatures.includes(featureName);
     },
     [isSuperAdmin, userPlan]
-  )
+  );
 
   // Get upgrade suggestion
   const getUpgradeSuggestionData = useCallback(
@@ -204,26 +207,26 @@ export const useSubscription = () => {
         planLimits.aiCredits,
         usage.emailAccountsUsed || 0,
         planLimits.emailAccounts
-      )
+      );
     },
     [planLimits]
-  )
+  );
 
   const closePremiumPrompt = useCallback((type = 'credits', persist = false) => {
-    setShowPremiumPrompt(false)
+    setShowPremiumPrompt(false);
     if (persist) {
       setDismissedPrompts((prev) => {
-        const next = new Set(prev)
-        next.add(type)
+        const next = new Set(prev);
+        next.add(type);
         try {
-          sessionStorage.setItem('dismissedPremiumPrompts', JSON.stringify(Array.from(next)))
+          sessionStorage.setItem('dismissedPremiumPrompts', JSON.stringify(Array.from(next)));
         } catch (e) {
           // ignore
         }
-        return next
-      })
+        return next;
+      });
     }
-  }, [])
+  }, []);
 
   // If usage falls back below limit, clear dismissal so it can reappear later
   useEffect(() => {
@@ -234,10 +237,10 @@ export const useSubscription = () => {
     } catch (e) {
       // ignore
     }
-  }, [planLimits.aiCredits, dismissedPrompts])
+  }, [planLimits.aiCredits, dismissedPrompts]);
 
-  const isPremiumUser = isSuperAdmin || userPlan !== 'personal'
-  const isEnterprise = isSuperAdmin || userPlan === 'enterprise'
+  const isPremiumUser = isSuperAdmin || userPlan !== 'personal';
+  const isEnterprise = isSuperAdmin || userPlan === 'enterprise';
 
   return {
     // State
@@ -267,7 +270,7 @@ export const useSubscription = () => {
     setPromptType,
     closePremiumPrompt,
     setCreditWarning,
-  }
-}
+  };
+};
 
-export default useSubscription
+export default useSubscription;

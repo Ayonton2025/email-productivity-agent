@@ -1,11 +1,11 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import { API_BASE_URL } from './services/api'
-import { logger } from './utils/logger'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import { API_BASE_URL } from './services/api';
+import { logger } from './utils/logger';
 
 // Import global styles
-import './styles/globals.css'
+import './styles/globals.css';
 
 /**
  * Bylix Email - Email Intelligence Platform
@@ -22,41 +22,41 @@ import './styles/globals.css'
 // Enhanced Error Boundary with AI-specific error handling
 class ErrorBoundary extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
       errorType: 'general',
-    }
+    };
   }
 
   static getDerivedStateFromError(error) {
     // Classify error types for better user messaging
-    let errorType = 'general'
+    let errorType = 'general';
 
     if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-      errorType = 'network'
+      errorType = 'network';
     } else if (error.message?.includes('OpenAI') || error.message?.includes('API')) {
-      errorType = 'ai_service'
+      errorType = 'ai_service';
     } else if (error.message?.includes('OAuth') || error.message?.includes('authentication')) {
-      errorType = 'auth'
+      errorType = 'auth';
     } else if (
       error.message?.includes('Email provider') ||
       error.message?.includes('Gmail') ||
       error.message?.includes('Outlook')
     ) {
-      errorType = 'email_provider'
+      errorType = 'email_provider';
     }
 
-    return { hasError: true, errorType }
+    return { hasError: true, errorType };
   }
 
   componentDidCatch(error, errorInfo) {
     this.setState({
       error: error,
       errorInfo: errorInfo,
-    })
+    });
 
     // Enhanced error logging with AI service context
     logger.error('Bylix Email Error Boundary caught an error:', {
@@ -65,11 +65,11 @@ class ErrorBoundary extends React.Component {
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
-    })
+    });
 
     // Send to error reporting service in production
     if (import.meta.env.PROD) {
-      this.reportErrorToService(error, errorInfo)
+      this.reportErrorToService(error, errorInfo);
     }
   }
 
@@ -82,25 +82,27 @@ class ErrorBoundary extends React.Component {
           description: error.toString(),
           fatal: true,
           error_type: this.state.errorType,
-        })
+        });
       }
     } catch (reportingError) {
-      logger.warn('Error reporting failed:', reportingError)
+      logger.warn('Error reporting failed:', reportingError);
     }
   }
 
   getErrorMessage() {
-    const { errorType } = this.state
+    const { errorType } = this.state;
 
     const messages = {
       network: {
         title: 'Connection Issue',
-        description: "We're having trouble connecting to our services. Please check your internet connection.",
+        description:
+          "We're having trouble connecting to our services. Please check your internet connection.",
         action: 'Check Connection',
       },
       ai_service: {
         title: 'AI Service Temporarily Unavailable',
-        description: 'Our AI features are currently experiencing issues. Basic email functions remain available.',
+        description:
+          'Our AI features are currently experiencing issues. Basic email functions remain available.',
         action: 'Retry AI Features',
       },
       auth: {
@@ -110,7 +112,8 @@ class ErrorBoundary extends React.Component {
       },
       email_provider: {
         title: 'Email Provider Connection Issue',
-        description: 'There was an issue with your email provider connection. Please reconnect your account.',
+        description:
+          'There was an issue with your email provider connection. Please reconnect your account.',
         action: 'Reconnect Account',
       },
       general: {
@@ -118,33 +121,33 @@ class ErrorBoundary extends React.Component {
         description: "We're sorry, but the application encountered an unexpected error.",
         action: 'Reload Application',
       },
-    }
+    };
 
-    return messages[errorType] || messages.general
+    return messages[errorType] || messages.general;
   }
 
   handleRecoveryAction = () => {
-    const { errorType } = this.state
+    const { errorType } = this.state;
 
     switch (errorType) {
       case 'auth':
         // Clear auth tokens and redirect to login
-        localStorage.removeItem('auth_token')
-        window.location.href = '/login'
-        break
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+        break;
       case 'email_provider':
         // Redirect to email accounts page
-        window.location.hash = '#email-accounts'
-        this.setState({ hasError: false, error: null, errorInfo: null })
-        break
+        window.location.hash = '#email-accounts';
+        this.setState({ hasError: false, error: null, errorInfo: null });
+        break;
       default:
-        window.location.reload()
+        window.location.reload();
     }
-  }
+  };
 
   render() {
     if (this.state.hasError) {
-      const errorMessage = this.getErrorMessage()
+      const errorMessage = this.getErrorMessage();
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4 dark:from-red-900 dark:to-red-800">
@@ -171,7 +174,12 @@ class ErrorBoundary extends React.Component {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               ) : this.state.errorType === 'auth' ? (
                 <svg
@@ -204,7 +212,9 @@ class ErrorBoundary extends React.Component {
               )}
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 mb-2 dark:text-white">{errorMessage.title}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2 dark:text-white">
+              {errorMessage.title}
+            </h2>
             <p className="text-gray-600 mb-4 dark:text-gray-300">{errorMessage.description}</p>
 
             {/* Enhanced error details for development */}
@@ -214,7 +224,9 @@ class ErrorBoundary extends React.Component {
                   Error Details (Development)
                 </summary>
                 <div className="mt-2">
-                  <p className="text-red-600 dark:text-red-400 font-mono text-xs">{this.state.error.toString()}</p>
+                  <p className="text-red-600 dark:text-red-400 font-mono text-xs">
+                    {this.state.error.toString()}
+                  </p>
                   <div className="text-xs text-gray-500 mt-1">Type: {this.state.errorType}</div>
                   <pre className="text-gray-600 dark:text-gray-400 text-xs mt-2 overflow-auto max-h-32">
                     {this.state.errorInfo.componentStack}
@@ -235,13 +247,16 @@ class ErrorBoundary extends React.Component {
                 <button
                   onClick={() => {
                     // Navigate to appropriate page based on error type
-                    const targetPage = this.state.errorType === 'email_provider' ? '#email-accounts' : '/login'
-                    window.location.href = targetPage
-                    this.setState({ hasError: false, error: null, errorInfo: null })
+                    const targetPage =
+                      this.state.errorType === 'email_provider' ? '#email-accounts' : '/login';
+                    window.location.href = targetPage;
+                    this.setState({ hasError: false, error: null, errorInfo: null });
                   }}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
-                  {this.state.errorType === 'email_provider' ? 'Go to Email Accounts' : 'Go to Sign In'}
+                  {this.state.errorType === 'email_provider'
+                    ? 'Go to Email Accounts'
+                    : 'Go to Sign In'}
                 </button>
               )}
 
@@ -255,10 +270,14 @@ class ErrorBoundary extends React.Component {
 
             {/* Enhanced support information */}
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Need help? Here are some options:</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Need help? Here are some options:
+              </p>
               <div className="flex justify-center gap-4 text-xs">
                 <button
-                  onClick={() => window.open('https://github.com/your-username/bylix-email/issues', '_blank')}
+                  onClick={() =>
+                    window.open('https://github.com/your-username/bylix-email/issues', '_blank')
+                  }
                   className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                 >
                   Report Issue
@@ -279,10 +298,10 @@ class ErrorBoundary extends React.Component {
             </div>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -294,19 +313,19 @@ const withPerformanceMonitoring = (WrappedComponent) => {
       aiOperationTimes: [],
       networkRequests: [],
       authOperations: [],
-    })
+    });
 
     React.useEffect(() => {
       // Measure initial app load time
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       // Track API performance including auth and email operations
-      const originalFetch = window.fetch
+      const originalFetch = window.fetch;
       window.fetch = function (...args) {
-        const start = performance.now()
+        const start = performance.now();
         return originalFetch.apply(this, args).then((response) => {
-          const duration = performance.now() - start
-          const url = args[0]
+          const duration = performance.now() - start;
+          const url = args[0];
 
           // Track different types of operations
           if (url?.includes('/api/auth/')) {
@@ -320,7 +339,7 @@ const withPerformanceMonitoring = (WrappedComponent) => {
                   timestamp: new Date().toISOString(),
                 },
               ].slice(-10),
-            }))
+            }));
           } else if (url?.includes('/api/email-accounts/')) {
             setPerformanceMetrics((prev) => ({
               ...prev,
@@ -333,7 +352,7 @@ const withPerformanceMonitoring = (WrappedComponent) => {
                   timestamp: new Date().toISOString(),
                 },
               ].slice(-20),
-            }))
+            }));
           } else if (url?.includes('/api/') || url?.includes('openai')) {
             setPerformanceMetrics((prev) => ({
               ...prev,
@@ -346,35 +365,35 @@ const withPerformanceMonitoring = (WrappedComponent) => {
                   timestamp: new Date().toISOString(),
                 },
               ].slice(-20),
-            }))
+            }));
           }
 
-          return response
-        })
-      }
+          return response;
+        });
+      };
 
       return () => {
-        const mountTime = performance.now() - startTime
-        window.fetch = originalFetch // Restore original fetch
+        const mountTime = performance.now() - startTime;
+        window.fetch = originalFetch; // Restore original fetch
 
         setPerformanceMetrics((prev) => ({
           ...prev,
           appLoadTime: mountTime,
-        }))
+        }));
 
         if (import.meta.env.DEV) {
-          logger.debug(`🚀 Bylix Email mounted in ${mountTime.toFixed(2)}ms`)
+          logger.debug(`🚀 Bylix Email mounted in ${mountTime.toFixed(2)}ms`);
 
           // Performance insights
-          const aiOps = performanceMetrics.aiOperationTimes.length
-          const authOps = performanceMetrics.authOperations.length
+          const aiOps = performanceMetrics.aiOperationTimes.length;
+          const authOps = performanceMetrics.authOperations.length;
 
-          logger.debug(`📊 Performance Summary:`)
-          logger.debug(`   - AI Operations: ${aiOps}`)
-          logger.debug(`   - Auth Operations: ${authOps}`)
+          logger.debug(`📊 Performance Summary:`);
+          logger.debug(`   - AI Operations: ${aiOps}`);
+          logger.debug(`   - Auth Operations: ${authOps}`);
 
           if (mountTime > 1000) {
-            logger.warn('⚠️  App mount time is high. Consider optimizing initial load.')
+            logger.warn('⚠️  App mount time is high. Consider optimizing initial load.');
           }
         }
 
@@ -385,11 +404,11 @@ const withPerformanceMonitoring = (WrappedComponent) => {
               load_time: Math.round(mountTime),
               ai_operations: performanceMetrics.aiOperationTimes.length,
               auth_operations: performanceMetrics.authOperations.length,
-            })
+            });
           }
         }
-      }
-    }, [])
+      };
+    }, []);
 
     // Monitor service health including auth and email providers
     React.useEffect(() => {
@@ -397,60 +416,60 @@ const withPerformanceMonitoring = (WrappedComponent) => {
         try {
           const apiBaseUrl = API_BASE_URL.startsWith('http')
             ? API_BASE_URL
-            : `${window.location.origin}${API_BASE_URL.startsWith('/') ? '' : '/'}${API_BASE_URL}`
+            : `${window.location.origin}${API_BASE_URL.startsWith('/') ? '' : '/'}${API_BASE_URL}`;
 
           // Check auth service
           const authResponse = await fetch(`${apiBaseUrl}/me`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             },
-          })
+          });
 
           if (!authResponse.ok && authResponse.status !== 401) {
-            logger.warn('⚠️  Auth service health check failed')
+            logger.warn('⚠️  Auth service health check failed');
           }
 
           // Check AI service health
-          const aiResponse = await fetch(`${apiBaseUrl}/health/ai`)
+          const aiResponse = await fetch(`${apiBaseUrl}/health/ai`);
           if (!aiResponse.ok) {
-            logger.warn('⚠️  AI service health check failed')
+            logger.warn('⚠️  AI service health check failed');
           }
         } catch (error) {
-          logger.warn('⚠️  Service health check failed:', error)
+          logger.warn('⚠️  Service health check failed:', error);
         }
-      }
+      };
 
       // Check service health every 5 minutes
-      const healthCheckInterval = setInterval(checkServiceHealth, 5 * 60 * 1000)
+      const healthCheckInterval = setInterval(checkServiceHealth, 5 * 60 * 1000);
 
-      return () => clearInterval(healthCheckInterval)
-    }, [])
+      return () => clearInterval(healthCheckInterval);
+    }, []);
 
-    return <WrappedComponent {...props} />
-  }
-}
+    return <WrappedComponent {...props} />;
+  };
+};
 
 // Enhanced App component with AI capabilities monitoring
-const EnhancedApp = withPerformanceMonitoring(App)
+const EnhancedApp = withPerformanceMonitoring(App);
 
 // Enhanced Strict Mode wrapper with development tools
 const StrictModeWrapper = ({ children }) => {
-  const [showDevTools, setShowDevTools] = React.useState(false)
+  const [showDevTools, setShowDevTools] = React.useState(false);
 
   React.useEffect(() => {
     if (import.meta.env.DEV) {
       const handleKeyPress = (event) => {
         // Ctrl+Shift+D to toggle dev tools
         if (event.ctrlKey && event.shiftKey && event.key === 'D') {
-          setShowDevTools((prev) => !prev)
+          setShowDevTools((prev) => !prev);
         }
-      }
+      };
 
-      window.addEventListener('keydown', handleKeyPress)
-      return () => window.removeEventListener('keydown', handleKeyPress)
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
     }
-    return undefined
-  }, [])
+    return undefined;
+  }, []);
 
   // Development-only features
   if (import.meta.env.DEV) {
@@ -459,24 +478,24 @@ const StrictModeWrapper = ({ children }) => {
         {children}
         {showDevTools && <DevelopmentTools />}
       </React.StrictMode>
-    )
+    );
   }
 
-  return <React.StrictMode>{children}</React.StrictMode>
-}
+  return <React.StrictMode>{children}</React.StrictMode>;
+};
 
 // Enhanced Development tools component with auth and email provider info
 const DevelopmentTools = () => {
-  const [metrics, setMetrics] = React.useState({})
-  const [authStatus, setAuthStatus] = React.useState('Checking...')
+  const [metrics, setMetrics] = React.useState({});
+  const [authStatus, setAuthStatus] = React.useState('Checking...');
 
   React.useEffect(() => {
     // Check auth status
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('auth_token');
     if (token) {
-      setAuthStatus('Authenticated')
+      setAuthStatus('Authenticated');
     } else {
-      setAuthStatus('Not Authenticated')
+      setAuthStatus('Not Authenticated');
     }
 
     // Simulate metrics collection
@@ -485,11 +504,11 @@ const DevelopmentTools = () => {
         memory: (performance.memory?.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
         connections: 'Active',
         aiStatus: 'Connected',
-      })
-    }, 2000)
+      });
+    }, 2000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-lg text-xs z-50 max-w-xs">
@@ -498,7 +517,9 @@ const DevelopmentTools = () => {
         <div>Memory: {metrics.memory}</div>
         <div>
           Auth:{' '}
-          <span className={authStatus === 'Authenticated' ? 'text-green-400' : 'text-yellow-400'}>{authStatus}</span>
+          <span className={authStatus === 'Authenticated' ? 'text-green-400' : 'text-yellow-400'}>
+            {authStatus}
+          </span>
         </div>
         <div>AI Status: {metrics.aiStatus}</div>
         <div className="text-green-400">✓ Real Email Integration Ready</div>
@@ -510,9 +531,9 @@ const DevelopmentTools = () => {
         <button
           onClick={() => {
             // Prefer production backend from environment variable
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             // Open /docs endpoint
-            window.open(`${apiUrl}/docs`, '_blank')
+            window.open(`${apiUrl}/docs`, '_blank');
           }}
           className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded text-xs"
         >
@@ -520,8 +541,8 @@ const DevelopmentTools = () => {
         </button>
         <button
           onClick={() => {
-            localStorage.removeItem('auth_token')
-            window.location.reload()
+            localStorage.removeItem('auth_token');
+            window.location.reload();
           }}
           className="flex-1 bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
         >
@@ -529,15 +550,15 @@ const DevelopmentTools = () => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Clean main render function without browser detection
 const renderApp = () => {
-  const rootElement = document.getElementById('root')
+  const rootElement = document.getElementById('root');
 
   if (!rootElement) {
-    logger.error('Root element not found!')
+    logger.error('Root element not found!');
 
     // Create fallback UI
     document.body.innerHTML = `
@@ -551,12 +572,12 @@ const renderApp = () => {
           </button>
         </div>
       </div>
-    `
-    return
+    `;
+    return;
   }
 
   try {
-    const root = ReactDOM.createRoot(rootElement)
+    const root = ReactDOM.createRoot(rootElement);
 
     root.render(
       <StrictModeWrapper>
@@ -564,7 +585,7 @@ const renderApp = () => {
           <EnhancedApp />
         </ErrorBoundary>
       </StrictModeWrapper>
-    )
+    );
 
     // Enhanced initialization logging with new features
     logger.debug(`
@@ -589,14 +610,14 @@ const renderApp = () => {
     4. Start managing real emails with AI assistance
     
     Need help? Check /docs for integration guides.
-    `)
+    `);
 
     // Enhanced loading indicator removal with smooth transition
-    const loadingContainer = document.querySelector('.loading-container')
+    const loadingContainer = document.querySelector('.loading-container');
     if (loadingContainer) {
       // Add success message before removing
-      const successMessage = document.createElement('div')
-      successMessage.className = 'loading-success'
+      const successMessage = document.createElement('div');
+      successMessage.className = 'loading-success';
       successMessage.innerHTML = `
         <div style="text-align: center; color: white; margin-top: 1rem;">
           <div style="font-size: 2rem;">🎉</div>
@@ -605,33 +626,34 @@ const renderApp = () => {
             Now with User Authentication & Real Email Support
           </div>
         </div>
-      `
-      loadingContainer.appendChild(successMessage)
+      `;
+      loadingContainer.appendChild(successMessage);
 
       setTimeout(() => {
-        loadingContainer.style.opacity = '0'
-        loadingContainer.style.transform = 'scale(0.95)'
-        loadingContainer.style.transition = 'all 0.5s ease'
+        loadingContainer.style.opacity = '0';
+        loadingContainer.style.transform = 'scale(0.95)';
+        loadingContainer.style.transition = 'all 0.5s ease';
 
         setTimeout(() => {
           if (loadingContainer.parentNode) {
-            loadingContainer.parentNode.removeChild(loadingContainer)
+            loadingContainer.parentNode.removeChild(loadingContainer);
           }
-        }, 500)
-      }, 1000)
+        }, 500);
+      }, 1000);
     }
   } catch (error) {
-    logger.error('💥 Failed to initialize Bylix Email:', error)
+    logger.error('💥 Failed to initialize Bylix Email:', error);
 
     // Enhanced error UI with specific guidance
-    let errorGuidance = 'Please refresh the page and try again.'
+    let errorGuidance = 'Please refresh the page and try again.';
 
     if (error.message?.includes('ReactDOM')) {
-      errorGuidance = 'This might be a browser compatibility issue. Try updating your browser.'
+      errorGuidance = 'This might be a browser compatibility issue. Try updating your browser.';
     } else if (error.message?.includes('memory')) {
-      errorGuidance = 'Your device is low on memory. Try closing other tabs and refresh.'
+      errorGuidance = 'Your device is low on memory. Try closing other tabs and refresh.';
     } else if (error.message?.includes('auth')) {
-      errorGuidance = 'Authentication system initialization failed. Please clear browser data and try again.'
+      errorGuidance =
+        'Authentication system initialization failed. Please clear browser data and try again.';
     }
 
     rootElement.innerHTML = `
@@ -648,50 +670,50 @@ const renderApp = () => {
           </button>
         </div>
       </div>
-    `
+    `;
   }
-}
+};
 
 // Clean application initialization - REMOVED browser feature detection
 const initializeApp = () => {
   // Check if user has existing auth token
-  const existingToken = localStorage.getItem('auth_token')
+  const existingToken = localStorage.getItem('auth_token');
   if (existingToken) {
-    logger.debug('🔐 Found existing authentication token')
+    logger.debug('🔐 Found existing authentication token');
   }
 
   // Proceed with app initialization
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderApp)
+    document.addEventListener('DOMContentLoaded', renderApp);
   } else {
-    renderApp()
+    renderApp();
   }
-}
+};
 
 // Enhanced Hot Module Replacement for development
 if (import.meta.hot) {
   import.meta.hot.accept('./App.jsx', () => {
-    logger.debug('🔁 Hot reloading Bylix Email App component...')
+    logger.debug('🔁 Hot reloading Bylix Email App component...');
 
     // Preserve auth state during hot reload
-    const preservedAuthToken = localStorage.getItem('auth_token')
+    const preservedAuthToken = localStorage.getItem('auth_token');
 
-    renderApp()
+    renderApp();
 
     // Restore auth state if it was cleared during reload
     if (preservedAuthToken && !localStorage.getItem('auth_token')) {
-      localStorage.setItem('auth_token', preservedAuthToken)
+      localStorage.setItem('auth_token', preservedAuthToken);
     }
-  })
+  });
 
   // Handle hot reload errors
   import.meta.hot.dispose(() => {
-    logger.debug('🧹 Cleaning up before hot reload...')
-  })
+    logger.debug('🧹 Cleaning up before hot reload...');
+  });
 }
 
 // Initialize the enhanced application
-initializeApp()
+initializeApp();
 
 // Export for testing and external integration
-export { renderApp, ErrorBoundary }
+export { renderApp, ErrorBoundary };

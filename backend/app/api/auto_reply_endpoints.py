@@ -155,7 +155,9 @@ async def get_away_mode(
     db: AsyncSession = Depends(get_db),
 ):
     """Get current user's away mode settings."""
-    result = await db.execute(select(AwayModeSetting).where(AwayModeSetting.user_id == current_user.id))
+    result = await db.execute(
+        select(AwayModeSetting).where(AwayModeSetting.user_id == current_user.id)
+    )
     s = result.scalar_one_or_none()
     if not s:
         return {
@@ -174,7 +176,9 @@ async def set_away_mode(
     db: AsyncSession = Depends(get_db),
 ):
     """Create or update away mode settings."""
-    result = await db.execute(select(AwayModeSetting).where(AwayModeSetting.user_id == current_user.id))
+    result = await db.execute(
+        select(AwayModeSetting).where(AwayModeSetting.user_id == current_user.id)
+    )
     s = result.scalar_one_or_none()
     if not s:
         s = AwayModeSetting(user_id=current_user.id)
@@ -198,7 +202,9 @@ async def get_approval_queue(
 ):
     """List drafts with auto_reply=True and approval_status=pending."""
     result = await db.execute(
-        select(EmailDraft).where(EmailDraft.user_id == current_user.id).order_by(EmailDraft.created_at.desc())
+        select(EmailDraft)
+        .where(EmailDraft.user_id == current_user.id)
+        .order_by(EmailDraft.created_at.desc())
     )
     drafts = result.scalars().all()
     out = []
@@ -246,7 +252,9 @@ async def approve_draft(
                 email_message_id = None
                 if draft.context_email_id:
                     email_result = await db.execute(
-                        select(Email).where(Email.id == draft.context_email_id, Email.user_id == current_user.id)
+                        select(Email).where(
+                            Email.id == draft.context_email_id, Email.user_id == current_user.id
+                        )
                     )
                     source_email = email_result.scalar_one_or_none()
                     if source_email:

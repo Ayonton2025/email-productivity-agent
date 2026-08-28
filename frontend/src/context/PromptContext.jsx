@@ -1,52 +1,52 @@
-import { logger } from '../utils/logger.js'
-import React, { createContext, useState, useContext } from 'react'
-import { useAuth } from './AuthContext'
-import { API_BASE_URL } from '../services/api'
+import { logger } from '../utils/logger.js';
+import React, { createContext, useState, useContext } from 'react';
+import { useAuth } from './AuthContext';
+import { API_BASE_URL } from '../services/api';
 
-const PromptContext = createContext()
+const PromptContext = createContext();
 
 export const usePrompt = () => {
-  const context = useContext(PromptContext)
+  const context = useContext(PromptContext);
   if (!context) {
-    throw new Error('usePrompt must be used within a PromptProvider')
+    throw new Error('usePrompt must be used within a PromptProvider');
   }
-  return context
-}
+  return context;
+};
 
 export const PromptProvider = ({ children }) => {
-  const [prompts, setPrompts] = useState([])
-  const [systemPrompts, setSystemPrompts] = useState([])
-  const [loading, setLoading] = useState(false)
-  const { token } = useAuth()
+  const [prompts, setPrompts] = useState([]);
+  const [systemPrompts, setSystemPrompts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
 
   // Use the same API_BASE_URL as your other contexts
   //const API_BASE_URL = process.env.REACT_APP_API_URL || '${API_BASE_URL}/...';
 
   // Fetch prompts from API
   const fetchPrompts = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/prompts/my`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch prompts')
+        throw new Error('Failed to fetch prompts');
       }
 
-      const data = await response.json()
-      setPrompts(data)
-      return data
+      const data = await response.json();
+      setPrompts(data);
+      return data;
     } catch (error) {
-      logger.error('Error fetching prompts:', error)
-      throw error
+      logger.error('Error fetching prompts:', error);
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Fetch system prompts from API
   const fetchSystemPrompts = async () => {
@@ -56,23 +56,23 @@ export const PromptProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch system prompts')
+        throw new Error('Failed to fetch system prompts');
       }
 
-      const data = await response.json()
-      setSystemPrompts(data)
-      return data
+      const data = await response.json();
+      setSystemPrompts(data);
+      return data;
     } catch (error) {
-      logger.error('Error fetching system prompts:', error)
-      throw error
+      logger.error('Error fetching system prompts:', error);
+      throw error;
     }
-  }
+  };
 
   const createPrompt = async (promptData) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/prompts`, {
         method: 'POST',
@@ -81,25 +81,25 @@ export const PromptProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(promptData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create prompt')
+        throw new Error('Failed to create prompt');
       }
 
-      const newPrompt = await response.json()
-      setPrompts((prev) => [newPrompt, ...prev])
-      return newPrompt
+      const newPrompt = await response.json();
+      setPrompts((prev) => [newPrompt, ...prev]);
+      return newPrompt;
     } catch (error) {
-      logger.error('Error creating prompt:', error)
-      throw error
+      logger.error('Error creating prompt:', error);
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updatePrompt = async (promptId, promptData) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/prompts/${promptId}`, {
         method: 'PUT',
@@ -108,49 +108,49 @@ export const PromptProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(promptData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update prompt')
+        throw new Error('Failed to update prompt');
       }
 
-      const updatedPrompt = await response.json()
-      setPrompts((prev) => prev.map((prompt) => (prompt.id === promptId ? updatedPrompt : prompt)))
-      return updatedPrompt
+      const updatedPrompt = await response.json();
+      setPrompts((prev) => prev.map((prompt) => (prompt.id === promptId ? updatedPrompt : prompt)));
+      return updatedPrompt;
     } catch (error) {
-      logger.error('Error updating prompt:', error)
-      throw error
+      logger.error('Error updating prompt:', error);
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const deletePrompt = async (promptId) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/prompts/${promptId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete prompt')
+        throw new Error('Failed to delete prompt');
       }
 
-      setPrompts((prev) => prev.filter((prompt) => prompt.id !== promptId))
-      return { success: true }
+      setPrompts((prev) => prev.filter((prompt) => prompt.id !== promptId));
+      return { success: true };
     } catch (error) {
-      logger.error('Error deleting prompt:', error)
-      throw error
+      logger.error('Error deleting prompt:', error);
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const testPrompt = async (promptId, emailContent) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/prompts/${promptId}/test`, {
         method: 'POST',
@@ -159,30 +159,30 @@ export const PromptProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ email_content: emailContent }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to test prompt')
+        throw new Error('Failed to test prompt');
       }
 
-      const result = await response.json()
-      return result
+      const result = await response.json();
+      return result;
     } catch (error) {
-      logger.error('Error testing prompt:', error)
-      throw error
+      logger.error('Error testing prompt:', error);
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Initialize with API data
   React.useEffect(() => {
-    if (!token) return
+    if (!token) return;
 
-    fetchPrompts()
-    fetchSystemPrompts()
+    fetchPrompts();
+    fetchSystemPrompts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+  }, [token]);
 
   const value = {
     prompts,
@@ -194,9 +194,9 @@ export const PromptProvider = ({ children }) => {
     testPrompt,
     refreshPrompts: fetchPrompts,
     refreshSystemPrompts: fetchSystemPrompts,
-  }
+  };
 
-  return <PromptContext.Provider value={value}>{children}</PromptContext.Provider>
-}
+  return <PromptContext.Provider value={value}>{children}</PromptContext.Provider>;
+};
 
-export { PromptContext }
+export { PromptContext };

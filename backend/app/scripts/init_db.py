@@ -69,7 +69,8 @@ async def create_default_admin():
             users = result.scalars().all()
             if not users:
                 admin_user = User(
-                    email=os.environ.get("DEFAULT_ADMIN_EMAIL", "admin@bylix.email"), full_name="System Administrator"
+                    email=os.environ.get("DEFAULT_ADMIN_EMAIL", "admin@bylix.email"),
+                    full_name="System Administrator",
                 )
                 admin_user.set_password(os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin123"))
                 admin_user.is_verified = True

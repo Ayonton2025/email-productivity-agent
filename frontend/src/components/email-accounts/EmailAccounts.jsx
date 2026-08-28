@@ -1,63 +1,74 @@
-import React, { useState, useEffect } from 'react'
-import { Mail, Plus, RefreshCw, Trash2, CheckCircle, XCircle, Clock, ExternalLink, AlertCircle } from 'lucide-react'
-import { useEmailAccounts } from '../../context/EmailAccountsContext'
-import ConnectEmailModal from './ConnectEmailModal'
+import React, { useState, useEffect } from 'react';
+import {
+  Mail,
+  Plus,
+  RefreshCw,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ExternalLink,
+  AlertCircle,
+} from 'lucide-react';
+import { useEmailAccounts } from '../../context/EmailAccountsContext';
+import ConnectEmailModal from './ConnectEmailModal';
 
 const EmailAccounts = () => {
-  const { emailAccounts, loading, syncing, loadEmailAccounts, disconnectAccount, syncAccount } = useEmailAccounts()
+  const { emailAccounts, loading, syncing, loadEmailAccounts, disconnectAccount, syncAccount } =
+    useEmailAccounts();
 
-  const [showConnectModal, setShowConnectModal] = useState(false)
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   useEffect(() => {
-    loadEmailAccounts()
-  }, [])
+    loadEmailAccounts();
+  }, []);
 
   const handleDisconnect = async (accountId) => {
     if (window.confirm('Are you sure you want to disconnect this email account?')) {
-      const result = await disconnectAccount(accountId)
+      const result = await disconnectAccount(accountId);
       if (!result.success) {
-        alert(result.error)
+        alert(result.error);
       }
     }
-  }
+  };
 
   const handleSync = async (accountId) => {
-    const result = await syncAccount(accountId)
+    const result = await syncAccount(accountId);
     if (!result.success) {
-      alert(result.error)
+      alert(result.error);
     }
-  }
+  };
 
   const getProviderIcon = (provider) => {
     switch (provider) {
       case 'gmail':
-        return <Mail className="h-5 w-5 text-red-500" />
+        return <Mail className="h-5 w-5 text-red-500" />;
       case 'outlook':
-        return <Mail className="h-5 w-5 text-blue-500" />
+        return <Mail className="h-5 w-5 text-blue-500" />;
       case 'yahoo':
-        return <Mail className="h-5 w-5 text-purple-500" />
+        return <Mail className="h-5 w-5 text-purple-500" />;
       default:
-        return <Mail className="h-5 w-5 text-gray-500" />
+        return <Mail className="h-5 w-5 text-gray-500" />;
     }
-  }
+  };
 
   const getProviderColor = (provider) => {
     switch (provider) {
       case 'gmail':
-        return 'bg-red-100 text-red-800 border-red-200'
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'outlook':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'yahoo':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Never'
-    return new Date(dateString).toLocaleString()
-  }
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleString();
+  };
 
   return (
     <div className="space-y-6">
@@ -87,12 +98,16 @@ const EmailAccounts = () => {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-green-600">{emailAccounts.filter((acc) => acc.is_active).length}</div>
+          <div className="text-2xl font-bold text-green-600">
+            {emailAccounts.filter((acc) => acc.is_active).length}
+          </div>
           <div className="text-sm text-gray-600">Active Accounts</div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-blue-600">{emailAccounts.filter((acc) => acc.last_sync).length}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {emailAccounts.filter((acc) => acc.last_sync).length}
+          </div>
           <div className="text-sm text-gray-600">Synced Accounts</div>
         </div>
       </div>
@@ -142,7 +157,9 @@ const EmailAccounts = () => {
                               : 'bg-gray-100 text-gray-800 border-gray-200'
                           }`}
                         >
-                          {account.email_account_type === 'hosted_internal' ? 'Hosted Internal' : 'External'}
+                          {account.email_account_type === 'hosted_internal'
+                            ? 'Hosted Internal'
+                            : 'External'}
                         </span>
                       </div>
                     </div>
@@ -195,7 +212,9 @@ const EmailAccounts = () => {
                     disabled={syncing[account.id]}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                   >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${syncing[account.id] ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${syncing[account.id] ? 'animate-spin' : ''}`}
+                    />
                     {syncing[account.id] ? 'Syncing...' : 'Sync Now'}
                   </button>
 
@@ -220,7 +239,7 @@ const EmailAccounts = () => {
         onSuccess={() => loadEmailAccounts()}
       />
     </div>
-  )
-}
+  );
+};
 
-export default EmailAccounts
+export default EmailAccounts;

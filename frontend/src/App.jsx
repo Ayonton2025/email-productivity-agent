@@ -1,9 +1,9 @@
-import React from 'react'
-import AppRouter from './routes/router'
+import React from 'react';
+import AppRouter from './routes/router';
 
 function App() {
-  return <AppRouter />
+  return <AppRouter />;
 }
 
-export { AppContent } from './components/layout/AppShell'
-export default App
+export { AppContent } from './components/layout/AppShell';
+export default App;

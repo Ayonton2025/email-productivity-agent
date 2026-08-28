@@ -1,90 +1,92 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import { FileText, Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
-import attachmentService from '../../services/attachmentService'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import { FileText, Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import attachmentService from '../../services/attachmentService';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * AttachmentCard - Individual attachment card with download and analysis trigger
  * Shows file metadata and analysis status
  */
 const AttachmentCard = ({ attachment, emailId, onAnalysisComplete = () => {} }) => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  const [loading, setLoading] = useState(false)
-  const [downloading, setDownloading] = useState(false)
-  const [error, setError] = useState(null)
-  const [analysis, setAnalysis] = useState(null)
-  const [showAnalysis, setShowAnalysis] = useState(false)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   // Handler for download button
   const handleDownload = async () => {
-    setDownloading(true)
-    setError(null)
+    setDownloading(true);
+    setError(null);
     try {
-      await attachmentService.downloadAttachmentFile(attachment.id, attachment.filename)
+      await attachmentService.downloadAttachmentFile(attachment.id, attachment.filename);
     } catch (err) {
-      setError('Download failed')
-      logger.error('Download error:', err)
+      setError('Download failed');
+      logger.error('Download error:', err);
     } finally {
-      setDownloading(false)
+      setDownloading(false);
     }
-  }
+  };
 
   // Handler for analyze button
   const handleAnalyze = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       // Trigger analysis
-      const result = await attachmentService.triggerAttachmentAnalysis(attachment.id)
+      const result = await attachmentService.triggerAttachmentAnalysis(attachment.id);
 
       if (result.success) {
         // Analysis triggered successfully
         // Now fetch the analysis (may not be complete immediately)
         setTimeout(() => {
-          fetchAnalysis()
-        }, 1000)
+          fetchAnalysis();
+        }, 1000);
       } else {
-        setLoading(false)
+        setLoading(false);
       }
     } catch (err) {
-      setError('Failed to trigger analysis')
-      logger.error('Analysis trigger error:', err)
-      setLoading(false)
+      setError('Failed to trigger analysis');
+      logger.error('Analysis trigger error:', err);
+      setLoading(false);
     }
-  }
+  };
 
   // Fetch analysis results
   const fetchAnalysis = async () => {
     try {
-      const result = await attachmentService.getAttachmentAnalysis(attachment.id)
+      const result = await attachmentService.getAttachmentAnalysis(attachment.id);
       if (result.success) {
-        const analysisData = result.data || {}
+        const analysisData = result.data || {};
         if (analysisData.status === 'not_analyzed') {
-          setError('Analysis not yet available. Please try again in a moment.')
-          setLoading(false)
-          return
+          setError('Analysis not yet available. Please try again in a moment.');
+          setLoading(false);
+          return;
         }
-        setAnalysis(analysisData)
-        setShowAnalysis(true)
-        onAnalysisComplete(analysisData)
+        setAnalysis(analysisData);
+        setShowAnalysis(true);
+        onAnalysisComplete(analysisData);
       } else if (result.data?.status === 'not_analyzed') {
         // Analysis not yet available
-        setError('Analysis not yet available. Please try again in a moment.')
-        setLoading(false)
+        setError('Analysis not yet available. Please try again in a moment.');
+        setLoading(false);
       }
     } catch (err) {
-      setError('Could not fetch analysis results')
-      logger.error('Fetch analysis error:', err)
-      setLoading(false)
+      setError('Could not fetch analysis results');
+      logger.error('Fetch analysis error:', err);
+      setLoading(false);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
-  const fileSize = attachment.file_size ? attachmentService.formatFileSize(attachment.file_size) : 'Unknown'
+  const fileSize = attachment.file_size
+    ? attachmentService.formatFileSize(attachment.file_size)
+    : 'Unknown';
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all overflow-hidden">
@@ -181,15 +183,16 @@ const AttachmentCard = ({ attachment, emailId, onAnalysisComplete = () => {} }) 
         />
       )}
     </div>
-  )
-}
+  );
+};
 
 /**
  * AnalysisDisplay - Shows AI analysis results with tiering
  */
 const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }) => {
   // Check if user is free tier (metadata only)
-  const isFreeUser = !isSuperAdmin && !analysis.summary && !analysis.key_points && !!analysis.upgrade_message
+  const isFreeUser =
+    !isSuperAdmin && !analysis.summary && !analysis.key_points && !!analysis.upgrade_message;
 
   if (isFreeUser) {
     return (
@@ -216,7 +219,7 @@ const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Full analysis display for paid users
@@ -225,7 +228,9 @@ const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }
       {/* Summary */}
       {analysis.summary && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">Summary</h4>
+          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Summary
+          </h4>
           <p className="text-sm text-gray-700 line-clamp-3">{analysis.summary}</p>
         </div>
       )}
@@ -233,7 +238,9 @@ const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }
       {/* Key Points */}
       {analysis.key_points && analysis.key_points.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">Key Points</h4>
+          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Key Points
+          </h4>
           <ul className="space-y-1">
             {analysis.key_points.slice(0, 3).map((point, idx) => (
               <li key={idx} className="text-xs text-gray-700 flex items-start">
@@ -248,7 +255,9 @@ const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }
       {/* Entities */}
       {analysis.entities && analysis.entities.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">Entities</h4>
+          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Entities
+          </h4>
           <div className="flex flex-wrap gap-1">
             {analysis.entities.slice(0, 5).map((entity, idx) => (
               <span
@@ -290,7 +299,7 @@ const AnalysisDisplay = ({ analysis, filename, onUpgrade, isSuperAdmin = false }
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default AttachmentCard
+export default AttachmentCard;

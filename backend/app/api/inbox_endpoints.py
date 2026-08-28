@@ -71,12 +71,19 @@ async def get_inbox(
         result = await db.execute(query)
         emails = result.scalars().all()
 
-        logger.info(f"📧 Retrieved {len(emails)} emails for user {current_user.id} (total: {total_count})")
+        logger.info(
+            f"📧 Retrieved {len(emails)} emails for user {current_user.id} (total: {total_count})"
+        )
 
         return {
             "success": True,
             "data": [email.to_dict() for email in emails],
-            "pagination": {"limit": limit, "offset": offset, "total": total_count, "count": len(emails)},
+            "pagination": {
+                "limit": limit,
+                "offset": offset,
+                "total": total_count,
+                "count": len(emails),
+            },
         }
 
     except Exception as e:
@@ -85,12 +92,16 @@ async def get_inbox(
 
 
 @router.get("/unread")
-async def get_unread_count(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_unread_count(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """
     Get count of unread emails for the current user.
     """
     try:
-        result = await db.execute(select(Email).where(and_(Email.user_id == current_user.id, Email.is_read == False)))
+        result = await db.execute(
+            select(Email).where(and_(Email.user_id == current_user.id, Email.is_read == False))
+        )
         unread_emails = result.scalars().all()
 
         return {"success": True, "unread_count": len(unread_emails)}
@@ -101,12 +112,18 @@ async def get_unread_count(current_user: User = Depends(get_current_user), db: A
 
 
 @router.get("/{email_id}")
-async def get_email(email_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_email(
+    email_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """
     Get a specific email by ID.
     """
     try:
-        result = await db.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id)))
+        result = await db.execute(
+            select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))
+        )
         email = result.scalar_one_or_none()
 
         if not email:
@@ -159,7 +176,12 @@ async def search_emails(
 
         logger.info(f"📧 Found {len(emails)} emails matching query '{q}'")
 
-        return {"success": True, "query": q, "data": [email.to_dict() for email in emails], "count": len(emails)}
+        return {
+            "success": True,
+            "query": q,
+            "data": [email.to_dict() for email in emails],
+            "count": len(emails),
+        }
 
     except Exception as e:
         logger.error(f"❌ Error searching emails: {e}")
@@ -177,7 +199,9 @@ async def mark_as_read(
     Mark email as read or unread.
     """
     try:
-        result = await db.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id)))
+        result = await db.execute(
+            select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))
+        )
         email = result.scalar_one_or_none()
 
         if not email:
@@ -206,7 +230,9 @@ async def toggle_flag(
     Flag or unflag an email.
     """
     try:
-        result = await db.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id)))
+        result = await db.execute(
+            select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))
+        )
         email = result.scalar_one_or_none()
 
         if not email:
@@ -225,7 +251,9 @@ async def toggle_flag(
 
 
 @router.get("/categories/stats")
-async def get_category_stats(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_category_stats(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """
     Get statistics of emails by AI category.
     """

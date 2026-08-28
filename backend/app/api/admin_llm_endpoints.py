@@ -24,7 +24,9 @@ class ProviderUpdateRequest(BaseModel):
     priority: Optional[int] = None
     model: Optional[str] = None
     endpoint: Optional[str] = None
-    api_keys: Optional[List[str]] = Field(default=None, description="Provide to replace full key pool")
+    api_keys: Optional[List[str]] = Field(
+        default=None, description="Provide to replace full key pool"
+    )
     additional_headers: Optional[Dict[str, str]] = None
     extra_config: Optional[Dict[str, Any]] = None
     max_retries: Optional[int] = None
@@ -160,7 +162,9 @@ async def live_providers_test(
         provider = res.get("provider")
         healthy = bool(res.get("success"))
         reason = None if healthy else res.get("error")
-        await LLMProviderConfigService.update_health(session, provider=provider, healthy=healthy, error=reason)
+        await LLMProviderConfigService.update_health(
+            session, provider=provider, healthy=healthy, error=reason
+        )
 
     rows = await LLMProviderConfigService.list_configs(session)
     return {
@@ -197,7 +201,9 @@ async def live_single_provider_health_check(
             error=item.get("reason"),
         )
     rows = await LLMProviderConfigService.list_configs(session)
-    provider_health = next((p for p in health.get("providers", []) if p.get("provider") == provider_key), None)
+    provider_health = next(
+        (p for p in health.get("providers", []) if p.get("provider") == provider_key), None
+    )
     return {
         "success": True,
         "provider_health": provider_health,
@@ -225,10 +231,14 @@ async def live_single_provider_test(
         tested_provider = res.get("provider")
         healthy = bool(res.get("success"))
         reason = None if healthy else res.get("error")
-        await LLMProviderConfigService.update_health(session, provider=tested_provider, healthy=healthy, error=reason)
+        await LLMProviderConfigService.update_health(
+            session, provider=tested_provider, healthy=healthy, error=reason
+        )
 
     rows = await LLMProviderConfigService.list_configs(session)
-    provider_result = next((r for r in test_results.get("results", []) if r.get("provider") == provider_key), None)
+    provider_result = next(
+        (r for r in test_results.get("results", []) if r.get("provider") == provider_key), None
+    )
     return {
         "success": True,
         "provider_result": provider_result,

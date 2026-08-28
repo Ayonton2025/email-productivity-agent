@@ -1,5 +1,5 @@
-import React from 'react'
-import { Sparkles } from 'lucide-react'
+import React from 'react';
+import { Sparkles } from 'lucide-react';
 
 const PromptAIDraft = ({ goal, loading, meta, quickPrompts, onGoalChange, onGenerate }) => (
   <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 space-y-3">
@@ -47,6 +47,6 @@ const PromptAIDraft = ({ goal, loading, meta, quickPrompts, onGoalChange, onGene
       </button>
     </div>
   </div>
-)
+);
 
-export default PromptAIDraft
+export default PromptAIDraft;

@@ -18,7 +18,18 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 
 from app.models.database import Base
 
@@ -34,10 +45,14 @@ class Campaign(Base):
     # Campaign Identity
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    campaign_type = Column(String, nullable=False, index=True)  # cold_outreach, follow_up, nurture, announcement
+    campaign_type = Column(
+        String, nullable=False, index=True
+    )  # cold_outreach, follow_up, nurture, announcement
 
     # Status
-    status = Column(String, default="draft", index=True)  # draft, scheduled, running, paused, completed, cancelled
+    status = Column(
+        String, default="draft", index=True
+    )  # draft, scheduled, running, paused, completed, cancelled
 
     # Sender Configuration
     from_email = Column(String, nullable=False)
@@ -111,7 +126,8 @@ class Campaign(Base):
             "bounces": self.bounces,
             "unsubscribes": self.unsubscribes,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -123,7 +139,9 @@ class CampaignSequence(Base):
     __tablename__ = "campaign_sequences"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    campaign_id = Column(String, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False, index=True)
+    campaign_id = Column(
+        String, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Sequence Step
     step_order = Column(Integer, nullable=False)  # Order in sequence
@@ -175,7 +193,8 @@ class CampaignSequence(Base):
             "variant_a_body": self.variant_a_body,
             "variant_b_subject": self.variant_b_subject,
             "variant_b_body": self.variant_b_body,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -245,18 +264,23 @@ class Lead(Base):
             "custom_fields": self.custom_fields or {},
             "status": self.status,
             "current_sequence_step": self.current_sequence_step,
-            "last_email_sent_at": self.last_email_sent_at.isoformat() if self.last_email_sent_at else None,
+            "last_email_sent_at": self.last_email_sent_at.isoformat()
+            if self.last_email_sent_at
+            else None,
             "next_email_scheduled_at": self.next_email_scheduled_at.isoformat()
             if self.next_email_scheduled_at
             else None,
             "first_opened_at": self.first_opened_at.isoformat() if self.first_opened_at else None,
             "last_opened_at": self.last_opened_at.isoformat() if self.last_opened_at else None,
-            "first_clicked_at": self.first_clicked_at.isoformat() if self.first_clicked_at else None,
+            "first_clicked_at": self.first_clicked_at.isoformat()
+            if self.first_clicked_at
+            else None,
             "last_clicked_at": self.last_clicked_at.isoformat() if self.last_clicked_at else None,
             "replied_at": self.replied_at.isoformat() if self.replied_at else None,
             "ab_test_variant": self.ab_test_variant,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -268,7 +292,9 @@ class WarmupSchedule(Base):
     __tablename__ = "warmup_schedules"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    campaign_id = Column(String, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False, index=True)
+    campaign_id = Column(
+        String, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     day_of_week = Column(String, nullable=False, index=True)  # Monday, Tuesday, ...
     send_limit = Column(Integer, default=5)

@@ -1,69 +1,69 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { Loader2, AlertCircle, FileIcon } from 'lucide-react'
-import AttachmentCard from './AttachmentCard'
-import attachmentService from '../../services/attachmentService'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { Loader2, AlertCircle, FileIcon } from 'lucide-react';
+import AttachmentCard from './AttachmentCard';
+import attachmentService from '../../services/attachmentService';
 
 /**
  * AttachmentsSection - Full attachments section for email detail view
  * Displays all attachments with metadata, analysis status, and analysis results
  */
 const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) => {
-  const [attachments, setAttachments] = useState(initialAttachments)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [analyzingAll, setAnalyzingAll] = useState(false)
+  const [attachments, setAttachments] = useState(initialAttachments);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [analyzingAll, setAnalyzingAll] = useState(false);
 
   // Fetch attachments with analysis status
   useEffect(() => {
     if (emailId) {
-      fetchAttachments()
+      fetchAttachments();
     }
-  }, [emailId])
+  }, [emailId]);
 
   const fetchAttachments = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const result = await attachmentService.getEmailAttachments(emailId, true)
+      const result = await attachmentService.getEmailAttachments(emailId, true);
       if (result.success) {
-        setAttachments(result.data.attachments || [])
+        setAttachments(result.data.attachments || []);
       } else {
-        setError('Could not load attachments')
+        setError('Could not load attachments');
       }
     } catch (err) {
-      setError('Failed to load attachments')
-      logger.error('Fetch attachments error:', err)
+      setError('Failed to load attachments');
+      logger.error('Fetch attachments error:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleAnalyzeAll = async () => {
-    setAnalyzingAll(true)
-    setError(null)
+    setAnalyzingAll(true);
+    setError(null);
     try {
-      const result = await attachmentService.analyzeEmailAttachments(emailId)
+      const result = await attachmentService.analyzeEmailAttachments(emailId);
       if (result.success) {
         // Refresh attachments to show analysis status
         setTimeout(() => {
-          fetchAttachments()
-        }, 2000)
+          fetchAttachments();
+        }, 2000);
       }
     } catch (err) {
-      setError('Failed to trigger batch analysis')
-      logger.error('Batch analysis error:', err)
+      setError('Failed to trigger batch analysis');
+      logger.error('Batch analysis error:', err);
     } finally {
-      setAnalyzingAll(false)
+      setAnalyzingAll(false);
     }
-  }
+  };
 
   const handleAnalysisComplete = async () => {
     // Refresh attachments when analysis completes
-    await fetchAttachments()
-  }
+    await fetchAttachments();
+  };
 
-  if (!emailId) return null
+  if (!emailId) return null;
 
   // Empty state
   if (loading) {
@@ -74,7 +74,7 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
           <p className="text-sm text-gray-600">Loading attachments...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (attachments.length === 0) {
@@ -86,11 +86,11 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
           <p className="text-xs text-gray-500 mt-1">This email has no attachments</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Count analyzed attachments
-  const analyzedCount = attachments.filter((att) => att.analysis?.status === 'completed').length
+  const analyzedCount = attachments.filter((att) => att.analysis?.status === 'completed').length;
 
   return (
     <div className="border-t bg-gray-50">
@@ -148,12 +148,12 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
       {/* Info message about analysis */}
       <div className="px-6 py-3 bg-white border-t border-gray-100 text-xs text-gray-600">
         <p>
-          💡 <span className="font-medium">Tip:</span> Analyze documents to get AI summaries, key points, entities, and
-          sentiment analysis.
+          💡 <span className="font-medium">Tip:</span> Analyze documents to get AI summaries, key
+          points, entities, and sentiment analysis.
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AttachmentsSection
+export default AttachmentsSection;

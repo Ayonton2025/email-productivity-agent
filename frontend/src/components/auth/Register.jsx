@@ -1,204 +1,217 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, AtSign } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  UserPlus,
+  AlertCircle,
+  CheckCircle,
+  AtSign,
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
-  const [mode, setMode] = useState('standard') // standard | hosted
+  const [mode, setMode] = useState('standard'); // standard | hosted
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     password: '',
     confirmPassword: '',
-  })
+  });
   const [hostedData, setHostedData] = useState({
     local_part: '',
     full_name: '',
     password: '',
     confirmPassword: '',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const { register, registerHosted, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { register, registerHosted, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (isAuthenticated) {
-      logger.debug('🔍 [Register] User already authenticated, redirecting to dashboard')
-      navigate('/')
+      logger.debug('🔍 [Register] User already authenticated, redirecting to dashboard');
+      navigate('/');
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    const search = new URLSearchParams(location.search)
-    const requestedMode = search.get('mode')
+    const search = new URLSearchParams(location.search);
+    const requestedMode = search.get('mode');
     if (requestedMode === 'hosted' || requestedMode === 'standard') {
-      setMode(requestedMode)
+      setMode(requestedMode);
     }
-  }, [location.search])
+  }, [location.search]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-    setSuccess('')
-  }
+    });
+    setError('');
+    setSuccess('');
+  };
 
   const handleHostedChange = (e) => {
     setHostedData({
       ...hostedData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-    setSuccess('')
-  }
+    });
+    setError('');
+    setSuccess('');
+  };
 
   const validateForm = () => {
     if (!formData.full_name?.trim()) {
-      setError('Full name is required')
-      return false
+      setError('Full name is required');
+      return false;
     }
 
     if (!formData.email?.trim()) {
-      setError('Email is required')
-      return false
+      setError('Email is required');
+      return false;
     }
 
     if (!formData.password) {
-      setError('Password is required')
-      return false
+      setError('Password is required');
+      return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return false
+      setError('Passwords do not match');
+      return false;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return false
+      setError('Password must be at least 6 characters long');
+      return false;
     }
 
     if (formData.password.length > 72) {
-      setError('Password cannot be longer than 72 characters')
-      return false
+      setError('Password cannot be longer than 72 characters');
+      return false;
     }
 
     // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address')
-      return false
+      setError('Please enter a valid email address');
+      return false;
     }
 
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
-    logger.debug('🔍 [Register] Starting registration process...')
+    logger.debug('🔍 [Register] Starting registration process...');
     logger.debug('📝 [Register] Form data:', {
       email: formData.email,
       full_name: formData.full_name,
       password_length: formData.password?.length,
-    })
+    });
 
     if (!validateForm()) {
-      logger.debug('❌ [Register] Form validation failed')
-      setLoading(false)
-      return
+      logger.debug('❌ [Register] Form validation failed');
+      setLoading(false);
+      return;
     }
 
-    const { confirmPassword, ...submitData } = formData
+    const { confirmPassword, ...submitData } = formData;
 
-    logger.debug('🚀 [Register] Calling register function...')
-    const result = await register(submitData)
+    logger.debug('🚀 [Register] Calling register function...');
+    const result = await register(submitData);
 
-    logger.debug('🔍 [Register] Registration result:', result)
+    logger.debug('🔍 [Register] Registration result:', result);
 
     if (result.success) {
       if (result.autoLoggedIn) {
         // User is automatically logged in - redirect to dashboard
-        logger.debug('✅ [Register] Auto-login successful, redirecting to dashboard')
-        setSuccess('Registration successful! Welcome to Bylix Email.')
+        logger.debug('✅ [Register] Auto-login successful, redirecting to dashboard');
+        setSuccess('Registration successful! Welcome to Bylix Email.');
         setTimeout(() => {
-          navigate('/', { replace: true })
-        }, 1000)
+          navigate('/', { replace: true });
+        }, 1000);
       } else {
         // User needs to verify email or login manually
-        logger.debug('⚠️ [Register] Registration successful but no auto-login')
-        setSuccess(result.message || 'Registration successful! Please login to continue.')
+        logger.debug('⚠️ [Register] Registration successful but no auto-login');
+        setSuccess(result.message || 'Registration successful! Please login to continue.');
         setFormData({
           full_name: '',
           email: '',
           password: '',
           confirmPassword: '',
-        })
+        });
 
         // Redirect to login page after a delay
         setTimeout(() => {
-          navigate('/login')
-        }, 2000)
+          navigate('/login');
+        }, 2000);
       }
     } else {
-      logger.error('❌ [Register] Registration failed:', result.error)
-      setError(result.error || 'Registration failed. Please try again.')
+      logger.error('❌ [Register] Registration failed:', result.error);
+      setError(result.error || 'Registration failed. Please try again.');
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleHostedSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     if (!hostedData.local_part?.trim()) {
-      setError('Bylix Email local part is required')
-      setLoading(false)
-      return
+      setError('Bylix Email local part is required');
+      setLoading(false);
+      return;
     }
     if (hostedData.password && hostedData.password.length > 72) {
-      setError('Password cannot be longer than 72 characters')
-      setLoading(false)
-      return
+      setError('Password cannot be longer than 72 characters');
+      setLoading(false);
+      return;
     }
-    if ((hostedData.password || hostedData.confirmPassword) && hostedData.password !== hostedData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
+    if (
+      (hostedData.password || hostedData.confirmPassword) &&
+      hostedData.password !== hostedData.confirmPassword
+    ) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
     }
 
     const result = await registerHosted({
       local_part: hostedData.local_part.trim().toLowerCase(),
       full_name: hostedData.full_name?.trim() || null,
       password: hostedData.password || null,
-    })
+    });
 
     if (result.success) {
       const tempPasswordNote = result.temporaryPassword
         ? ` Temporary password generated: ${result.temporaryPassword}`
-        : ''
-      setSuccess(`Hosted account created.${tempPasswordNote}`)
-      setTimeout(() => navigate('/', { replace: true }), 1000)
+        : '';
+      setSuccess(`Hosted account created.${tempPasswordNote}`);
+      setTimeout(() => navigate('/', { replace: true }), 1000);
     } else {
-      setError(result.error || 'Hosted signup failed')
+      setError(result.error || 'Hosted signup failed');
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
@@ -207,7 +220,9 @@ const Register = () => {
           <div className="mx-auto h-12 w-12 bg-white rounded-lg flex items-center justify-center">
             <span className="text-2xl">✉️</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Create your account</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Create your account
+          </h2>
           <p className="mt-2 text-center text-sm text-indigo-100">Choose your onboarding path</p>
         </div>
 
@@ -216,9 +231,9 @@ const Register = () => {
             <button
               type="button"
               onClick={() => {
-                setMode('standard')
-                setError('')
-                setSuccess('')
+                setMode('standard');
+                setError('');
+                setSuccess('');
               }}
               className={`px-3 py-2 rounded-lg text-sm border ${
                 mode === 'standard'
@@ -231,9 +246,9 @@ const Register = () => {
             <button
               type="button"
               onClick={() => {
-                setMode('hosted')
-                setError('')
-                setSuccess('')
+                setMode('hosted');
+                setError('');
+                setSuccess('');
               }}
               className={`px-3 py-2 rounded-lg text-sm border ${
                 mode === 'hosted'
@@ -342,7 +357,10 @@ const Register = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Confirm Password *
                 </label>
                 <div className="mt-1 relative">
@@ -407,11 +425,16 @@ const Register = () => {
                     placeholder="yourname"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Your address will use your configured hosted domain.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Your address will use your configured hosted domain.
+                </p>
               </div>
 
               <div>
-                <label htmlFor="hosted_full_name" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="hosted_full_name"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Full Name (Optional)
                 </label>
                 <div className="mt-1 relative">
@@ -431,7 +454,10 @@ const Register = () => {
               </div>
 
               <div>
-                <label htmlFor="hosted_password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="hosted_password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password (Optional)
                 </label>
                 <div className="mt-1 relative">
@@ -463,7 +489,10 @@ const Register = () => {
               </div>
 
               <div>
-                <label htmlFor="hosted_confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="hosted_confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Confirm Password
                 </label>
                 <div className="mt-1 relative">
@@ -509,7 +538,7 @@ const Register = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;

@@ -87,7 +87,9 @@ async def disable_follow_up(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    email_result = await db.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id)))
+    email_result = await db.execute(
+        select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))
+    )
     email = email_result.scalar_one_or_none()
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")

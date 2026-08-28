@@ -23,7 +23,9 @@ async def get_stats(
 ):
     """Return lightweight inbox stats for dashboard widgets."""
     try:
-        total = (await db.execute(select(func.count(Email.id)).where(Email.user_id == current_user.id))).scalar() or 0
+        total = (
+            await db.execute(select(func.count(Email.id)).where(Email.user_id == current_user.id))
+        ).scalar() or 0
         unread = (
             await db.execute(
                 select(func.count(Email.id)).where(

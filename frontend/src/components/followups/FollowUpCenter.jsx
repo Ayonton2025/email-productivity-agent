@@ -1,107 +1,110 @@
-import React, { useEffect, useState } from 'react'
-import { CheckCircle2, Clock3, RefreshCw, Save, AlertCircle, PlayCircle } from 'lucide-react'
-import { followupsApi } from '../../services/api'
+import React, { useEffect, useState } from 'react';
+import { CheckCircle2, Clock3, RefreshCw, Save, AlertCircle, PlayCircle } from 'lucide-react';
+import { followupsApi } from '../../services/api';
 
 const FollowUpCenter = () => {
-  const [loading, setLoading] = useState(true)
-  const [processing, setProcessing] = useState(false)
-  const [policySaving, setPolicySaving] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [policySaving, setPolicySaving] = useState(false);
   const [policy, setPolicy] = useState({
     enabled: true,
     min_delay_hours: 48,
     max_stages: 3,
     auto_send: false,
     tone_profile: 'professional',
-  })
-  const [queue, setQueue] = useState([])
-  const [queueStatus, setQueueStatus] = useState('pending_approval')
-  const [manualSchedule, setManualSchedule] = useState({ emailId: '', delayHours: 48 })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  });
+  const [queue, setQueue] = useState([]);
+  const [queueStatus, setQueueStatus] = useState('pending_approval');
+  const [manualSchedule, setManualSchedule] = useState({ emailId: '', delayHours: 48 });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const load = async (status = queueStatus) => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
     try {
-      const [policyRes, queueRes] = await Promise.all([followupsApi.getPolicy(), followupsApi.getQueue(status, 100)])
-      setPolicy(policyRes.data?.policy || policy)
-      setQueue(queueRes.data?.items || [])
+      const [policyRes, queueRes] = await Promise.all([
+        followupsApi.getPolicy(),
+        followupsApi.getQueue(status, 100),
+      ]);
+      setPolicy(policyRes.data?.policy || policy);
+      setQueue(queueRes.data?.items || []);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load follow-up center')
+      setError(e?.response?.data?.detail || 'Failed to load follow-up center');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    load(queueStatus)
-  }, [queueStatus])
+    load(queueStatus);
+  }, [queueStatus]);
 
   const savePolicy = async () => {
-    setPolicySaving(true)
-    setError('')
-    setSuccess('')
+    setPolicySaving(true);
+    setError('');
+    setSuccess('');
     try {
       const payload = {
         ...policy,
         min_delay_hours: Number(policy.min_delay_hours),
         max_stages: Number(policy.max_stages),
-      }
-      const res = await followupsApi.updatePolicy(payload)
-      setPolicy(res.data?.policy || payload)
-      setSuccess('Follow-up policy updated.')
+      };
+      const res = await followupsApi.updatePolicy(payload);
+      setPolicy(res.data?.policy || payload);
+      setSuccess('Follow-up policy updated.');
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to update policy')
+      setError(e?.response?.data?.detail || 'Failed to update policy');
     } finally {
-      setPolicySaving(false)
+      setPolicySaving(false);
     }
-  }
+  };
 
   const processDue = async () => {
-    setProcessing(true)
-    setError('')
-    setSuccess('')
+    setProcessing(true);
+    setError('');
+    setSuccess('');
     try {
-      const res = await followupsApi.processDue()
-      const stats = res.data?.stats || {}
+      const res = await followupsApi.processDue();
+      const stats = res.data?.stats || {};
       setSuccess(
         `Processed: ${stats.processed || 0}, queued: ${stats.queued_for_approval || 0}, auto-sent: ${stats.auto_sent || 0}.`
-      )
-      await load(queueStatus)
+      );
+      await load(queueStatus);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to process due follow-ups')
+      setError(e?.response?.data?.detail || 'Failed to process due follow-ups');
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   const approveItem = async (executionId) => {
-    setError('')
-    setSuccess('')
+    setError('');
+    setSuccess('');
     try {
-      await followupsApi.approveQueueItem(executionId)
-      setSuccess('Follow-up approved and sent.')
-      await load(queueStatus)
+      await followupsApi.approveQueueItem(executionId);
+      setSuccess('Follow-up approved and sent.');
+      await load(queueStatus);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to approve follow-up')
+      setError(e?.response?.data?.detail || 'Failed to approve follow-up');
     }
-  }
+  };
 
   const scheduleManual = async () => {
-    setError('')
-    setSuccess('')
+    setError('');
+    setSuccess('');
     if (!manualSchedule.emailId) {
-      setError('Provide a sent email ID to schedule follow-up.')
-      return
+      setError('Provide a sent email ID to schedule follow-up.');
+      return;
     }
     try {
-      await followupsApi.schedule(manualSchedule.emailId, Number(manualSchedule.delayHours))
-      setSuccess('Follow-up scheduled on selected email.')
-      setManualSchedule({ ...manualSchedule, emailId: '' })
+      await followupsApi.schedule(manualSchedule.emailId, Number(manualSchedule.delayHours));
+      setSuccess('Follow-up scheduled on selected email.');
+      setManualSchedule({ ...manualSchedule, emailId: '' });
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to schedule follow-up')
+      setError(e?.response?.data?.detail || 'Failed to schedule follow-up');
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -109,7 +112,7 @@ const FollowUpCenter = () => {
         <RefreshCw className="h-5 w-5 animate-spin text-indigo-600" />
         <span className="text-gray-700">Loading follow-up center...</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -117,7 +120,9 @@ const FollowUpCenter = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Auto Follow-up Agent</h1>
-          <p className="text-sm text-gray-600">Manage follow-up policy, queue approvals, and due execution.</p>
+          <p className="text-sm text-gray-600">
+            Manage follow-up policy, queue approvals, and due execution.
+          </p>
         </div>
         <button
           type="button"
@@ -261,10 +266,15 @@ const FollowUpCenter = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm text-gray-500">Email ID: {item.source_email_id}</div>
-                    <div className="font-medium text-gray-900">{item.generated_subject || 'Generated follow-up'}</div>
-                    <div className="text-sm text-gray-700 whitespace-pre-wrap mt-1">{item.generated_body || '-'}</div>
+                    <div className="font-medium text-gray-900">
+                      {item.generated_subject || 'Generated follow-up'}
+                    </div>
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap mt-1">
+                      {item.generated_body || '-'}
+                    </div>
                     <div className="text-xs text-gray-500 mt-2">
-                      Stage {item.stage} | Status: {item.status} | Scheduled: {item.scheduled_for || 'n/a'}
+                      Stage {item.stage} | Status: {item.status} | Scheduled:{' '}
+                      {item.scheduled_for || 'n/a'}
                     </div>
                   </div>
                   {item.status === 'pending_approval' && (
@@ -284,7 +294,7 @@ const FollowUpCenter = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FollowUpCenter
+export default FollowUpCenter;

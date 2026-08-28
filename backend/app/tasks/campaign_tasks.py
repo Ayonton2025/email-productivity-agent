@@ -58,7 +58,9 @@ async def _send_campaign_emails(self):
                     # Determine sender account
                     account = await _get_sender_account(session, campaign)
                     if not account:
-                        logger.warning(f"No active email account found for campaign {campaign.id}; skipping")
+                        logger.warning(
+                            f"No active email account found for campaign {campaign.id}; skipping"
+                        )
                         continue
 
                     # Get leads with pending status
@@ -73,7 +75,9 @@ async def _send_campaign_emails(self):
                         try:
                             # Personalize and send email
                             personalized_subject = sequence.subject_template.format(
-                                first_name=lead.first_name or "", company=lead.company or "", email=lead.email
+                                first_name=lead.first_name or "",
+                                company=lead.company or "",
+                                email=lead.email,
                             )
 
                             personalized_body = sequence.body_template.format(
@@ -128,7 +132,9 @@ async def _process_campaign_replies(self):
         async with AsyncSessionLocal() as session:
             # Get leads with replies
             result = await session.execute(
-                select(Lead).where(and_(Lead.replied_at.isnot(None), Lead.status == "sent")).limit(100)
+                select(Lead)
+                .where(and_(Lead.replied_at.isnot(None), Lead.status == "sent"))
+                .limit(100)
             )
             leads = result.scalars().all()
 
@@ -185,13 +191,17 @@ async def _execute_warmup_schedule(self):
                     )
                     sequence = seq_result.scalar_one_or_none()
                     if not sequence:
-                        logger.warning(f"Campaign {schedule.campaign_id} has no sequence steps; skipping warmup")
+                        logger.warning(
+                            f"Campaign {schedule.campaign_id} has no sequence steps; skipping warmup"
+                        )
                         continue
 
                     # Get pending leads for this campaign
                     lead_result = await session.execute(
                         select(Lead)
-                        .where(and_(Lead.campaign_id == schedule.campaign_id, Lead.status == "pending"))
+                        .where(
+                            and_(Lead.campaign_id == schedule.campaign_id, Lead.status == "pending")
+                        )
                         .limit(schedule.send_limit)
                     )
                     leads = lead_result.scalars().all()
@@ -259,7 +269,9 @@ async def _get_sender_account(session, campaign: Campaign) -> UserEmailAccount:
     # Fallback to primary active account
     result = await session.execute(
         select(UserEmailAccount)
-        .where(and_(UserEmailAccount.user_id == campaign.user_id, UserEmailAccount.is_active == True))
+        .where(
+            and_(UserEmailAccount.user_id == campaign.user_id, UserEmailAccount.is_active == True)
+        )
         .order_by(UserEmailAccount.is_primary.desc(), UserEmailAccount.created_at.desc())
         .limit(1)
     )

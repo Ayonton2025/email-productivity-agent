@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -9,20 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import logger
 from app.models.billing_models import (
-    AI_ACTION_COSTS,
     CREDIT_PACK_PRICING_USD,
-    SUBSCRIPTION_PLANS,
-    AICredits,
-    CreditTransaction,
-    OutboundCredits,
     Payment,
-    PaymentTransaction,
-    Subscription,
-    UsageLog,
 )
-from app.models.database import SystemSetting, User
 from app.services.billing.credits import CreditService
-from app.services.billing.paypal import BybitPayService, CoinbaseCommerceService, PayPalService, StripeService
+from app.services.billing.paypal import (
+    BybitPayService,
+    CoinbaseCommerceService,
+    PayPalService,
+    StripeService,
+)
 from app.services.billing.paystack import PaystackService
 
 

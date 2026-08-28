@@ -54,14 +54,18 @@ async def get_gmail_auth_url(redirect_uri: str):
         if not settings.GOOGLE_CLIENT_ID:
             raise HTTPException(status_code=500, detail="Google OAuth not configured")
 
-        auth_url = email_provider_service.get_gmail_auth_url(settings.GOOGLE_CLIENT_ID, redirect_uri)
+        auth_url = email_provider_service.get_gmail_auth_url(
+            settings.GOOGLE_CLIENT_ID, redirect_uri
+        )
         return {"auth_url": auth_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/providers/gmail/authenticate")
-async def authenticate_gmail_with_code(auth_data: GmailCodeRequest, db: AsyncSession = Depends(get_db)):
+async def authenticate_gmail_with_code(
+    auth_data: GmailCodeRequest, db: AsyncSession = Depends(get_db)
+):
     """Authenticate with Gmail using OAuth code"""
     try:
         if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
@@ -94,7 +98,11 @@ async def authenticate_gmail_with_code(auth_data: GmailCodeRequest, db: AsyncSes
             db.add(provider_config)
             await db.commit()
 
-            return {"status": "success", "message": "Gmail authentication successful", "tokens": tokens}
+            return {
+                "status": "success",
+                "message": "Gmail authentication successful",
+                "tokens": tokens,
+            }
         else:
             raise HTTPException(status_code=400, detail="Gmail authentication failed")
 
@@ -103,7 +111,9 @@ async def authenticate_gmail_with_code(auth_data: GmailCodeRequest, db: AsyncSes
 
 
 @router.post("/providers/gmail/authenticate-token")
-async def authenticate_gmail_directly(auth_data: GmailTokenRequest, db: AsyncSession = Depends(get_db)):
+async def authenticate_gmail_directly(
+    auth_data: GmailTokenRequest, db: AsyncSession = Depends(get_db)
+):
     """Authenticate with Gmail using direct token (for frontend OAuth)"""
     try:
         success = await email_provider_service.authenticate_gmail_with_token(
@@ -133,10 +143,14 @@ async def authenticate_gmail_directly(auth_data: GmailTokenRequest, db: AsyncSes
 
 # Legacy endpoint for backward compatibility
 @router.post("/providers/gmail/authenticate-legacy")
-async def authenticate_gmail_legacy(credentials: GmailLegacyRequest, db: AsyncSession = Depends(get_db)):
+async def authenticate_gmail_legacy(
+    credentials: GmailLegacyRequest, db: AsyncSession = Depends(get_db)
+):
     """Authenticate with Gmail (legacy method)"""
     try:
-        success = await email_provider_service.authenticate_gmail(credentials.credentials_file, credentials.token_file)
+        success = await email_provider_service.authenticate_gmail(
+            credentials.credentials_file, credentials.token_file
+        )
 
         if success:
             # Save provider config to database
@@ -180,7 +194,9 @@ async def authenticate_outlook(credentials: OutlookAuthRequest, db: AsyncSession
 
 
 @router.post("/providers/{provider}/authenticate")
-async def authenticate_provider(provider: str, credentials: ProviderAuthRequest, db: AsyncSession = Depends(get_db)):
+async def authenticate_provider(
+    provider: str, credentials: ProviderAuthRequest, db: AsyncSession = Depends(get_db)
+):
     """
     Generic provider authenticate route used by frontend ProviderConnection.
     """
@@ -210,7 +226,9 @@ async def authenticate_provider(provider: str, credentials: ProviderAuthRequest,
                 ),
                 db,
             )
-        raise HTTPException(status_code=422, detail="Gmail authentication credentials are incomplete")
+        raise HTTPException(
+            status_code=422, detail="Gmail authentication credentials are incomplete"
+        )
     if provider == "outlook":
         if credentials.client_id and credentials.client_secret and credentials.tenant_id:
             return await authenticate_outlook(
@@ -221,7 +239,9 @@ async def authenticate_provider(provider: str, credentials: ProviderAuthRequest,
                 ),
                 db,
             )
-        raise HTTPException(status_code=422, detail="Outlook authentication credentials are incomplete")
+        raise HTTPException(
+            status_code=422, detail="Outlook authentication credentials are incomplete"
+        )
 
     raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
 

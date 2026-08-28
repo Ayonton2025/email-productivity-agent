@@ -36,7 +36,11 @@ class LLMProviderConfigService:
             "default_model": "llama-3.3-70b-versatile",
             "default_endpoint": "https://api.groq.com/openai/v1",
         },
-        "google": {"display_name": "Google Gemini", "default_model": "gemini-1.5-flash", "default_endpoint": None},
+        "google": {
+            "display_name": "Google Gemini",
+            "default_model": "gemini-1.5-flash",
+            "default_endpoint": None,
+        },
         "openrouter": {
             "display_name": "OpenRouter",
             "default_model": "deepseek/deepseek-chat-v3-0324:free",
@@ -47,7 +51,11 @@ class LLMProviderConfigService:
             "default_model": "mistralai/Mistral-7B-Instruct-v0.3",
             "default_endpoint": "https://api-inference.huggingface.co/models",
         },
-        "ollama": {"display_name": "Ollama", "default_model": "llama3.1", "default_endpoint": "http://localhost:11434"},
+        "ollama": {
+            "display_name": "Ollama",
+            "default_model": "llama3.1",
+            "default_endpoint": "http://localhost:11434",
+        },
         "openai": {
             "display_name": "OpenAI",
             "default_model": "gpt-4o-mini",
@@ -142,7 +150,9 @@ class LLMProviderConfigService:
     async def list_configs(cls, session: AsyncSession) -> List[LLMProviderConfig]:
         await cls.ensure_catalog_rows(session)
         result = await session.execute(
-            select(LLMProviderConfig).order_by(LLMProviderConfig.priority.asc(), LLMProviderConfig.provider.asc())
+            select(LLMProviderConfig).order_by(
+                LLMProviderConfig.priority.asc(), LLMProviderConfig.provider.asc()
+            )
         )
         return list(result.scalars().all())
 
@@ -166,7 +176,9 @@ class LLMProviderConfigService:
                 out.append(decrypt_credential(item))
             except Exception:
                 # Log a warning so admins can detect decryption issues (no key material printed)
-                logger.warning("Failed to decrypt one API key entry (possibly wrong ENCRYPTION_KEY or corrupted data)")
+                logger.warning(
+                    "Failed to decrypt one API key entry (possibly wrong ENCRYPTION_KEY or corrupted data)"
+                )
                 continue
         return out
 
@@ -323,7 +335,8 @@ class LLMProviderConfigService:
                 RuntimeProviderConfig(
                     provider=row.provider,
                     display_name=row.display_name,
-                    model=row.model or cls.PROVIDER_CATALOG.get(row.provider, {}).get("default_model", ""),
+                    model=row.model
+                    or cls.PROVIDER_CATALOG.get(row.provider, {}).get("default_model", ""),
                     endpoint=row.endpoint,
                     api_keys=keys,
                     additional_headers=row.additional_headers or {},

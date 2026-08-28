@@ -198,13 +198,13 @@ button {
 }
 
 /* Global button styling for default/secondary buttons */
-button:not([class*='bg-']):not([class*='text-white']):not([class*='text-indigo']):not([class*='text-red']):not(
-    [class*='text-green']
-  ):not([class*='text-blue']),
+button:not([class*='bg-']):not([class*='text-white']):not([class*='text-indigo']):not(
+    [class*='text-red']
+  ):not([class*='text-green']):not([class*='text-blue']),
 .flex-1
-  button:not([class*='bg-']):not([class*='text-white']):not([class*='text-indigo']):not([class*='text-red']):not(
-    [class*='text-green']
-  ):not([class*='text-blue']) {
+  button:not([class*='bg-']):not([class*='text-white']):not([class*='text-indigo']):not(
+    [class*='text-red']
+  ):not([class*='text-green']):not([class*='text-blue']) {
   /* Handles border-only buttons like Refresh, Edit buttons */
   color: #374151 !important; /* Dark gray text */
 }
@@ -222,9 +222,11 @@ button.flex {
 }
 
 /* Specific button style patterns for maximum compatibility */
-button:not(.text-white):not([class*='bg-indigo']):not([class*='bg-red']):not([class*='bg-green']):not(
-    [class*='bg-emerald']
-  ):not([class*='bg-purple']):not([class*='bg-orange']):not([class*='bg-blue']),
+button:not(.text-white):not([class*='bg-indigo']):not([class*='bg-red']):not(
+    [class*='bg-green']
+  ):not([class*='bg-emerald']):not([class*='bg-purple']):not([class*='bg-orange']):not(
+    [class*='bg-blue']
+  ),
 button.hover\:bg-slate-50 {
   color: #1f2937 !important; /* Darkest gray for maximum contrast */
 }

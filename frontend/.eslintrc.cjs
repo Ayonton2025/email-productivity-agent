@@ -5,12 +5,18 @@ module.exports = {
     es2022: true,
     node: true,
   },
-  extends: ['eslint:recommended', 'plugin:react/recommended', 'plugin:react-hooks/recommended', 'prettier'],
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'prettier',
+  ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
+  reportUnusedDisableDirectives: true,
   plugins: ['react', 'react-hooks'],
   settings: {
     react: { version: 'detect' },
@@ -41,4 +47,4 @@ module.exports = {
       rules: { 'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
   ],
-}
+};

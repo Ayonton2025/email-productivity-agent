@@ -31,7 +31,9 @@ def _resolve_user_plan(current_user: User) -> str:
 
 @router.get("/{attachment_id}/info")
 async def get_attachment_info(
-    attachment_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    attachment_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Get attachment metadata"""
     try:
@@ -70,7 +72,9 @@ async def get_attachment_info(
 
 @router.get("/{attachment_id}/download")
 async def download_attachment(
-    attachment_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    attachment_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Download attachment file"""
     try:
@@ -101,7 +105,9 @@ async def download_attachment(
         temp_file.write(file_content)
         temp_file.close()
 
-        return FileResponse(path=temp_file.name, filename=attachment.filename, media_type=attachment.mime_type)
+        return FileResponse(
+            path=temp_file.name, filename=attachment.filename, media_type=attachment.mime_type
+        )
 
     except HTTPException:
         raise
@@ -112,7 +118,9 @@ async def download_attachment(
 
 @router.get("/{attachment_id}/analysis")
 async def get_attachment_analysis(
-    attachment_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    attachment_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Get AI analysis of attachment (with tiering)"""
     try:
@@ -148,7 +156,10 @@ async def get_attachment_analysis(
 
         # Return with tiering applied
         user_plan = _resolve_user_plan(current_user)
-        return {"success": True, "data": analysis.to_dict(include_full_analysis=(user_plan != "free"))}
+        return {
+            "success": True,
+            "data": analysis.to_dict(include_full_analysis=(user_plan != "free")),
+        }
 
     except HTTPException:
         raise
@@ -159,7 +170,9 @@ async def get_attachment_analysis(
 
 @router.post("/{attachment_id}/analyze")
 async def trigger_attachment_analysis(
-    attachment_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    attachment_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Trigger AI analysis on attachment (runs in background)"""
     try:
@@ -182,11 +195,17 @@ async def trigger_attachment_analysis(
         existing_analysis = result.scalars().first()
 
         if existing_analysis and existing_analysis.analysis_status == "completed":
-            return {"success": True, "message": "Analysis already completed", "analysis_id": existing_analysis.id}
+            return {
+                "success": True,
+                "message": "Analysis already completed",
+                "analysis_id": existing_analysis.id,
+            }
 
         # Schedule background analysis using task handler (Celery or async fallback)
         await task_handler.analyze_attachment(
-            attachment_id=attachment_id, user_id=current_user.id, user_plan=_resolve_user_plan(current_user)
+            attachment_id=attachment_id,
+            user_id=current_user.id,
+            user_plan=_resolve_user_plan(current_user),
         )
 
         logger.info(f"📊 Analysis scheduled for attachment: {attachment.filename}")
@@ -212,7 +231,9 @@ email_attachment_router = APIRouter(prefix="/emails", tags=["email-attachments"]
 @email_attachment_router.get("/{email_id}/attachments")
 async def list_email_attachments(
     email_id: str,
-    include_analysis: bool = Query(False, description="Include analysis status for each attachment"),
+    include_analysis: bool = Query(
+        False, description="Include analysis status for each attachment"
+    ),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
@@ -253,11 +274,18 @@ async def list_email_attachments(
                         "has_full_analysis": analysis.is_full_analysis,
                     }
                 else:
-                    att_data["analysis"] = {"status": "not_analyzed", "summary": None, "has_full_analysis": False}
+                    att_data["analysis"] = {
+                        "status": "not_analyzed",
+                        "summary": None,
+                        "has_full_analysis": False,
+                    }
 
             attachment_list.append(att_data)
 
-        return {"success": True, "data": {"count": len(attachments), "attachments": attachment_list}}
+        return {
+            "success": True,
+            "data": {"count": len(attachments), "attachments": attachment_list},
+        }
 
     except HTTPException:
         raise
@@ -268,7 +296,9 @@ async def list_email_attachments(
 
 @email_attachment_router.get("/{email_id}/attachments/count")
 async def get_attachment_count(
-    email_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    email_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Get attachment count for email (for UI badges)"""
     try:
@@ -282,7 +312,10 @@ async def get_attachment_count(
         result = await session.execute(stmt)
         attachments = result.scalars().all()
 
-        return {"success": True, "data": {"email_id": email_id, "attachment_count": len(attachments)}}
+        return {
+            "success": True,
+            "data": {"email_id": email_id, "attachment_count": len(attachments)},
+        }
 
     except HTTPException:
         raise
@@ -293,7 +326,9 @@ async def get_attachment_count(
 
 @email_attachment_router.post("/{email_id}/attachments/analyze-all")
 async def analyze_all_email_attachments(
-    email_id: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    email_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Trigger AI analysis on all attachments in an email"""
     try:

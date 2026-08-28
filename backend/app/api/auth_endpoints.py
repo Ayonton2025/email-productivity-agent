@@ -7,7 +7,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest
+from app.api.schemas import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+)
 from app.core.config import settings
 from app.core.security import create_access_token, verify_token
 from app.models.database import get_db
@@ -28,7 +33,8 @@ def _is_super_admin_email(email: Optional[str]) -> bool:
 
 # Dependency to get current user
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: AsyncSession = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     try:
         token = credentials.credentials
@@ -107,7 +113,9 @@ async def debug_users(db: AsyncSession = Depends(get_db)):
                     "is_verified": user.is_verified,
                     "is_active": user.is_active,
                     "created_at": user.created_at.isoformat() if user.created_at else None,
-                    "password_hash": user.password_hash[:20] + "..." if user.password_hash else None,
+                    "password_hash": user.password_hash[:20] + "..."
+                    if user.password_hash
+                    else None,
                 }
             )
 
@@ -129,7 +137,9 @@ async def debug_database(db: AsyncSession = Depends(get_db)):
         # Check if users table exists and has data
         from sqlalchemy import text
 
-        result = await db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'"))
+        result = await db.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+        )
         users_table_exists = result.scalar_one_or_none() is not None
 
         result = await db.execute(text("SELECT COUNT(*) FROM users"))
@@ -153,7 +163,11 @@ async def debug_database(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/register")
-async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def register(
+    user_data: RegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
     """Register a new user"""
     try:
         email = str(user_data.email)
@@ -164,15 +178,20 @@ async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks
         logger.info("Registration request received", extra={"email": email})
 
         if not email or not password:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required"
+            )
 
         if not EmailValidator.validate_email_format(email):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
+            )
 
         # Check password length for bcrypt (CRITICAL FIX)
         if len(password) > 72:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Password cannot be longer than 72 characters"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password cannot be longer than 72 characters",
             )
 
         # Check if user already exists
@@ -183,7 +202,10 @@ async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks
 
         if existing_user:
             logger.info(f"❌ [Register] User already exists: {email}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with this email already exists")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already exists",
+            )
 
         logger.info(f"✅ [Register] Creating new user: {email}")
 
@@ -204,11 +226,12 @@ async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks
         except Exception as password_error:
             logger.error(f"❌ [Register] Password setting failed: {password_error}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Password error: {str(password_error)}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Password error: {str(password_error)}",
             )
 
         # Generate verification token (but don't require verification for now)
-        verification_token = user.generate_verification_token()
+        _verification_token = user.generate_verification_token()
         logger.info("🔍 [Register] Verification token generated")
 
         db.add(user)
@@ -221,7 +244,8 @@ async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks
             logger.error(f"❌ [Register] Database commit failed: {commit_error}")
             await db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to save user to database"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save user to database",
             )
 
         await db.refresh(user)
@@ -268,7 +292,10 @@ async def register(user_data: RegisterRequest, background_tasks: BackgroundTasks
         import traceback
 
         logger.info(f"❌ [Register] Stack trace: {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Registration failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}",
+        )
 
 
 @router.post("/verify-email")
@@ -279,7 +306,9 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
         user_id = payload.get("user_id")
 
         if not user_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
+            )
 
         from sqlalchemy import select
 
@@ -290,7 +319,9 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         if user.verification_token != token:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
+            )
 
         user.is_verified = True
         user.verification_token = None
@@ -299,9 +330,13 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
         return {"message": "Email verified successfully"}
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification token has expired")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Verification token has expired"
+        )
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
+        )
 
 
 @router.post("/login")
@@ -314,7 +349,9 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
         logger.info(f"🔑 [Login] Attempting login for: {email}")
 
         if not email or not password:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required"
+            )
 
         from sqlalchemy import select
 
@@ -329,7 +366,9 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
 
         if not user:
             logger.error(f"❌ [Login] User not found: {email}")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+            )
 
         # Check password
         password_valid = user.check_password(password)
@@ -337,11 +376,15 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
 
         if not password_valid:
             logger.error(f"❌ [Login] Invalid password for: {email}")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+            )
 
         if not user.is_active:
             logger.info(f"❌ [Login] Account deactivated: {email}")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated"
+            )
 
         # Update last login
         user.last_login = datetime.utcnow()
@@ -379,7 +422,9 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/forgot-password")
 async def forgot_password(
-    email_data: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
+    email_data: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
 ):
     """Request password reset"""
     email = str(email_data.email)
@@ -393,7 +438,9 @@ async def forgot_password(
         await db.commit()
 
         # Send reset email (in background)
-        background_tasks.add_task(send_password_reset_email, user.email, user.full_name, reset_token)
+        background_tasks.add_task(
+            send_password_reset_email, user.email, user.full_name, reset_token
+        )
 
     return {"message": "If the email exists, a password reset link has been sent"}
 
@@ -405,7 +452,9 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
     new_password = reset_data.new_password
 
     if not token or not new_password:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token and new password are required")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Token and new password are required"
+        )
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
@@ -417,7 +466,9 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
         user = result.scalar_one_or_none()
 
         if not user or user.reset_token != token:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token"
+            )
 
         user.set_password(new_password)
         user.reset_token = None
@@ -426,7 +477,9 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
         return {"message": "Password reset successfully"}
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token has expired")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token has expired"
+        )
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token")
 

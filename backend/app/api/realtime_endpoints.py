@@ -19,7 +19,9 @@ router = APIRouter(prefix="/ws", tags=["websocket"])
 
 
 @router.websocket("/email-updates/{token}")
-async def websocket_email_updates(websocket: WebSocket, token: str, db: AsyncSession = Depends(get_db)):
+async def websocket_email_updates(
+    websocket: WebSocket, token: str, db: AsyncSession = Depends(get_db)
+):
     """
     WebSocket endpoint for real-time email updates.
 
@@ -95,7 +97,10 @@ async def websocket_email_updates(websocket: WebSocket, token: str, db: AsyncSes
                         # Respond to keep-alive ping
                         await connection_manager.send_personal_message(
                             websocket,
-                            {"type": "pong", "timestamp": __import__("datetime").datetime.utcnow().isoformat()},
+                            {
+                                "type": "pong",
+                                "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+                            },
                         )
                     elif message_type == "subscribe_account":
                         # Client subscribing to updates for specific account

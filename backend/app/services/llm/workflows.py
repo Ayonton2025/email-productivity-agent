@@ -75,7 +75,13 @@ class StructuredWorkflowMixin:
                     "suggested_actions": ["string"],
                     "draft": {
                         "campaign": {"name": "string"},
-                        "sequences": [{"name": "string", "subject_template": "string", "body_template": "string"}],
+                        "sequences": [
+                            {
+                                "name": "string",
+                                "subject_template": "string",
+                                "body_template": "string",
+                            }
+                        ],
                         "leads": [{"email": "string"}],
                     },
                 }
@@ -98,7 +104,13 @@ class StructuredWorkflowMixin:
                     "page": "agents",
                     "assistant_message": "string",
                     "suggested_actions": ["string"],
-                    "draft": {"agent": {"name": "string", "agent_type": "support", "system_prompt": "string"}},
+                    "draft": {
+                        "agent": {
+                            "name": "string",
+                            "agent_type": "support",
+                            "system_prompt": "string",
+                        }
+                    },
                 }
             )
         if p in {"prompts", "prompt_brain"}:
@@ -107,11 +119,18 @@ class StructuredWorkflowMixin:
                     "page": "prompts",
                     "assistant_message": "string",
                     "suggested_actions": ["string"],
-                    "draft": {"prompt": {"name": "string", "template": "string", "category": "analysis"}},
+                    "draft": {
+                        "prompt": {"name": "string", "template": "string", "category": "analysis"}
+                    },
                 }
             )
         return json.dumps(
-            {"page": p or "general", "assistant_message": "string", "suggested_actions": ["string"], "draft": {}}
+            {
+                "page": p or "general",
+                "assistant_message": "string",
+                "suggested_actions": ["string"],
+                "draft": {},
+            }
         )
 
     async def classify_email(
@@ -188,7 +207,10 @@ class StructuredWorkflowMixin:
             return {"error": "Failed to parse sentiment"}
 
     async def summarize_thread(
-        self, thread_body: str, user_id: Optional[str] = None, session: Optional[AsyncSession] = None
+        self,
+        thread_body: str,
+        user_id: Optional[str] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Dict[str, Any]:
         r = await self.call_llm(
             prompt=f"Summarize thread:\n{thread_body[:4000]}",
@@ -202,7 +224,11 @@ class StructuredWorkflowMixin:
             return {"error": r.get("error")}
         try:
             s = json.loads(r["response"])
-            return {"summary": s.get("summary"), "key_points": s.get("key_points", []), "cost": r["cost"]}
+            return {
+                "summary": s.get("summary"),
+                "key_points": s.get("key_points", []),
+                "cost": r["cost"],
+            }
         except json.JSONDecodeError:
             return {"error": "Failed to parse summary"}
 
@@ -227,7 +253,10 @@ class StructuredWorkflowMixin:
             return {"error": "Failed to parse reply"}
 
     async def score_relationship(
-        self, email_history: str, user_id: Optional[str] = None, session: Optional[AsyncSession] = None
+        self,
+        email_history: str,
+        user_id: Optional[str] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Dict[str, Any]:
         r = await self.call_llm(
             prompt=f"Score relationship:\n{email_history[:3000]}",

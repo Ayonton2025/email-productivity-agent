@@ -1,14 +1,32 @@
-import React, { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Save, X, Zap, Clock, CheckCircle, XCircle, Mail, Filter, AlertCircle } from 'lucide-react'
-import { autoReplyApi } from '../../services/api'
+import React, { useState, useEffect } from 'react';
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  Zap,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Mail,
+  Filter,
+  AlertCircle,
+} from 'lucide-react';
+import { autoReplyApi } from '../../services/api';
 
 const AutoReplyRules = () => {
-  const [rules, setRules] = useState([])
-  const [away, setAway] = useState({ is_active: false, valid_from: null, valid_until: null, message: null })
-  const [queue, setQueue] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [editingId, setEditingId] = useState(null)
+  const [rules, setRules] = useState([]);
+  const [away, setAway] = useState({
+    is_active: false,
+    valid_from: null,
+    valid_until: null,
+    message: null,
+  });
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     name: '',
     match_category: '',
@@ -19,33 +37,33 @@ const AutoReplyRules = () => {
     require_away_mode: true,
     use_approval_queue: true,
     auto_send: false,
-  })
-  const [showForm, setShowForm] = useState(false)
+  });
+  const [showForm, setShowForm] = useState(false);
 
   const load = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const [rulesRes, awayRes, queueRes] = await Promise.all([
         autoReplyApi.getRules(),
         autoReplyApi.getAwayMode(),
         autoReplyApi.getApprovalQueue(),
-      ])
-      setRules(Array.isArray(rulesRes.data) ? rulesRes.data : [])
-      setAway(awayRes.data || { is_active: false })
-      setQueue(Array.isArray(queueRes.data) ? queueRes.data : [])
+      ]);
+      setRules(Array.isArray(rulesRes.data) ? rulesRes.data : []);
+      setAway(awayRes.data || { is_active: false });
+      setQueue(Array.isArray(queueRes.data) ? queueRes.data : []);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to load')
-      setRules([])
-      setQueue([])
+      setError(e.response?.data?.detail || e.message || 'Failed to load');
+      setRules([]);
+      setQueue([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   const handleAwayToggle = async () => {
     try {
@@ -54,15 +72,15 @@ const AutoReplyRules = () => {
         valid_from: away.valid_from || null,
         valid_until: away.valid_until || null,
         message: away.message || null,
-      })
-      setAway((prev) => ({ ...prev, is_active: !prev.is_active }))
+      });
+      setAway((prev) => ({ ...prev, is_active: !prev.is_active }));
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to update away mode')
+      setError(e.response?.data?.detail || e.message || 'Failed to update away mode');
     }
-  }
+  };
 
   const handleCreateRule = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       await autoReplyApi.createRule({
         name: form.name,
@@ -74,7 +92,7 @@ const AutoReplyRules = () => {
         require_away_mode: form.require_away_mode,
         use_approval_queue: form.use_approval_queue,
         auto_send: form.auto_send,
-      })
+      });
       setForm({
         name: '',
         match_category: '',
@@ -85,58 +103,58 @@ const AutoReplyRules = () => {
         require_away_mode: true,
         use_approval_queue: true,
         auto_send: false,
-      })
-      setShowForm(false)
-      load()
+      });
+      setShowForm(false);
+      load();
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to create rule')
+      setError(e.response?.data?.detail || e.message || 'Failed to create rule');
     }
-  }
+  };
 
   const handleUpdateRule = async (ruleId, patch) => {
     try {
-      await autoReplyApi.updateRule(ruleId, patch)
-      setEditingId(null)
-      load()
+      await autoReplyApi.updateRule(ruleId, patch);
+      setEditingId(null);
+      load();
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to update rule')
+      setError(e.response?.data?.detail || e.message || 'Failed to update rule');
     }
-  }
+  };
 
   const handleDeleteRule = async (ruleId) => {
-    if (!window.confirm('Delete this rule?')) return
+    if (!window.confirm('Delete this rule?')) return;
     try {
-      await autoReplyApi.deleteRule(ruleId)
-      load()
+      await autoReplyApi.deleteRule(ruleId);
+      load();
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to delete rule')
+      setError(e.response?.data?.detail || e.message || 'Failed to delete rule');
     }
-  }
+  };
 
   const handleApprove = async (draftId) => {
     try {
-      await autoReplyApi.approveDraft(draftId)
-      load()
+      await autoReplyApi.approveDraft(draftId);
+      load();
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to approve')
+      setError(e.response?.data?.detail || e.message || 'Failed to approve');
     }
-  }
+  };
 
   const handleReject = async (draftId) => {
     try {
-      await autoReplyApi.rejectDraft(draftId)
-      load()
+      await autoReplyApi.rejectDraft(draftId);
+      load();
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to reject')
+      setError(e.response?.data?.detail || e.message || 'Failed to reject');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -201,8 +219,8 @@ const AutoReplyRules = () => {
           <button
             type="button"
             onClick={() => {
-              setShowForm(true)
-              setEditingId(null)
+              setShowForm(true);
+              setEditingId(null);
               setForm({
                 name: '',
                 match_category: '',
@@ -213,7 +231,7 @@ const AutoReplyRules = () => {
                 require_away_mode: true,
                 use_approval_queue: true,
                 auto_send: false,
-              })
+              });
             }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
           >
@@ -239,7 +257,9 @@ const AutoReplyRules = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Match category (optional)</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Match category (optional)
+                </label>
                 <input
                   type="text"
                   value={form.match_category}
@@ -249,7 +269,9 @@ const AutoReplyRules = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Match sender (optional)</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Match sender (optional)
+                </label>
                 <input
                   type="text"
                   value={form.match_sender}
@@ -259,17 +281,23 @@ const AutoReplyRules = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Priority (lower = first)</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Priority (lower = first)
+                </label>
                 <input
                   type="number"
                   value={form.priority}
-                  onChange={(e) => setForm((f) => ({ ...f, priority: parseInt(e.target.value, 10) || 0 }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, priority: parseInt(e.target.value, 10) || 0 }))
+                  }
                   className="mt-1 block w-full rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Instructions (optional)</label>
+              <label className="block text-sm font-medium text-slate-700">
+                Instructions (optional)
+              </label>
               <textarea
                 value={form.instructions}
                 onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
@@ -328,7 +356,9 @@ const AutoReplyRules = () => {
         )}
 
         {rules.length === 0 ? (
-          <p className="text-slate-500 text-sm">No rules yet. Add one to auto-draft replies when away.</p>
+          <p className="text-slate-500 text-sm">
+            No rules yet. Add one to auto-draft replies when away.
+          </p>
         ) : (
           <ul className="divide-y divide-slate-200">
             {rules.map((r) => (
@@ -336,12 +366,17 @@ const AutoReplyRules = () => {
                 <div>
                   <p className="font-medium text-slate-900">{r.name}</p>
                   <p className="text-sm text-slate-600">
-                    Category: {r.match_category || 'any'} · Sender: {r.match_sender || 'any'} · Priority {r.priority}
+                    Category: {r.match_category || 'any'} · Sender: {r.match_sender || 'any'} ·
+                    Priority {r.priority}
                   </p>
-                  {r.instructions && <p className="text-xs text-slate-500 mt-1">{r.instructions}</p>}
+                  {r.instructions && (
+                    <p className="text-xs text-slate-500 mt-1">{r.instructions}</p>
+                  )}
                   <div className="flex gap-2 mt-2">
                     {r.require_away_mode && (
-                      <span className="badge-default px-2 py-0.5 rounded text-xs font-medium">Away only</span>
+                      <span className="badge-default px-2 py-0.5 rounded text-xs font-medium">
+                        Away only
+                      </span>
                     )}
                     {r.use_approval_queue && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800 border border-sky-200">
@@ -412,7 +447,7 @@ const AutoReplyRules = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AutoReplyRules
+export default AutoReplyRules;

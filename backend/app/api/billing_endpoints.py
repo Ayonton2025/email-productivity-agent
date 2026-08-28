@@ -9,5 +9,11 @@ from app.api.billing.subscriptions import router as subscriptions_router
 from app.api.billing.webhooks import router as webhooks_router
 
 router = APIRouter()
-for child_router in (subscriptions_router, payments_router, credits_router, webhooks_router, features_router):
+for child_router in (
+    subscriptions_router,
+    payments_router,
+    credits_router,
+    webhooks_router,
+    features_router,
+):
     router.include_router(child_router)

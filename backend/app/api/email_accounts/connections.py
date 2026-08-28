@@ -10,18 +10,14 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import encrypt_credential, get_current_user
-from app.models.database import Email, EmailProviderConfig, UserEmailAccount, get_db
-from app.models.document_models import EmailAttachment
+from app.models.database import UserEmailAccount, get_db
 from app.models.user_models import User
-from app.services.email_provider_service import EmailProviderService
-from app.services.gmail_sync_service import sync_gmail_inbox
 from app.services.imap_service import imap_service
-from app.services.smtp_service import smtp_service
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +28,12 @@ class ConnectEmailAccountRequest(BaseModel):
     """Connect email account with IMAP/SMTP credentials"""
 
     email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password")
-    display_name: Optional[str] = Field(None, max_length=255, description="Display name for account")
+    password: str = Field(
+        ..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password"
+    )
+    display_name: Optional[str] = Field(
+        None, max_length=255, description="Display name for account"
+    )
     auto_detect_provider: bool = Field(default=True, description="Auto-detect IMAP/SMTP settings")
 
 
@@ -95,7 +95,9 @@ router = APIRouter(prefix="/email-accounts", tags=["email-accounts"])
 
 
 @router.post("/test-connection")
-async def test_connection(request: TestConnectionRequest, current_user: User = Depends(get_current_user)):
+async def test_connection(
+    request: TestConnectionRequest, current_user: User = Depends(get_current_user)
+):
     """Test IMAP/SMTP connection without saving credentials"""
     try:
         # Extract domain from email
@@ -104,7 +106,11 @@ async def test_connection(request: TestConnectionRequest, current_user: User = D
         # Get provider config
         provider_config = settings.get_provider_config(domain)
         if not provider_config:
-            return {"success": False, "message": f"❌ Email provider not supported: {domain}", "provider": None}
+            return {
+                "success": False,
+                "message": f"❌ Email provider not supported: {domain}",
+                "provider": None,
+            }
 
         # Create temporary account object for testing
         temp_account = UserEmailAccount(
@@ -158,7 +164,9 @@ async def connect_email_account(
         if request.auto_detect_provider:
             provider_config = settings.get_provider_config(domain)
             if not provider_config:
-                raise HTTPException(status_code=400, detail=f"Email provider not supported: {domain}")
+                raise HTTPException(
+                    status_code=400, detail=f"Email provider not supported: {domain}"
+                )
             provider_name = provider_config["name"].lower()
             imap_host = provider_config["imap_host"]
             imap_port = provider_config["imap_port"]
@@ -171,7 +179,9 @@ async def connect_email_account(
 
         # Check if account already exists
         stmt = select(UserEmailAccount).where(
-            and_(UserEmailAccount.user_id == current_user.id, UserEmailAccount.email == request.email)
+            and_(
+                UserEmailAccount.user_id == current_user.id, UserEmailAccount.email == request.email
+            )
         )
         existing = await db.execute(stmt)
         if existing.scalar_one_or_none():

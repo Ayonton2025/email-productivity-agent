@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {
   AtSign,
   BarChart3,
@@ -21,11 +21,12 @@ import {
   Users,
   Workflow,
   Zap,
-} from 'lucide-react'
+} from 'lucide-react';
 
-void React
+void React;
 
-const isSuperAdminUser = (user) => Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
+const isSuperAdminUser = (user) =>
+  Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
 
 // Main navigation structure with organized groups and dropdowns
 const getNavigationGroups = (isAdmin) => {
@@ -80,7 +81,7 @@ const getNavigationGroups = (isAdmin) => {
         { id: 'prompts', name: 'Prompt Brain', icon: Settings },
       ],
     },
-  ]
+  ];
 
   if (isAdmin) {
     groups.push({
@@ -93,10 +94,10 @@ const getNavigationGroups = (isAdmin) => {
         { id: 'admin-user-access', name: 'User Access', icon: ShieldCheck },
         { id: 'admin-feature-rules', name: 'Feature Rules', icon: SlidersHorizontal },
       ],
-    })
+    });
   }
 
-  return groups
-}
+  return groups;
+};
 
-export { getNavigationGroups, isSuperAdminUser }
+export { getNavigationGroups, isSuperAdminUser };

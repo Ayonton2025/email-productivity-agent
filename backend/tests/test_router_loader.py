@@ -13,7 +13,7 @@ def test_load_router_returns_none_for_missing_module():
 
 
 def test_load_router_accepts_router_attribute():
-    module = "app.api.system_endpoints"
+    _module = "app.api.system_endpoints"
     runtime = RuntimeContext([], False, 8000, set(), lambda: True)
     router = create_system_router(runtime)
     assert isinstance(router, APIRouter)

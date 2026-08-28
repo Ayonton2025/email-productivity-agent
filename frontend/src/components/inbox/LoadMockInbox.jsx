@@ -1,9 +1,9 @@
-import React, { useContext } from 'react'
-import { useEmail } from '../../context/EmailContext'
-import { Download } from 'lucide-react'
+import React, { useContext } from 'react';
+import { useEmail } from '../../context/EmailContext';
+import { Download } from 'lucide-react';
 
 const LoadMockInbox = () => {
-  const { loadMockEmails, loading } = useEmail()
+  const { loadMockEmails, loading } = useEmail();
 
   return (
     <button
@@ -14,7 +14,7 @@ const LoadMockInbox = () => {
       <Download className="h-4 w-4 mr-2" />
       Load Mock Inbox
     </button>
-  )
-}
+  );
+};
 
-export default LoadMockInbox
+export default LoadMockInbox;

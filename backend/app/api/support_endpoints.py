@@ -29,7 +29,9 @@ async def auto_resolve(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id)))
+    result = await db.execute(
+        select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id))
+    )
     email = result.scalar_one_or_none()
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")

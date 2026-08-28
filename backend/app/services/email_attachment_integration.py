@@ -84,7 +84,9 @@ class EmailAttachmentIntegration:
 
                     if attachment_record:
                         stored_attachments.append(attachment_record)
-                        logger.info(f"✅ Stored Gmail attachment: {filename} ({len(file_content)} bytes)")
+                        logger.info(
+                            f"✅ Stored Gmail attachment: {filename} ({len(file_content)} bytes)"
+                        )
 
                 except Exception as e:
                     logger.error(f"❌ Failed to download Gmail attachment {filename}: {e}")
@@ -152,7 +154,9 @@ class EmailAttachmentIntegration:
 
                         if attachment_record:
                             stored_attachments.append(attachment_record)
-                            logger.info(f"✅ Stored IMAP attachment: {filename} ({len(file_content)} bytes)")
+                            logger.info(
+                                f"✅ Stored IMAP attachment: {filename} ({len(file_content)} bytes)"
+                            )
 
                     except Exception as e:
                         logger.error(f"❌ Failed to extract IMAP attachment {filename}: {e}")

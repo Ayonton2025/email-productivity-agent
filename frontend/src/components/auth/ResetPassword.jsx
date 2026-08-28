@@ -1,85 +1,90 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const { resetPassword, isAuthenticated } = useAuth()
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { resetPassword, isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState({
     newPassword: '',
     confirmPassword: '',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/')
+      navigate('/');
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-  }
+    });
+    setError('');
+  };
 
   const validateForm = () => {
     if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return false
+      setError('Password must be at least 6 characters long');
+      return false;
     }
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return false
+      setError('Passwords do not match');
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
     if (!validateForm()) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
-    const token = searchParams.get('token')
+    const token = searchParams.get('token');
     if (!token) {
-      setError('No reset token provided')
-      setLoading(false)
-      return
+      setError('No reset token provided');
+      setLoading(false);
+      return;
     }
 
-    const result = await resetPassword(token, formData.newPassword)
+    const result = await resetPassword(token, formData.newPassword);
 
     if (result.success) {
-      setSuccess('Your password has been reset successfully! You can now sign in with your new password.')
+      setSuccess(
+        'Your password has been reset successfully! You can now sign in with your new password.'
+      );
       setFormData({
         newPassword: '',
         confirmPassword: '',
-      })
+      });
     } else {
-      setError(result.error)
+      setError(result.error);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <Link to="/login" className="inline-flex items-center text-sm text-indigo-100 hover:text-white mb-6">
+          <Link
+            to="/login"
+            className="inline-flex items-center text-sm text-indigo-100 hover:text-white mb-6"
+          >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to sign in
           </Link>
@@ -87,7 +92,9 @@ const ResetPassword = () => {
           <div className="mx-auto h-12 w-12 bg-white rounded-lg flex items-center justify-center">
             <span className="text-2xl">🔑</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Create new password</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Create new password
+          </h2>
           <p className="mt-2 text-center text-sm text-indigo-100">Enter your new password below</p>
         </div>
 
@@ -142,7 +149,10 @@ const ResetPassword = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Confirm New Password
                 </label>
                 <div className="mt-1 relative">
@@ -189,7 +199,8 @@ const ResetPassword = () => {
             <div className="text-center">
               <div className="space-y-4">
                 <p className="text-gray-600">
-                  Your password has been successfully reset. You can now sign in with your new password.
+                  Your password has been successfully reset. You can now sign in with your new
+                  password.
                 </p>
                 <Link
                   to="/login"
@@ -203,7 +214,7 @@ const ResetPassword = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ResetPassword
+export default ResetPassword;

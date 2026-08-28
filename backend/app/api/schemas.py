@@ -218,7 +218,9 @@ class EmailAccountResponse(BaseModel):
 class BulkEmailActionRequest(BaseModel):
     """Request for bulk email operations"""
 
-    email_ids: List[int] = Field(..., min_length=1, max_length=1000, description="Email IDs to operate on")
+    email_ids: List[int] = Field(
+        ..., min_length=1, max_length=1000, description="Email IDs to operate on"
+    )
 
     @field_validator("email_ids")
     @classmethod

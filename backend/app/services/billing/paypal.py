@@ -1,26 +1,9 @@
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import logger
-from app.models.billing_models import (
-    AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
-    SUBSCRIPTION_PLANS,
-    AICredits,
-    CreditTransaction,
-    OutboundCredits,
-    Payment,
-    PaymentTransaction,
-    Subscription,
-    UsageLog,
-)
-from app.models.database import SystemSetting, User
 
 
 class PayPalService:
@@ -34,7 +17,9 @@ class PayPalService:
 
         # Use environment variables for API URLs
         if self.mode == "sandbox":
-            self.base_url = settings.PAYPAL_API_BASE_URL  # https://api-m.sandbox.paypal.com by default
+            self.base_url = (
+                settings.PAYPAL_API_BASE_URL
+            )  # https://api-m.sandbox.paypal.com by default
         else:
             self.base_url = settings.PAYPAL_API_BASE_URL_LIVE  # https://api-m.paypal.com for live
 
@@ -43,7 +28,9 @@ class PayPalService:
         try:
             auth = (self.client_id, self.client_secret)
             response = await self.client.post(
-                f"{self.base_url}/v1/oauth2/token", data={"grant_type": "client_credentials"}, auth=auth
+                f"{self.base_url}/v1/oauth2/token",
+                data={"grant_type": "client_credentials"},
+                auth=auth,
             )
             response.raise_for_status()
             data = response.json()
@@ -53,7 +40,13 @@ class PayPalService:
             return None
 
     async def create_order(
-        self, user_email: str, plan_id: str, plan_name: str, amount_usd: float, user_id: str, return_url: str = None
+        self,
+        user_email: str,
+        plan_id: str,
+        plan_name: str,
+        amount_usd: float,
+        user_id: str,
+        return_url: str = None,
     ) -> Dict[str, Any]:
         """
         Create a PayPal order for subscription upgrade
@@ -102,7 +95,9 @@ class PayPalService:
                 },
             }
 
-            response = await self.client.post(f"{self.base_url}/v2/checkout/orders", json=payload, headers=headers)
+            response = await self.client.post(
+                f"{self.base_url}/v2/checkout/orders", json=payload, headers=headers
+            )
 
             response.raise_for_status()
             data = response.json()
@@ -180,7 +175,9 @@ class CoinbaseCommerceService:
         self.base = settings.COINBASE_COMMERCE_API_BASE
         self.client = httpx.AsyncClient(timeout=30.0)
         if not self.api_key:
-            logger.warning("⚠️ [CoinbaseCommerce] COINBASE_COMMERCE_API_KEY not configured - crypto payments disabled")
+            logger.warning(
+                "⚠️ [CoinbaseCommerce] COINBASE_COMMERCE_API_KEY not configured - crypto payments disabled"
+            )
         else:
             logger.info("Coinbase Commerce service initialized")
 
@@ -202,7 +199,11 @@ class CoinbaseCommerceService:
             "metadata": metadata or {},
         }
 
-        headers = {"X-CC-Api-Key": self.api_key, "X-CC-Version": "2018-03-22", "Content-Type": "application/json"}
+        headers = {
+            "X-CC-Api-Key": self.api_key,
+            "X-CC-Version": "2018-03-22",
+            "Content-Type": "application/json",
+        }
 
         try:
             resp = await self.client.post(f"{self.base}/charges", json=payload, headers=headers)
@@ -210,7 +211,12 @@ class CoinbaseCommerceService:
             data = resp.json()
             hosted_url = data.get("data", {}).get("hosted_url")
             charge_id = data.get("data", {}).get("id")
-            return {"success": True, "hosted_url": hosted_url, "charge_id": charge_id, "data": data.get("data")}
+            return {
+                "success": True,
+                "hosted_url": hosted_url,
+                "charge_id": charge_id,
+                "data": data.get("data"),
+            }
         except Exception as e:
             logger.error(f"❌ [CoinbaseCommerce] create_charge error: {str(e)}")
             try:
@@ -232,7 +238,9 @@ class BybitPayService:
     def is_configured(self) -> bool:
         return bool(self.api_key and self.api_secret and self.merchant_id)
 
-    async def create_order(self, order_id: str, amount_usd: float, return_url: str) -> Dict[str, Any]:
+    async def create_order(
+        self, order_id: str, amount_usd: float, return_url: str
+    ) -> Dict[str, Any]:
         """
         Create a Bybit Pay order.
         Notes:
@@ -256,19 +264,26 @@ class BybitPayService:
             "X-BAPI-API-KEY": self.api_key,
         }
         try:
-            resp = await self.client.post(f"{self.base}/v5/pay/order/create", json=payload, headers=headers)
+            resp = await self.client.post(
+                f"{self.base}/v5/pay/order/create", json=payload, headers=headers
+            )
             data = resp.json() if resp.content else {}
             if resp.status_code >= 400:
                 return {
                     "success": False,
-                    "message": data.get("retMsg") or data.get("message") or f"HTTP {resp.status_code}",
+                    "message": data.get("retMsg")
+                    or data.get("message")
+                    or f"HTTP {resp.status_code}",
                 }
 
             result = data.get("result", {}) if isinstance(data, dict) else {}
             checkout_url = result.get("payUrl") or result.get("url")
             if checkout_url:
                 return {"success": True, "checkout_url": checkout_url, "raw": data}
-            return {"success": False, "message": data.get("retMsg") or "Bybit order creation failed"}
+            return {
+                "success": False,
+                "message": data.get("retMsg") or "Bybit order creation failed",
+            }
         except Exception as e:
             return {"success": False, "message": str(e)}
 

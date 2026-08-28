@@ -39,7 +39,9 @@ class Agent(Base):
     # Agent Configuration
     system_prompt = Column(Text, nullable=False)  # Base system prompt for the agent
     instructions = Column(Text, nullable=True)  # Additional instructions
-    capabilities = Column(JSON, default=list)  # List of capabilities (draft_replies, escalate, tag, etc.)
+    capabilities = Column(
+        JSON, default=list
+    )  # List of capabilities (draft_replies, escalate, tag, etc.)
 
     # Status
     is_active = Column(Boolean, default=True, index=True)
@@ -104,9 +106,12 @@ class Agent(Base):
             "emails_processed": self.emails_processed,
             "replies_drafted": self.replies_drafted,
             "escalations": self.escalations,
-            "last_activity_at": self.last_activity_at.isoformat() if self.last_activity_at else None,
+            "last_activity_at": self.last_activity_at.isoformat()
+            if self.last_activity_at
+            else None,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -118,7 +123,9 @@ class AgentMemory(Base):
     __tablename__ = "agent_memory"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    agent_id = Column(String, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    agent_id = Column(
+        String, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
 
     # Memory Content
@@ -155,7 +162,8 @@ class AgentMemory(Base):
             "related_contact_id": self.related_contact_id,
             "importance_score": self.importance_score,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -207,6 +215,7 @@ class AgentActivity(Base):
             "action_result": self.action_result,
             "decision_reasoning": self.decision_reasoning,
             "status": self.status,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
         }

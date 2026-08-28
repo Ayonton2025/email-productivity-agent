@@ -24,7 +24,9 @@ class SyncHistoryService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def start_sync(self, user_id: str, provider_config_id: str, sync_type: str = "incremental") -> SyncHistory:
+    async def start_sync(
+        self, user_id: str, provider_config_id: str, sync_type: str = "incremental"
+    ) -> SyncHistory:
         """
         Record the start of an email sync operation.
 
@@ -89,7 +91,9 @@ class SyncHistoryService:
             await self.db.refresh(sync_record)
 
             duration = (sync_record.completed_at - sync_record.started_at).total_seconds()
-            logger.info(f"✅ Sync completed: {sync_id} ({len(emails_processed)} emails in {duration:.1f}s)")
+            logger.info(
+                f"✅ Sync completed: {sync_id} ({len(emails_processed)} emails in {duration:.1f}s)"
+            )
 
             return sync_record
 
@@ -159,7 +163,9 @@ class SyncHistoryService:
             logger.error(f"❌ Failed to get sync history: {e}")
             return []
 
-    async def get_provider_sync_history(self, provider_config_id: str, limit: int = 50) -> List[SyncHistory]:
+    async def get_provider_sync_history(
+        self, provider_config_id: str, limit: int = 50
+    ) -> List[SyncHistory]:
         """
         Get sync history for a specific email provider config.
 

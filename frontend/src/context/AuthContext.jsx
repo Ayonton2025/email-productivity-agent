@@ -1,238 +1,253 @@
-import { logger } from '../utils/logger.js'
-import React, { createContext, useState, useContext, useEffect } from 'react'
-import { authApi, hostedEmailApi } from '../services/api'
+import { logger } from '../utils/logger.js';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authApi, hostedEmailApi } from '../services/api';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
-}
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState(null)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
 
   // Check authentication on app start
   useEffect(() => {
-    let completed = false
+    let completed = false;
     const watchdog = setTimeout(() => {
       if (!completed) {
-        logger.warn('⚠️ [AuthContext] Auth bootstrap watchdog triggered; forcing loading=false')
-        setLoading(false)
+        logger.warn('⚠️ [AuthContext] Auth bootstrap watchdog triggered; forcing loading=false');
+        setLoading(false);
       }
-    }, 10000)
+    }, 10000);
 
-    ;(async () => {
+    (async () => {
       try {
-        await checkAuth()
+        await checkAuth();
       } finally {
-        completed = true
-        clearTimeout(watchdog)
+        completed = true;
+        clearTimeout(watchdog);
       }
-    })()
+    })();
 
     return () => {
-      completed = true
-      clearTimeout(watchdog)
-    }
-  }, [])
+      completed = true;
+      clearTimeout(watchdog);
+    };
+  }, []);
 
   const checkAuth = async () => {
     try {
-      const storedToken = localStorage.getItem('auth_token')
-      const storedUser = localStorage.getItem('user')
+      const storedToken = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('user');
 
-      logger.debug('🔍 [AuthContext] Checking authentication:')
+      logger.debug('🔍 [AuthContext] Checking authentication:');
       logger.debug(
         '   - Token in localStorage:',
         storedToken ? `Present (${storedToken.substring(0, 20)}...)` : 'Not found'
-      )
-      logger.debug('   - User in localStorage:', storedUser ? 'Present' : 'Not found')
+      );
+      logger.debug('   - User in localStorage:', storedUser ? 'Present' : 'Not found');
 
       if (storedToken && storedUser) {
-        let parsedStoredUser = null
+        let parsedStoredUser = null;
         try {
-          parsedStoredUser = JSON.parse(storedUser)
+          parsedStoredUser = JSON.parse(storedUser);
         } catch (parseError) {
-          logger.error('❌ [AuthContext] Failed to parse stored user:', parseError)
-          clearAuthData()
-          return
+          logger.error('❌ [AuthContext] Failed to parse stored user:', parseError);
+          clearAuthData();
+          return;
         }
 
         try {
           // Verify the token is still valid by calling the backend with timeout
-          logger.debug('🔄 [AuthContext] Validating token with backend...')
+          logger.debug('🔄 [AuthContext] Validating token with backend...');
 
           // Create a timeout promise
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Backend request timeout')), 5000)
-          )
+          );
 
           // Race between the API call and timeout
-          const response = await Promise.race([authApi.getCurrentUser(), timeoutPromise])
+          const response = await Promise.race([authApi.getCurrentUser(), timeoutPromise]);
 
-          logger.debug('✅ [AuthContext] Token is valid, user:', response.data.email)
+          logger.debug('✅ [AuthContext] Token is valid, user:', response.data.email);
 
-          setUser(response.data)
-          setToken(storedToken)
+          setUser(response.data);
+          setToken(storedToken);
         } catch (error) {
-          logger.error('❌ [AuthContext] Token validation failed:', error.message)
+          logger.error('❌ [AuthContext] Token validation failed:', error.message);
           const isTransientTimeout =
             error?.message === 'Backend request timeout' ||
             error?.code === 'ECONNABORTED' ||
             String(error?.message || '')
               .toLowerCase()
-              .includes('timeout')
-          const isUnauthorized = error?.response?.status === 401
+              .includes('timeout');
+          const isUnauthorized = error?.response?.status === 401;
 
           if (isTransientTimeout && parsedStoredUser) {
             // Keep existing local session if backend is temporarily slow/unreachable.
-            logger.warn('⚠️ [AuthContext] Backend validation timed out; preserving existing session')
-            setUser(parsedStoredUser)
-            setToken(storedToken)
+            logger.warn(
+              '⚠️ [AuthContext] Backend validation timed out; preserving existing session'
+            );
+            setUser(parsedStoredUser);
+            setToken(storedToken);
           } else if (isUnauthorized) {
-            clearAuthData()
+            clearAuthData();
           } else if (parsedStoredUser) {
             // Fail-open for non-auth transient errors to avoid forced logout loops.
-            logger.warn('⚠️ [AuthContext] Non-auth validation error; preserving local session')
-            setUser(parsedStoredUser)
-            setToken(storedToken)
+            logger.warn('⚠️ [AuthContext] Non-auth validation error; preserving local session');
+            setUser(parsedStoredUser);
+            setToken(storedToken);
           } else {
-            clearAuthData()
+            clearAuthData();
           }
         }
       } else {
-        logger.debug('❌ [AuthContext] No valid auth data found')
-        clearAuthData()
+        logger.debug('❌ [AuthContext] No valid auth data found');
+        clearAuthData();
       }
     } catch (error) {
-      logger.error('❌ [AuthContext] Auth check failed:', error)
-      clearAuthData()
+      logger.error('❌ [AuthContext] Auth check failed:', error);
+      clearAuthData();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const clearAuthData = () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user')
-    setUser(null)
-    setToken(null)
-  }
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setToken(null);
+  };
 
   const applyAuthSession = (accessToken, userData) => {
-    if (!accessToken || !userData) return false
-    localStorage.setItem('auth_token', accessToken)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
-    setToken(accessToken)
-    return true
-  }
+    if (!accessToken || !userData) return false;
+    localStorage.setItem('auth_token', accessToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    setToken(accessToken);
+    return true;
+  };
 
   const login = async (email, password) => {
     try {
-      logger.debug('🔑 [AuthContext] Attempting login for:', email)
-      const response = await authApi.login({ email, password })
-      const { access_token, user: userData } = response.data
+      logger.debug('🔑 [AuthContext] Attempting login for:', email);
+      const response = await authApi.login({ email, password });
+      const { access_token, user: userData } = response.data;
 
-      logger.debug('✅ [AuthContext] Login successful:')
-      logger.debug('   - Token received:', access_token ? `Present (${access_token.substring(0, 20)}...)` : 'Missing!')
-      logger.debug('   - User data:', userData)
+      logger.debug('✅ [AuthContext] Login successful:');
+      logger.debug(
+        '   - Token received:',
+        access_token ? `Present (${access_token.substring(0, 20)}...)` : 'Missing!'
+      );
+      logger.debug('   - User data:', userData);
 
       if (!access_token) {
-        logger.error('❌ [AuthContext] No access token in login response!')
+        logger.error('❌ [AuthContext] No access token in login response!');
         return {
           success: false,
           error: 'No access token received from server',
-        }
+        };
       }
 
       if (!userData) {
-        logger.error('❌ [AuthContext] No user data in login response!')
+        logger.error('❌ [AuthContext] No user data in login response!');
         return {
           success: false,
           error: 'No user data received from server',
-        }
+        };
       }
 
       // Store token and user data
-      localStorage.setItem('auth_token', access_token)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setUser(userData)
-      setToken(access_token)
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      setToken(access_token);
 
-      logger.debug('💾 [AuthContext] Auth data stored in localStorage and state')
-      logger.debug('🔍 [AuthContext] Current auth state - User:', !!userData, 'Token:', !!access_token)
+      logger.debug('💾 [AuthContext] Auth data stored in localStorage and state');
+      logger.debug(
+        '🔍 [AuthContext] Current auth state - User:',
+        !!userData,
+        'Token:',
+        !!access_token
+      );
 
-      return { success: true, user: userData }
+      return { success: true, user: userData };
     } catch (error) {
-      logger.error('❌ [AuthContext] Login failed:', error)
-      logger.debug('   - Error response:', error.response?.data)
+      logger.error('❌ [AuthContext] Login failed:', error);
+      logger.debug('   - Error response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.detail || 'Login failed',
-      }
+      };
     }
-  }
+  };
 
   const register = async (userData) => {
     try {
-      logger.debug('📝 [AuthContext] Attempting registration for:', userData.email)
+      logger.debug('📝 [AuthContext] Attempting registration for:', userData.email);
 
       // Clear any existing auth data first
-      clearAuthData()
+      clearAuthData();
 
-      const response = await authApi.register(userData)
+      const response = await authApi.register(userData);
 
-      logger.debug('✅ [AuthContext] Registration response received:', response.data)
+      logger.debug('✅ [AuthContext] Registration response received:', response.data);
 
       // Check if we got an access token for auto-login
       if (response.data.access_token && response.data.user) {
-        const { access_token, user: newUser } = response.data
+        const { access_token, user: newUser } = response.data;
 
-        logger.debug('✅ [AuthContext] Auto-login after registration')
-        logger.debug('🔍 [AuthContext] Token to store:', access_token ? `${access_token.substring(0, 20)}...` : 'None')
-        logger.debug('🔍 [AuthContext] User to store:', newUser)
+        logger.debug('✅ [AuthContext] Auto-login after registration');
+        logger.debug(
+          '🔍 [AuthContext] Token to store:',
+          access_token ? `${access_token.substring(0, 20)}...` : 'None'
+        );
+        logger.debug('🔍 [AuthContext] User to store:', newUser);
 
         // Store token and user data
-        applyAuthSession(access_token, newUser)
+        applyAuthSession(access_token, newUser);
 
         // Verify storage
-        const storedToken = localStorage.getItem('auth_token')
-        const storedUser = localStorage.getItem('user')
-        logger.debug('🔍 [AuthContext] After storage - Token in localStorage:', !!storedToken)
-        logger.debug('🔍 [AuthContext] After storage - User in localStorage:', !!storedUser)
+        const storedToken = localStorage.getItem('auth_token');
+        const storedUser = localStorage.getItem('user');
+        logger.debug('🔍 [AuthContext] After storage - Token in localStorage:', !!storedToken);
+        logger.debug('🔍 [AuthContext] After storage - User in localStorage:', !!storedUser);
 
         return {
           success: true,
           user: newUser,
           autoLoggedIn: true,
           message: 'Registration successful! Welcome to Bylix Email.',
-        }
+        };
       } else {
         // Registration successful but no auto-login
-        logger.debug('⚠️ [AuthContext] Registration successful but no auto-login')
+        logger.debug('⚠️ [AuthContext] Registration successful but no auto-login');
         return {
           success: true,
           user: null,
           autoLoggedIn: false,
-          message: response.data.message || 'Registration successful! Please check your email for verification.',
-        }
+          message:
+            response.data.message ||
+            'Registration successful! Please check your email for verification.',
+        };
       }
     } catch (error) {
-      logger.error('❌ [AuthContext] Registration failed:', error)
-      logger.debug('   - Error response:', error.response?.data)
+      logger.error('❌ [AuthContext] Registration failed:', error);
+      logger.debug('   - Error response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.detail || 'Registration failed',
-      }
+      };
     }
-  }
+  };
 
   const registerHosted = async ({ local_part, full_name, password }) => {
     try {
@@ -240,11 +255,14 @@ export const AuthProvider = ({ children }) => {
         local_part,
         full_name: full_name || null,
         password: password || null,
-      })
-      const accessToken = response.data?.access_token
-      const userData = response.data?.user
+      });
+      const accessToken = response.data?.access_token;
+      const userData = response.data?.user;
       if (!applyAuthSession(accessToken, userData)) {
-        return { success: false, error: 'Hosted signup completed but no valid auth session was returned.' }
+        return {
+          success: false,
+          error: 'Hosted signup completed but no valid auth session was returned.',
+        };
       }
       return {
         success: true,
@@ -252,60 +270,60 @@ export const AuthProvider = ({ children }) => {
         autoLoggedIn: true,
         hostedAccount: response.data?.account,
         temporaryPassword: response.data?.temporary_password || null,
-      }
+      };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.detail || 'Hosted signup failed',
-      }
+      };
     }
-  }
+  };
 
   const verifyEmail = async (token) => {
     try {
-      const response = await authApi.verifyEmail({ token })
-      return { success: true, data: response.data }
+      const response = await authApi.verifyEmail({ token });
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.detail || 'Email verification failed',
-      }
+      };
     }
-  }
+  };
 
   const forgotPassword = async (email) => {
     try {
-      const response = await authApi.forgotPassword({ email })
-      return { success: true, data: response.data }
+      const response = await authApi.forgotPassword({ email });
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.detail || 'Password reset request failed',
-      }
+      };
     }
-  }
+  };
 
   const resetPassword = async (token, newPassword) => {
     try {
-      const response = await authApi.resetPassword({ token, new_password: newPassword })
-      return { success: true, data: response.data }
+      const response = await authApi.resetPassword({ token, new_password: newPassword });
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.detail || 'Password reset failed',
-      }
+      };
     }
-  }
+  };
 
   const logout = () => {
-    logger.debug('🚪 [AuthContext] Logging out user')
-    clearAuthData()
+    logger.debug('🚪 [AuthContext] Logging out user');
+    clearAuthData();
 
     // Optional: Call backend logout
     authApi.logout().catch((error) => {
-      logger.debug('⚠️ [AuthContext] Backend logout failed (may be expected):', error)
-    })
-  }
+      logger.debug('⚠️ [AuthContext] Backend logout failed (may be expected):', error);
+    });
+  };
 
   const value = {
     user,
@@ -320,7 +338,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuth,
     isAuthenticated: !!user && !!token,
-  }
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

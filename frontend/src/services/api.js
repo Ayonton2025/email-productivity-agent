@@ -1,37 +1,37 @@
-import axios from 'axios'
-import { logger } from '../utils/logger'
+import axios from 'axios';
+import { logger } from '../utils/logger';
 
 // Determine API base URL
 // In development, use relative URL to leverage Vite proxy
 // In production, use the full URL from environment variable
 const getApiBaseUrl = () => {
   // Check if we're in development mode
-  const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development'
+  const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
   if (isDevelopment) {
     // Use relative URL in development to leverage Vite proxy
     // The proxy will forward /api requests to the backend
-    return '/api/v1'
+    return '/api/v1';
   } else {
     // In production, use the full URL from environment variable
-    return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
+    return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
   }
-}
+};
 
-const API_BASE_URL = getApiBaseUrl()
+const API_BASE_URL = getApiBaseUrl();
 
-logger.debug('🚀 [API] Initializing with base URL:', API_BASE_URL)
+logger.debug('🚀 [API] Initializing with base URL:', API_BASE_URL);
 logger.debug('🔍 [API] Environment:', {
   mode: import.meta.env.MODE,
   dev: import.meta.env.DEV,
   viteApiUrl: import.meta.env.VITE_API_URL,
-})
+});
 
-export { API_BASE_URL }
+export { API_BASE_URL };
 
 // Create axios instance with interceptors
-const DEFAULT_REQUEST_TIMEOUT_MS = 60000
-const LONG_AI_TIMEOUT_MS = 300000
+const DEFAULT_REQUEST_TIMEOUT_MS = 60000;
+const LONG_AI_TIMEOUT_MS = 300000;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -40,33 +40,37 @@ const apiClient = axios.create({
   },
   timeout: DEFAULT_REQUEST_TIMEOUT_MS,
   withCredentials: false,
-})
+});
 
 export const getFriendlyApiError = (error) => {
-  const serverDetail = error.response?.data?.detail || error.response?.data?.message
-  if (serverDetail) return String(serverDetail)
-  if (error.code === 'ECONNABORTED') return 'The request timed out. Please try again.'
+  const serverDetail = error.response?.data?.detail || error.response?.data?.message;
+  if (serverDetail) return String(serverDetail);
+  if (error.code === 'ECONNABORTED') return 'The request timed out. Please try again.';
   if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-    return 'Unable to reach the server. Check your connection and try again.'
+    return 'Unable to reach the server. Check your connection and try again.';
   }
-  if ((error.response?.status || 0) >= 500) return 'The server encountered a problem. Please try again shortly.'
-  return error.message || 'Something went wrong. Please try again.'
-}
+  if ((error.response?.status || 0) >= 500)
+    return 'The server encountered a problem. Please try again shortly.';
+  return error.message || 'Something went wrong. Please try again.';
+};
 
-export const handleApiSuccess = (response) => response
+export const handleApiSuccess = (response) => response;
 
-export const handleApiError = (error, scheduleRedirect = (callback) => setTimeout(callback, 1000)) => {
-  const status = error.response?.status
-  error.friendlyMessage = getFriendlyApiError(error)
+export const handleApiError = (
+  error,
+  scheduleRedirect = (callback) => setTimeout(callback, 1000)
+) => {
+  const status = error.response?.status;
+  error.friendlyMessage = getFriendlyApiError(error);
 
   if (status === 401) {
-    const currentToken = localStorage.getItem('auth_token')
+    const currentToken = localStorage.getItem('auth_token');
     if (currentToken) {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('user')
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
 
       if (typeof window !== 'undefined') {
-        const pathname = window.location.pathname || '/'
+        const pathname = window.location.pathname || '/';
         const publicPaths = [
           '/',
           '/landing',
@@ -75,48 +79,48 @@ export const handleApiError = (error, scheduleRedirect = (callback) => setTimeou
           '/forgot-password',
           '/reset-password',
           '/oauth/callback',
-        ]
+        ];
         const isPublicPage =
           publicPaths.some((path) => pathname === path || pathname.startsWith(path + '/')) ||
           pathname.startsWith('/register') ||
-          pathname.startsWith('/login')
+          pathname.startsWith('/login');
 
         if (!isPublicPage && !pathname.includes('/login')) {
-          scheduleRedirect(() => window.location.assign('/login'))
+          scheduleRedirect(() => window.location.assign('/login'));
         }
       }
     }
   }
 
-  return Promise.reject(error)
-}
+  return Promise.reject(error);
+};
 
 // Enhanced Request interceptor to add auth token with debugging
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('auth_token');
 
     logger.debug('🔐 [API Request]', {
       url: config.url,
       method: config.method?.toUpperCase(),
       tokenPresent: !!token,
       tokenPreview: token ? `${token.substring(0, 20)}...` : 'None',
-    })
+    });
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-      logger.debug('✅ [API Request] Authorization header set')
+      config.headers.Authorization = `Bearer ${token}`;
+      logger.debug('✅ [API Request] Authorization header set');
     } else {
-      logger.debug('⚠️ [API Request] No auth token available for request')
+      logger.debug('⚠️ [API Request] No auth token available for request');
     }
 
-    return config
+    return config;
   },
   (error) => {
-    logger.error('❌ [API Request] Interceptor error:', error)
-    return Promise.reject(error)
+    logger.error('❌ [API Request] Interceptor error:', error);
+    return Promise.reject(error);
   }
-)
+);
 
 // Enhanced Response interceptor with better debugging
 apiClient.interceptors.response.use(
@@ -126,8 +130,8 @@ apiClient.interceptors.response.use(
       url: response.config.url,
       method: response.config.method?.toUpperCase(),
       data: response.data ? 'Received' : 'No data',
-    })
-    return handleApiSuccess(response)
+    });
+    return handleApiSuccess(response);
   },
   (error) => {
     const errorDetails = {
@@ -136,25 +140,25 @@ apiClient.interceptors.response.use(
       method: error.config?.method?.toUpperCase(),
       message: error.message,
       data: error.response?.data,
-    }
+    };
 
-    logger.error('❌ [API Response] Error:', errorDetails)
+    logger.error('❌ [API Response] Error:', errorDetails);
 
     // Handle specific error cases for diagnostic logging. State cleanup and
     // user-safe messaging are centralized in handleApiError for testability.
     if (error.response?.status === 401) {
-      logger.debug('🔄 [API Response] 401 Unauthorized - Token expired or invalid')
+      logger.debug('🔄 [API Response] 401 Unauthorized - Token expired or invalid');
     } else if (error.response?.status === 403) {
-      logger.debug('🚫 [API Response] 403 Forbidden - Insufficient permissions')
+      logger.debug('🚫 [API Response] 403 Forbidden - Insufficient permissions');
     } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-      logger.error('🌐 [API Response] Network error - Backend might be down')
+      logger.error('🌐 [API Response] Network error - Backend might be down');
     } else if (error.code === 'ECONNABORTED') {
-      logger.error('⏱️ [API Response] Request timed out - AI generation may still be running')
+      logger.error('⏱️ [API Response] Request timed out - AI generation may still be running');
     }
 
-    return handleApiError(error)
+    return handleApiError(error);
   }
-)
+);
 
 // Enhanced Authentication API with comprehensive debugging - CORRECTED ENDPOINTS
 export const authApi = {
@@ -162,260 +166,262 @@ export const authApi = {
     logger.debug('📝 [Auth] Registering user:', {
       email: userData.email,
       fullName: userData.full_name,
-    })
+    });
 
     // Make sure we're sending the correct data structure
     const registerData = {
       email: userData.email,
       password: userData.password,
       full_name: userData.full_name || userData.fullName,
-    }
+    };
 
-    logger.debug('📤 [Auth] Sending registration data:', registerData)
+    logger.debug('📤 [Auth] Sending registration data:', registerData);
 
     try {
       // CORRECTED: Changed from '/auth/register' to '/register'
-      const response = await apiClient.post('/register', registerData)
+      const response = await apiClient.post('/register', registerData);
       logger.debug('✅ [Auth] Registration successful:', {
         userId: response.data.user_id,
         email: response.data.email,
         hasToken: !!response.data.access_token,
         message: response.data.message,
-      })
-      return response
+      });
+      return response;
     } catch (error) {
       logger.error('❌ [Auth] Registration failed:', {
         error: error.response?.data?.detail,
         status: error.response?.status,
         fullError: error.response?.data,
-      })
-      throw error
+      });
+      throw error;
     }
   },
 
   login: async (credentials) => {
-    logger.debug('🔑 [Auth] Logging in user:', { email: credentials.email })
+    logger.debug('🔑 [Auth] Logging in user:', { email: credentials.email });
 
     const loginData = {
       email: credentials.email,
       password: credentials.password,
-    }
+    };
 
     try {
       // CORRECTED: Changed from '/auth/login' to '/login'
-      const response = await apiClient.post('/login', loginData)
+      const response = await apiClient.post('/login', loginData);
       logger.debug('✅ [Auth] Login successful:', {
         hasToken: !!response.data.access_token,
-        tokenPreview: response.data.access_token ? `${response.data.access_token.substring(0, 20)}...` : 'None',
+        tokenPreview: response.data.access_token
+          ? `${response.data.access_token.substring(0, 20)}...`
+          : 'None',
         userEmail: response.data.user?.email,
         userVerified: response.data.user?.is_verified,
-      })
+      });
 
       // Validate response structure
       if (!response.data.access_token) {
-        logger.error('❌ [Auth] Login response missing access_token!')
-        throw new Error('No access token received from server')
+        logger.error('❌ [Auth] Login response missing access_token!');
+        throw new Error('No access token received from server');
       }
 
       if (!response.data.user) {
-        logger.error('❌ [Auth] Login response missing user data!')
-        throw new Error('No user data received from server')
+        logger.error('❌ [Auth] Login response missing user data!');
+        throw new Error('No user data received from server');
       }
 
-      return response
+      return response;
     } catch (error) {
       logger.error('❌ [Auth] Login failed:', {
         error: error.response?.data?.detail || error.message,
         status: error.response?.status,
         fullError: error.response?.data,
-      })
-      throw error
+      });
+      throw error;
     }
   },
 
   logout: async () => {
-    logger.debug('🚪 [Auth] Logging out')
-    const tokenBefore = localStorage.getItem('auth_token')
-    logger.debug('🔍 [Auth] Token before logout:', tokenBefore ? 'Present' : 'None')
+    logger.debug('🚪 [Auth] Logging out');
+    const tokenBefore = localStorage.getItem('auth_token');
+    logger.debug('🔍 [Auth] Token before logout:', tokenBefore ? 'Present' : 'None');
 
     // Clear local storage first
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user')
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
 
     try {
       // CORRECTED: Changed from '/auth/logout' to '/logout'
-      const response = await apiClient.post('/logout')
-      logger.debug('✅ [Auth] Backend logout successful')
-      return response
+      const response = await apiClient.post('/logout');
+      logger.debug('✅ [Auth] Backend logout successful');
+      return response;
     } catch (error) {
-      logger.debug('⚠️ [Auth] Backend logout failed (may be expected):', error.message)
+      logger.debug('⚠️ [Auth] Backend logout failed (may be expected):', error.message);
       // Still return success for local logout
-      return { data: { message: 'Logged out locally' } }
+      return { data: { message: 'Logged out locally' } };
     }
   },
 
   getCurrentUser: async () => {
-    logger.debug('👤 [Auth] Getting current user')
-    const token = localStorage.getItem('auth_token')
-    logger.debug('🔍 [Auth] Using token:', token ? `${token.substring(0, 20)}...` : 'None')
+    logger.debug('👤 [Auth] Getting current user');
+    const token = localStorage.getItem('auth_token');
+    logger.debug('🔍 [Auth] Using token:', token ? `${token.substring(0, 20)}...` : 'None');
 
     try {
       // CORRECTED: Changed from '/auth/me' to '/me'
-      const response = await apiClient.get('/me')
+      const response = await apiClient.get('/me');
       logger.debug('✅ [Auth] Current user fetched:', {
         email: response.data.email,
         id: response.data.id,
         verified: response.data.is_verified,
-      })
-      return response
+      });
+      return response;
     } catch (error) {
       logger.error('❌ [Auth] Get current user failed:', {
         error: error.response?.data?.detail,
         status: error.response?.status,
-      })
-      throw error
+      });
+      throw error;
     }
   },
 
   refreshToken: async () => {
-    logger.debug('🔄 [Auth] Refreshing token')
+    logger.debug('🔄 [Auth] Refreshing token');
     try {
       // CORRECTED: Changed from '/auth/refresh' to '/refresh'
-      const response = await apiClient.post('/refresh')
-      logger.debug('✅ [Auth] Token refreshed successfully')
-      return response
+      const response = await apiClient.post('/refresh');
+      logger.debug('✅ [Auth] Token refreshed successfully');
+      return response;
     } catch (error) {
-      logger.error('❌ [Auth] Token refresh failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Auth] Token refresh failed:', error.response?.data);
+      throw error;
     }
   },
 
   verifyEmail: async (data) => {
-    logger.debug('📧 [Auth] Verifying email with token')
+    logger.debug('📧 [Auth] Verifying email with token');
     try {
       // CORRECTED: Changed from '/auth/verify-email' to '/verify-email'
-      const response = await apiClient.post('/verify-email', data)
-      logger.debug('✅ [Auth] Email verification successful')
-      return response
+      const response = await apiClient.post('/verify-email', data);
+      logger.debug('✅ [Auth] Email verification successful');
+      return response;
     } catch (error) {
-      logger.error('❌ [Auth] Email verification failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Auth] Email verification failed:', error.response?.data);
+      throw error;
     }
   },
 
   forgotPassword: async (data) => {
-    logger.debug('🔐 [Auth] Requesting password reset for:', data.email)
+    logger.debug('🔐 [Auth] Requesting password reset for:', data.email);
     try {
       // CORRECTED: Changed from '/auth/forgot-password' to '/forgot-password'
-      const response = await apiClient.post('/forgot-password', data)
-      logger.debug('✅ [Auth] Password reset request sent')
-      return response
+      const response = await apiClient.post('/forgot-password', data);
+      logger.debug('✅ [Auth] Password reset request sent');
+      return response;
     } catch (error) {
-      logger.error('❌ [Auth] Password reset request failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Auth] Password reset request failed:', error.response?.data);
+      throw error;
     }
   },
 
   resetPassword: async (data) => {
-    logger.debug('🔐 [Auth] Resetting password with token')
+    logger.debug('🔐 [Auth] Resetting password with token');
     try {
       // CORRECTED: Changed from '/auth/reset-password' to '/reset-password'
-      const response = await apiClient.post('/reset-password', data)
-      logger.debug('✅ [Auth] Password reset successful')
-      return response
+      const response = await apiClient.post('/reset-password', data);
+      logger.debug('✅ [Auth] Password reset successful');
+      return response;
     } catch (error) {
-      logger.error('❌ [Auth] Password reset failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Auth] Password reset failed:', error.response?.data);
+      throw error;
     }
   },
-}
+};
 
 // Enhanced Email API with debugging
 export const emailApi = {
   getUserInbox: async (filters = {}) => {
-    logger.debug('📧 [Email] Fetching user inbox with filters:', filters)
+    logger.debug('📧 [Email] Fetching user inbox with filters:', filters);
     try {
-      const response = await apiClient.get('/emails/my-inbox', { params: filters })
+      const response = await apiClient.get('/emails/my-inbox', { params: filters });
       logger.debug('✅ [Email] Inbox fetched successfully:', {
         emailsCount: response.data?.length || 0,
         hasEmails: !!response.data && response.data.length > 0,
-      })
-      return response
+      });
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Fetch inbox failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Fetch inbox failed:', error.response?.data);
+      throw error;
     }
   },
 
   getEmails: async (limit = 50, offset = 0) => {
-    logger.debug('📧 [Email] Fetching emails:', { limit, offset })
+    logger.debug('📧 [Email] Fetching emails:', { limit, offset });
     try {
-      const response = await apiClient.get(`/emails?limit=${limit}&offset=${offset}`)
-      logger.debug('✅ [Email] Emails fetched successfully')
-      return response
+      const response = await apiClient.get(`/emails?limit=${limit}&offset=${offset}`);
+      logger.debug('✅ [Email] Emails fetched successfully');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Fetch emails failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Fetch emails failed:', error.response?.data);
+      throw error;
     }
   },
 
   generateReply: async (emailId) => {
-    logger.debug('📧 [Email] Generating reply for email:', emailId)
+    logger.debug('📧 [Email] Generating reply for email:', emailId);
     try {
-      const response = await apiClient.post(`/emails/${emailId}/generate-reply`)
-      logger.debug('✅ [Email] Reply generated successfully')
-      return response
+      const response = await apiClient.post(`/emails/${emailId}/generate-reply`);
+      logger.debug('✅ [Email] Reply generated successfully');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Generate reply failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Generate reply failed:', error.response?.data);
+      throw error;
     }
   },
 
   getEmail: async (emailId) => {
-    logger.debug('📧 [Email] Fetching email:', emailId)
+    logger.debug('📧 [Email] Fetching email:', emailId);
     try {
-      const response = await apiClient.get(`/emails/${emailId}`)
-      logger.debug('✅ [Email] Email fetched successfully')
-      return response
+      const response = await apiClient.get(`/emails/${emailId}`);
+      logger.debug('✅ [Email] Email fetched successfully');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Fetch email failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Fetch email failed:', error.response?.data);
+      throw error;
     }
   },
 
   updateEmailCategory: async (emailId, category) => {
-    logger.debug('📧 [Email] Updating category:', { emailId, category })
+    logger.debug('📧 [Email] Updating category:', { emailId, category });
     try {
-      const response = await apiClient.put(`/emails/${emailId}/category`, { category })
-      logger.debug('✅ [Email] Category updated successfully')
-      return response
+      const response = await apiClient.put(`/emails/${emailId}/category`, { category });
+      logger.debug('✅ [Email] Category updated successfully');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Update category failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Update category failed:', error.response?.data);
+      throw error;
     }
   },
 
   syncUserEmails: async () => {
-    logger.debug('📧 [Email] Syncing user emails')
+    logger.debug('📧 [Email] Syncing user emails');
     try {
-      const response = await apiClient.post('/emails/sync')
-      logger.debug('✅ [Email] Email sync initiated')
-      return response
+      const response = await apiClient.post('/emails/sync');
+      logger.debug('✅ [Email] Email sync initiated');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Email sync failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Email sync failed:', error.response?.data);
+      throw error;
     }
   },
 
   loadMockEmails: async () => {
-    logger.debug('📧 [Email] Loading mock emails')
+    logger.debug('📧 [Email] Loading mock emails');
     try {
-      const response = await apiClient.post('/emails/load-mock')
-      logger.debug('✅ [Email] Mock emails loaded')
-      return response
+      const response = await apiClient.post('/emails/load-mock');
+      logger.debug('✅ [Email] Mock emails loaded');
+      return response;
     } catch (error) {
-      logger.error('❌ [Email] Load mock emails failed:', error.response?.data)
-      throw error
+      logger.error('❌ [Email] Load mock emails failed:', error.response?.data);
+      throw error;
     }
   },
 
@@ -425,16 +431,19 @@ export const emailApi = {
   getAccounts: () => apiClient.get('/email-accounts/list'),
   getAccountsList: () => apiClient.get('/email-accounts'),
   disconnectAccount: (accountId) => apiClient.delete(`/email-accounts/${accountId}`),
-  syncEmails: (accountId, options = {}) => apiClient.post(`/email-accounts/${accountId}/sync`, options),
+  syncEmails: (accountId, options = {}) =>
+    apiClient.post(`/email-accounts/${accountId}/sync`, options),
   getInbox: (accountId, page = 0, perPage = 50) =>
     apiClient.get(`/email-accounts/${accountId}/inbox`, {
       timeout: 120000,
       params: { page, per_page: perPage },
     }),
-  getEmailDetail: (accountId, emailId) => apiClient.get(`/email-accounts/${accountId}/email/${emailId}`),
-  sendEmail: (accountId, emailData) => apiClient.post(`/email-accounts/${accountId}/send`, emailData),
+  getEmailDetail: (accountId, emailId) =>
+    apiClient.get(`/email-accounts/${accountId}/email/${emailId}`),
+  sendEmail: (accountId, emailData) =>
+    apiClient.post(`/email-accounts/${accountId}/send`, emailData),
   getFolders: (accountId) => apiClient.get(`/email-accounts/${accountId}/folders`),
-}
+};
 
 // Email Accounts API (Legacy OAuth - deprecated)
 export const emailAccountsApi = {
@@ -444,7 +453,7 @@ export const emailAccountsApi = {
   disconnectAccount: (accountId) => apiClient.delete(`/email-accounts/${accountId}`),
   syncAccount: (accountId) => apiClient.post(`/email-accounts/${accountId}/sync`),
   getAccount: (accountId) => apiClient.get(`/email-accounts/${accountId}`),
-}
+};
 
 // AI Processing API
 export const aiApi = {
@@ -471,7 +480,7 @@ export const aiApi = {
     }),
   assistWorkspace: (payload, timeoutMs = LONG_AI_TIMEOUT_MS) =>
     apiClient.post('/ai/assistant/assist', payload, { timeout: timeoutMs }),
-}
+};
 
 // Prompt API
 export const promptApi = {
@@ -480,14 +489,14 @@ export const promptApi = {
   createPrompt: (promptData) => apiClient.post('/prompts', promptData),
   updatePrompt: (promptId, promptData) => apiClient.put(`/prompts/${promptId}`, promptData),
   deletePrompt: (promptId) => apiClient.delete(`/prompts/${promptId}`),
-}
+};
 
 // Agent API
 export const agentApi = {
   processEmail: (requestData) => apiClient.post('/agent/process', requestData),
   chatWithAgent: (message) => apiClient.post('/agent/chat', { message }),
   getAgentStatus: () => apiClient.get('/agent/status'),
-}
+};
 
 // Draft API
 export const draftApi = {
@@ -495,7 +504,7 @@ export const draftApi = {
   createDraft: (draftData) => apiClient.post('/drafts', draftData),
   updateDraft: (draftId, draftData) => apiClient.put(`/drafts/${draftId}`, draftData),
   deleteDraft: (draftId) => apiClient.delete(`/drafts/${draftId}`),
-}
+};
 
 // Auto-Reply API (rules, away mode, approval queue)
 export const autoReplyApi = {
@@ -508,7 +517,7 @@ export const autoReplyApi = {
   getApprovalQueue: () => apiClient.get('/auto-reply/approval-queue'),
   approveDraft: (draftId) => apiClient.post(`/auto-reply/approval-queue/${draftId}/approve`),
   rejectDraft: (draftId) => apiClient.post(`/auto-reply/approval-queue/${draftId}/reject`),
-}
+};
 
 // Phase 1: Daily Briefing API
 export const briefingsApi = {
@@ -516,7 +525,7 @@ export const briefingsApi = {
   regenerateToday: () => apiClient.post('/briefings/regenerate'),
   getPreferences: () => apiClient.get('/briefings/preferences'),
   updatePreferences: (data) => apiClient.put('/briefings/preferences', data),
-}
+};
 
 // Phase 1: Follow-up API
 export const followupsApi = {
@@ -529,15 +538,16 @@ export const followupsApi = {
     apiClient.get('/followups/queue', { params: { status, limit } }),
   approveQueueItem: (executionId) => apiClient.post(`/followups/queue/${executionId}/approve`),
   processDue: () => apiClient.post('/followups/process-due'),
-}
+};
 
 // Phase 2: Hosted email API
 export const hostedEmailApi = {
-  checkAvailability: (localPart) => apiClient.get('/hosted-email/availability', { params: { local_part: localPart } }),
+  checkAvailability: (localPart) =>
+    apiClient.get('/hosted-email/availability', { params: { local_part: localPart } }),
   provision: (payload) => apiClient.post('/hosted-email/provision', payload),
   signup: (payload) => apiClient.post('/hosted-email/signup', payload),
   getLimits: () => apiClient.get('/hosted-email/limits'),
-}
+};
 
 // Shared inbox API
 export const sharedInboxApi = {
@@ -545,32 +555,35 @@ export const sharedInboxApi = {
   create: (payload) => apiClient.post('/shared-inboxes/', payload),
   listMembers: (inboxId) => apiClient.get(`/shared-inboxes/${inboxId}/members`),
   addMember: (inboxId, payload) => apiClient.post(`/shared-inboxes/${inboxId}/members`, payload),
-  listEmails: (inboxId, params = {}) => apiClient.get(`/shared-inboxes/${inboxId}/emails`, { params }),
+  listEmails: (inboxId, params = {}) =>
+    apiClient.get(`/shared-inboxes/${inboxId}/emails`, { params }),
   addEmail: (inboxId, emailId) => apiClient.post(`/shared-inboxes/${inboxId}/emails/${emailId}`),
-  updateEmail: (inboxId, emailId, payload) => apiClient.patch(`/shared-inboxes/${inboxId}/emails/${emailId}`, payload),
-}
+  updateEmail: (inboxId, emailId, payload) =>
+    apiClient.patch(`/shared-inboxes/${inboxId}/emails/${emailId}`, payload),
+};
 
 // Deliverability API
 export const deliverabilityApi = {
   getScore: (days = 30) => apiClient.get('/deliverability/score', { params: { days } }),
-}
+};
 
 // Executive AI API
 export const executiveApi = {
   getSummary: () => apiClient.get('/executive/summary'),
   command: (payload) => apiClient.post('/executive/command', payload),
-}
+};
 
 // Insights API
 export const insightsApi = {
   getRisks: (severity) => apiClient.get('/insights/risks', { params: { severity } }),
   getOpportunities: (status) => apiClient.get('/insights/opportunities', { params: { status } }),
-  getDeadlines: (daysAhead = 7) => apiClient.get('/insights/deadlines', { params: { days_ahead: daysAhead } }),
+  getDeadlines: (daysAhead = 7) =>
+    apiClient.get('/insights/deadlines', { params: { days_ahead: daysAhead } }),
   getRelationships: (status) => apiClient.get('/insights/relationships', { params: { status } }),
   getAnalytics: (days = 30) => apiClient.get('/insights/analytics', { params: { days } }),
   getContactDetails: (contactId) => apiClient.get(`/insights/contacts/${contactId}`),
   getCompanyDetails: (companyId) => apiClient.get(`/insights/companies/${companyId}`),
-}
+};
 
 // Workflows API
 export const workflowsApi = {
@@ -586,25 +599,28 @@ export const workflowsApi = {
     apiClient.get(`/workflows/${workflowId}/executions`, { params: { limit } }),
   executeWorkflow: (workflowId, emailId = null) =>
     apiClient.post(`/workflows/${workflowId}/execute`, { email_id: emailId }),
-}
+};
 
 // Agents API
 export const agentsApi = {
-  getAgents: (agentType = null) => apiClient.get('/agents/', { params: agentType ? { agent_type: agentType } : {} }),
+  getAgents: (agentType = null) =>
+    apiClient.get('/agents/', { params: agentType ? { agent_type: agentType } : {} }),
   getAgent: (agentId) => apiClient.get(`/agents/${agentId}`),
   createAgent: (data) => apiClient.post('/agents/', data),
   updateAgent: (agentId, data) => apiClient.put(`/agents/${agentId}`, data),
   deleteAgent: (agentId) => apiClient.delete(`/agents/${agentId}`),
-  getActivities: (agentId, limit = 50) => apiClient.get(`/agents/${agentId}/activities`, { params: { limit } }),
+  getActivities: (agentId, limit = 50) =>
+    apiClient.get(`/agents/${agentId}/activities`, { params: { limit } }),
   getMemory: (agentId, memoryType = null, limit = 100) =>
     apiClient.get(`/agents/${agentId}/memory`, {
       params: { memory_type: memoryType, limit },
     }),
-}
+};
 
 // Campaigns API
 export const campaignsApi = {
-  getCampaigns: (status = null) => apiClient.get('/campaigns/', { params: status ? { status } : {} }),
+  getCampaigns: (status = null) =>
+    apiClient.get('/campaigns/', { params: status ? { status } : {} }),
   getCampaign: (campaignId) => apiClient.get(`/campaigns/${campaignId}`),
   createCampaign: (data) => apiClient.post('/campaigns/', data),
   updateCampaign: (campaignId, data) => apiClient.put(`/campaigns/${campaignId}`, data),
@@ -612,8 +628,8 @@ export const campaignsApi = {
   getRecommendedSender: () => apiClient.get('/campaigns/recommended-sender'),
   createSequence: (campaignId, data) => apiClient.post(`/campaigns/${campaignId}/sequences`, data),
   bulkCreateLeads: (campaignId, leads) => {
-    const normalizedLeads = Array.isArray(leads) ? leads : leads?.leads || []
-    return apiClient.post(`/campaigns/${campaignId}/leads/bulk`, { leads: normalizedLeads })
+    const normalizedLeads = Array.isArray(leads) ? leads : leads?.leads || [];
+    return apiClient.post(`/campaigns/${campaignId}/leads/bulk`, { leads: normalizedLeads });
   },
   getLeads: (campaignId, status = null, limit = 100, offset = 0) =>
     apiClient.get(`/campaigns/${campaignId}/leads`, {
@@ -621,13 +637,14 @@ export const campaignsApi = {
     }),
   startCampaign: (campaignId) => apiClient.post(`/campaigns/${campaignId}/start`),
   pauseCampaign: (campaignId) => apiClient.post(`/campaigns/${campaignId}/pause`),
-}
+};
 
 // Analytics API
 export const analyticsApi = {
   getStats: () => apiClient.get('/analytics/stats'),
-  getProductivity: (period = 'week') => apiClient.get('/analytics/productivity', { params: { period } }),
-}
+  getProductivity: (period = 'week') =>
+    apiClient.get('/analytics/productivity', { params: { period } }),
+};
 
 // Health check endpoints
 export const healthApi = {
@@ -638,82 +655,85 @@ export const healthApi = {
     apiClient.get(`/ai/health?check_live=${checkLive ? 'true' : 'false'}`, {
       timeout: checkLive ? LONG_AI_TIMEOUT_MS : DEFAULT_REQUEST_TIMEOUT_MS,
     }),
-}
+};
 
 // Enhanced test connection to backend
 export const testConnection = async () => {
   try {
-    logger.debug('🔍 [Connection Test] Testing connection to:', API_BASE_URL)
-    const healthResponse = await apiClient.get('/health')
+    logger.debug('🔍 [Connection Test] Testing connection to:', API_BASE_URL);
+    const healthResponse = await apiClient.get('/health');
     // Test token storage
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('auth_token');
     logger.debug(
       '🔍 [Connection Test] Auth token in storage:',
       token ? `Present (${token.substring(0, 20)}...)` : 'Missing'
-    )
+    );
     return {
       success: true,
       data: healthResponse.data,
       tokenPresent: !!token,
       message: 'Backend is running and accessible',
-    }
+    };
   } catch (error) {
-    logger.error('❌ [Connection Test] Failed:', error)
+    logger.error('❌ [Connection Test] Failed:', error);
     return {
       success: false,
       error: error.message,
       details: 'Backend might not be running or CORS issue',
-    }
+    };
   }
-}
+};
 
 // Token management utilities
 export const tokenUtils = {
   getToken: () => {
-    const token = localStorage.getItem('auth_token')
-    logger.debug('🔍 [Token] Retrieved token:', token ? `${token.substring(0, 20)}...` : 'None')
-    return token
+    const token = localStorage.getItem('auth_token');
+    logger.debug('🔍 [Token] Retrieved token:', token ? `${token.substring(0, 20)}...` : 'None');
+    return token;
   },
   setToken: (token) => {
-    logger.debug('💾 [Token] Storing token in localStorage:', token ? `${token.substring(0, 20)}...` : 'Empty token!')
+    logger.debug(
+      '💾 [Token] Storing token in localStorage:',
+      token ? `${token.substring(0, 20)}...` : 'Empty token!'
+    );
     if (!token) {
-      logger.error('❌ [Token] Attempted to store empty token!')
-      return
+      logger.error('❌ [Token] Attempted to store empty token!');
+      return;
     }
-    localStorage.setItem('auth_token', token)
+    localStorage.setItem('auth_token', token);
   },
   removeToken: () => {
-    logger.debug('🗑️ [Token] Removing token from localStorage')
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user')
+    logger.debug('🗑️ [Token] Removing token from localStorage');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
   },
   isValid: () => {
-    const token = localStorage.getItem('auth_token')
-    const isValid = !!token
-    logger.debug('🔍 [Token] Validation check:', isValid ? 'Valid' : 'Invalid')
-    return isValid
+    const token = localStorage.getItem('auth_token');
+    const isValid = !!token;
+    logger.debug('🔍 [Token] Validation check:', isValid ? 'Valid' : 'Invalid');
+    return isValid;
   },
-}
+};
 
 // WebSocket helper
 export const createWebSocket = (clientId = 'default') => {
-  const token = localStorage.getItem('auth_token')
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const baseUrl = import.meta.env.VITE_API_URL?.replace(/^https?/, protocol)
-  const wsUrl = `${baseUrl}/ws/agent?client_id=${clientId}${token ? `&token=${token}` : ''}`
-  logger.debug('🔌 [WebSocket] Connecting to:', wsUrl)
-  return new WebSocket(wsUrl)
-}
+  const token = localStorage.getItem('auth_token');
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const baseUrl = import.meta.env.VITE_API_URL?.replace(/^https?/, protocol);
+  const wsUrl = `${baseUrl}/ws/agent?client_id=${clientId}${token ? `&token=${token}` : ''}`;
+  logger.debug('🔌 [WebSocket] Connecting to:', wsUrl);
+  return new WebSocket(wsUrl);
+};
 
 // Connection status monitor
 export const monitorConnection = () => {
   const checkInterval = setInterval(async () => {
-    const status = await testConnection()
+    const status = await testConnection();
     if (!status.success) {
-      logger.warn('⚠️ [Monitor] Backend connection lost')
+      logger.warn('⚠️ [Monitor] Backend connection lost');
     }
-  }, 30000)
-  return () => clearInterval(checkInterval)
-}
+  }, 30000);
+  return () => clearInterval(checkInterval);
+};
 
-export default apiClient
+export default apiClient;

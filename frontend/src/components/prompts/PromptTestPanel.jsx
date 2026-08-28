@@ -1,5 +1,5 @@
-import React from 'react'
-import { Play } from 'lucide-react'
+import React from 'react';
+import { Play } from 'lucide-react';
 
 const PromptTestPanel = ({ input, output, testing, onInputChange, onRun }) => (
   <div className="border-t border-gray-200">
@@ -22,7 +22,9 @@ const PromptTestPanel = ({ input, output, testing, onInputChange, onRun }) => (
             {testing ? (
               <div className="text-gray-500">Testing prompt...</div>
             ) : (
-              <pre className="font-mono text-sm whitespace-pre-wrap">{output || 'Run test to see output...'}</pre>
+              <pre className="font-mono text-sm whitespace-pre-wrap">
+                {output || 'Run test to see output...'}
+              </pre>
             )}
           </div>
         </div>
@@ -37,6 +39,6 @@ const PromptTestPanel = ({ input, output, testing, onInputChange, onRun }) => (
       </div>
     </div>
   </div>
-)
+);
 
-export default PromptTestPanel
+export default PromptTestPanel;

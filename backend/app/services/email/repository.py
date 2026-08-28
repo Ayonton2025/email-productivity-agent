@@ -14,14 +14,18 @@ class EmailRepositoryMixin:
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""
         try:
-            result = await self.db.execute(select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset))
+            result = await self.db.execute(
+                select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset)
+            )
             emails = result.scalars().all()
             return [email.to_dict() for email in emails]
         except Exception as e:
             logger.error(f"❌ [EmailService] Error in get_all_emails: {e}")
             return []
 
-    async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    async def get_user_emails(
+        self, user_id: str, limit: int = 50, offset: int = 0
+    ) -> List[Dict[str, Any]]:
         """Get emails for a specific user"""
         try:
             logger.info(f"📧 [EmailService] Getting emails for user: {user_id}")
@@ -86,7 +90,9 @@ class EmailRepositoryMixin:
             logger.error(f"❌ [EmailService] Error getting email by ID: {e}")
             return None
 
-    async def update_email_category(self, email_id: str, category: str, user_id: str = None) -> bool:
+    async def update_email_category(
+        self, email_id: str, category: str, user_id: str = None
+    ) -> bool:
         """Update email category"""
         try:
             query = select(Email).where(Email.id == email_id)
@@ -126,7 +132,9 @@ class EmailRepositoryMixin:
     async def get_drafts(self) -> List[Dict[str, Any]]:
         """Get all email drafts"""
         try:
-            result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
+            result = await self.db.execute(
+                select(EmailDraft).order_by(EmailDraft.updated_at.desc())
+            )
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
         except Exception as e:
@@ -137,7 +145,9 @@ class EmailRepositoryMixin:
         """Get drafts for a specific user"""
         try:
             result = await self.db.execute(
-                select(EmailDraft).where(EmailDraft.user_id == user_id).order_by(EmailDraft.updated_at.desc())
+                select(EmailDraft)
+                .where(EmailDraft.user_id == user_id)
+                .order_by(EmailDraft.updated_at.desc())
             )
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
@@ -145,7 +155,9 @@ class EmailRepositoryMixin:
             logger.error(f"❌ [EmailService] Error getting user drafts: {e}")
             return []
 
-    async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_draft(
+        self, draft_id: str, draft_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Update a draft"""
         try:
             if "metadata" in draft_data:

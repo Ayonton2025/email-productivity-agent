@@ -13,12 +13,10 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.security import encrypt_credential, get_current_user
-from app.models.database import Email, EmailProviderConfig, UserEmailAccount, get_db
+from app.core.security import get_current_user
+from app.models.database import Email, UserEmailAccount, get_db
 from app.models.document_models import EmailAttachment
 from app.models.user_models import User
-from app.services.email_provider_service import EmailProviderService
 from app.services.gmail_sync_service import sync_gmail_inbox
 from app.services.imap_service import imap_service
 from app.services.smtp_service import smtp_service
@@ -32,8 +30,12 @@ class ConnectEmailAccountRequest(BaseModel):
     """Connect email account with IMAP/SMTP credentials"""
 
     email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password")
-    display_name: Optional[str] = Field(None, max_length=255, description="Display name for account")
+    password: str = Field(
+        ..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password"
+    )
+    display_name: Optional[str] = Field(
+        None, max_length=255, description="Display name for account"
+    )
     auto_detect_provider: bool = Field(default=True, description="Auto-detect IMAP/SMTP settings")
 
 
@@ -153,7 +155,9 @@ async def get_inbox(
 
         # Get total count without loading full rows
         stmt_count = (
-            select(func.count()).select_from(Email).where(and_(Email.account_id == account_id, Email.folder == "INBOX"))
+            select(func.count())
+            .select_from(Email)
+            .where(and_(Email.account_id == account_id, Email.folder == "INBOX"))
         )
         result_count = await db.execute(stmt_count)
         total = int(result_count.scalar_one() or 0)
@@ -167,7 +171,13 @@ async def get_inbox(
             email_data["has_attachments"] = email_data["attachment_count"] > 0
             emails_data.append(email_data)
 
-        return {"success": True, "emails": emails_data, "total": total, "page": page, "per_page": per_page}
+        return {
+            "success": True,
+            "emails": emails_data,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+        }
 
     except HTTPException:
         raise
@@ -177,7 +187,10 @@ async def get_inbox(
 
 @router.get("/{account_id}/email/{email_id}")
 async def get_email_detail(
-    account_id: str, email_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    account_id: str,
+    email_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get full email details"""
     try:
@@ -287,7 +300,9 @@ async def send_email(
 
 @router.get("/{account_id}/folders")
 async def get_folders(
-    account_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    account_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get list of folders for account"""
     try:

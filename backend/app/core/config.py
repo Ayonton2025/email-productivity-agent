@@ -92,9 +92,13 @@ class Settings(BaseSettings):
     PAYSTACK_API_BASE_URL: str = "https://api.paystack.co"
     PAYSTACK_SUPPORTED_CURRENCIES: str = "NGN"  # Comma-separated, e.g. NGN,GHS,ZAR,KES,USD
     PAYSTACK_FALLBACK_CURRENCY: str = "NGN"
-    PAYSTACK_FORCE_CURRENCY: Optional[str] = None  # Optional forced settlement currency for Paystack
+    PAYSTACK_FORCE_CURRENCY: Optional[str] = (
+        None  # Optional forced settlement currency for Paystack
+    )
     BILLING_CHARGE_CURRENCY: str = "USD"  # canonical price currency for website plans
-    BILLING_STRICT_USD: bool = True  # if true, price source remains USD and local conversion is explicit
+    BILLING_STRICT_USD: bool = (
+        True  # if true, price source remains USD and local conversion is explicit
+    )
     BILLING_FX_BUFFER_PERCENT: float = 0.0  # Optional buffer (e.g., 2.0 => +2%)
     ENABLE_LIVE_FX_RATES: bool = True
     FX_RATE_API_BASE_URL: str = "https://api.exchangerate.host"
@@ -177,7 +181,9 @@ class Settings(BaseSettings):
     HOSTED_EMAIL_MAX_RECIPIENTS_PER_DAY: int = 200
     HOSTED_EMAIL_SPAM_SCORE_BLOCK_THRESHOLD: float = 0.75
     HOSTED_EMAIL_ABUSE_USE_AI: bool = False
-    HOSTED_EMAIL_SPAM_KEYWORDS: str = "free money,guaranteed income,click now,act now,urgent offer,crypto giveaway"
+    HOSTED_EMAIL_SPAM_KEYWORDS: str = (
+        "free money,guaranteed income,click now,act now,urgent offer,crypto giveaway"
+    )
 
     class Config:
         env_file = ".env"

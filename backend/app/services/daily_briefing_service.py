@@ -23,8 +23,12 @@ from app.services.llm_orchestration_service import llm_service
 
 
 class DailyBriefingService:
-    async def get_or_create_preference(self, user_id: str, session: AsyncSession) -> UserDigestPreference:
-        result = await session.execute(select(UserDigestPreference).where(UserDigestPreference.user_id == user_id))
+    async def get_or_create_preference(
+        self, user_id: str, session: AsyncSession
+    ) -> UserDigestPreference:
+        result = await session.execute(
+            select(UserDigestPreference).where(UserDigestPreference.user_id == user_id)
+        )
         pref = result.scalar_one_or_none()
         if pref:
             return pref
@@ -34,7 +38,9 @@ class DailyBriefingService:
         await session.flush()
         return pref
 
-    async def get_today_briefing(self, user_id: str, session: AsyncSession) -> Optional[DailyBriefing]:
+    async def get_today_briefing(
+        self, user_id: str, session: AsyncSession
+    ) -> Optional[DailyBriefing]:
         pref = await self.get_or_create_preference(user_id, session)
         local_tz = ZoneInfo(pref.timezone or "UTC")
         today_local = datetime.now(local_tz).date()
@@ -73,9 +79,15 @@ class DailyBriefingService:
             return existing
 
         context = await self._build_context(user_id=user_id, session=session)
-        ai_result = await self._generate_ai_briefing(user_id=user_id, context=context, session=session)
+        ai_result = await self._generate_ai_briefing(
+            user_id=user_id, context=context, session=session
+        )
 
-        content = ai_result.get("content") if ai_result.get("success") else self._fallback_briefing(context)
+        content = (
+            ai_result.get("content")
+            if ai_result.get("success")
+            else self._fallback_briefing(context)
+        )
         credits_used = 2 if ai_result.get("success") else 0
 
         if existing:
@@ -228,7 +240,9 @@ class DailyBriefingService:
                 "schedule": [],
                 "metrics": {
                     "unresolved_commitments": len(context.get("unresolved_commitments", [])),
-                    "high_sentiment_negative_emails": len(context.get("high_sentiment_negative_emails", [])),
+                    "high_sentiment_negative_emails": len(
+                        context.get("high_sentiment_negative_emails", [])
+                    ),
                     "idle_threads": len(context.get("idle_threads", [])),
                     "upcoming_deadlines": len(context.get("upcoming_deadlines", [])),
                 },
@@ -244,7 +258,9 @@ class DailyBriefingService:
             "schedule": [],
             "metrics": {
                 "unresolved_commitments": len(context.get("unresolved_commitments", [])),
-                "high_sentiment_negative_emails": len(context.get("high_sentiment_negative_emails", [])),
+                "high_sentiment_negative_emails": len(
+                    context.get("high_sentiment_negative_emails", [])
+                ),
                 "idle_threads": len(context.get("idle_threads", [])),
                 "upcoming_deadlines": len(context.get("upcoming_deadlines", [])),
             },

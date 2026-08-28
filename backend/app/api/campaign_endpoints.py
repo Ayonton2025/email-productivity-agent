@@ -149,7 +149,9 @@ async def get_recommended_sender_account(
         )
         best = ranked[0]
         at_name = (best.display_name or "").strip()
-        fallback_name = (current_user.full_name or "").strip() or (best.email.split("@")[0] if best.email else "")
+        fallback_name = (current_user.full_name or "").strip() or (
+            best.email.split("@")[0] if best.email else ""
+        )
         from_name = at_name or fallback_name
 
         limit = int(best.send_limit_daily or 0)
@@ -174,12 +176,16 @@ async def get_recommended_sender_account(
             "message": "Recommended sender account loaded",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get recommended sender account: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get recommended sender account: {str(e)}"
+        )
 
 
 @router.get("/", response_model=List[Dict[str, Any]])
 async def get_campaigns(
-    status: Optional[str] = None, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get all campaigns for the user"""
     try:
@@ -197,12 +203,16 @@ async def get_campaigns(
 
 @router.get("/{campaign_id}", response_model=Dict[str, Any])
 async def get_campaign(
-    campaign_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get a specific campaign with sequences and stats"""
     try:
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -232,7 +242,9 @@ async def get_campaign(
 
 @router.post("/", response_model=Dict[str, Any])
 async def create_campaign(
-    campaign_data: CampaignCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    campaign_data: CampaignCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a new campaign"""
     try:
@@ -242,7 +254,8 @@ async def create_campaign(
         )
         if not can_access:
             raise HTTPException(
-                status_code=403, detail="Outbound campaigns are not available on your plan. Upgrade to Enterprise."
+                status_code=403,
+                detail="Outbound campaigns are not available on your plan. Upgrade to Enterprise.",
             )
 
         campaign = Campaign(
@@ -285,7 +298,9 @@ async def update_campaign(
     """Update a campaign"""
     try:
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -307,12 +322,16 @@ async def update_campaign(
 
 @router.delete("/{campaign_id}")
 async def delete_campaign(
-    campaign_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete a campaign"""
     try:
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -339,7 +358,9 @@ async def create_campaign_sequence(
     try:
         # Verify campaign belongs to user
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -384,7 +405,9 @@ async def bulk_create_leads(
     try:
         # Verify campaign belongs to user
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -409,7 +432,10 @@ async def bulk_create_leads(
         campaign.total_leads = (campaign.total_leads or 0) + len(created_leads)
         await db.commit()
 
-        return {"message": f"Created {len(created_leads)} leads", "leads_created": len(created_leads)}
+        return {
+            "message": f"Created {len(created_leads)} leads",
+            "leads_created": len(created_leads),
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -430,7 +456,9 @@ async def get_campaign_leads(
     try:
         # Verify campaign belongs to user
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -443,7 +471,7 @@ async def get_campaign_leads(
 
         leads_result = await db.execute(query)
         leads = list(leads_result.scalars().all())
-        return [l.to_dict() for l in leads]
+        return [lead.to_dict() for lead in leads]
     except HTTPException:
         raise
     except Exception as e:
@@ -452,12 +480,16 @@ async def get_campaign_leads(
 
 @router.post("/{campaign_id}/start")
 async def start_campaign(
-    campaign_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Start a campaign"""
     try:
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:
@@ -483,12 +515,16 @@ async def start_campaign(
 
 @router.post("/{campaign_id}/pause")
 async def pause_campaign(
-    campaign_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Pause a campaign"""
     try:
         result = await db.execute(
-            select(Campaign).where(and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id))
+            select(Campaign).where(
+                and_(Campaign.id == campaign_id, Campaign.user_id == current_user.id)
+            )
         )
         campaign = result.scalar_one_or_none()
         if not campaign:

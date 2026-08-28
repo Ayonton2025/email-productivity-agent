@@ -57,7 +57,8 @@ async def get_contact_timeline(
         select(RelationshipTimelineEvent)
         .where(
             and_(
-                RelationshipTimelineEvent.user_id == current_user.id, RelationshipTimelineEvent.contact_id == contact_id
+                RelationshipTimelineEvent.user_id == current_user.id,
+                RelationshipTimelineEvent.contact_id == contact_id,
             )
         )
         .order_by(desc(RelationshipTimelineEvent.occurred_at))

@@ -34,4 +34,6 @@ class ModelRegistry:
         model = cls.get_model(model_id)
         if not model:
             return 0.0
-        return (input_tokens / 1000) * model["input_cost_per_1k"] + (output_tokens / 1000) * model["output_cost_per_1k"]
+        return (input_tokens / 1000) * model["input_cost_per_1k"] + (output_tokens / 1000) * model[
+            "output_cost_per_1k"
+        ]

@@ -1,45 +1,49 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const VerifyEmail = () => {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const { verifyEmail, isAuthenticated } = useAuth()
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { verifyEmail, isAuthenticated } = useAuth();
 
-  const [status, setStatus] = useState('verifying') // verifying, success, error
-  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState('verifying'); // verifying, success, error
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/')
+      navigate('/');
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    const token = searchParams.get('token')
+    const token = searchParams.get('token');
 
     if (!token) {
-      setStatus('error')
-      setMessage('No verification token provided')
-      return
+      setStatus('error');
+      setMessage('No verification token provided');
+      return;
     }
 
     const verifyToken = async () => {
-      const result = await verifyEmail(token)
+      const result = await verifyEmail(token);
 
       if (result.success) {
-        setStatus('success')
-        setMessage('Your email has been verified successfully! You can now sign in to your account.')
+        setStatus('success');
+        setMessage(
+          'Your email has been verified successfully! You can now sign in to your account.'
+        );
       } else {
-        setStatus('error')
-        setMessage(result.error || 'Email verification failed. The token may be invalid or expired.')
+        setStatus('error');
+        setMessage(
+          result.error || 'Email verification failed. The token may be invalid or expired.'
+        );
       }
-    }
+    };
 
-    verifyToken()
-  }, [searchParams, verifyEmail])
+    verifyToken();
+  }, [searchParams, verifyEmail]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
@@ -65,7 +69,9 @@ const VerifyEmail = () => {
           {status === 'success' && (
             <div className="text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Email Verified Successfully!</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Email Verified Successfully!
+              </h3>
               <p className="text-gray-600 mb-6">{message}</p>
               <div className="space-y-3">
                 <Link
@@ -110,7 +116,7 @@ const VerifyEmail = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default VerifyEmail
+export default VerifyEmail;

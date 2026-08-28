@@ -10,30 +10,26 @@ Routes:
 - POST /api/v1/billing/webhook/paystack - Paystack webhook handler
 """
 
-import hashlib
-import hmac
-import json
 from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.billing.schemas import (
-    AvailablePlansResponse,
-    CouponRequest,
     CreditsResponse,
     CreditTopupRequest,
-    PaymentMethodUpdateRequest,
-    SubscriptionResponse,
-    UpgradeRequest,
 )
 from app.core.config import settings
 from app.core.security import get_current_user, logger
-from app.models.billing_models import CREDIT_PACK_PRICING_USD, SUBSCRIPTION_PLANS, PaymentTransaction
+from app.models.billing_models import CREDIT_PACK_PRICING_USD, PaymentTransaction
 from app.models.database import User, get_db
-from app.services.billing_service import CreditService, FeatureGatingService, PaymentService, SubscriptionService
+from app.services.billing_service import (
+    CreditService,
+    FeatureGatingService,
+    PaymentService,
+    SubscriptionService,
+)
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 
@@ -44,16 +40,21 @@ gating_service = FeatureGatingService()
 _IP_REQUEST_LOG = {}
 
 
-def _enforce_ip_rate_limit(request: Request, key: str, max_requests: int = 20, window_seconds: int = 60) -> None:
+def _enforce_ip_rate_limit(
+    request: Request, key: str, max_requests: int = 20, window_seconds: int = 60
+) -> None:
     xff = request.headers.get("x-forwarded-for", "")
-    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    ip = (
+        xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    )
     now = datetime.utcnow().timestamp()
     bucket_key = f"{key}:{ip}"
     events = _IP_REQUEST_LOG.get(bucket_key, [])
     events = [ts for ts in events if now - ts <= window_seconds]
     if len(events) >= max_requests:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests, please retry shortly."
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests, please retry shortly.",
         )
     events.append(now)
     _IP_REQUEST_LOG[bucket_key] = events
@@ -77,7 +78,9 @@ def _is_super_admin(user: User) -> bool:
 
 
 @router.get("/credits", response_model=Optional[CreditsResponse])
-async def get_credits(current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)):
+async def get_credits(
+    current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+):
     """Get user's current credit balance"""
     try:
         credits = await credit_service.get_credits(current_user.id, session)
@@ -85,7 +88,9 @@ async def get_credits(current_user: User = Depends(get_current_user), session: A
 
     except Exception as e:
         logger.error(f"Error getting credits: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve credits")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve credits"
+        )
 
 
 @router.post("/credits/topup")
@@ -100,7 +105,9 @@ async def initialize_credit_topup(
         _enforce_ip_rate_limit(http_request, "billing_topup", max_requests=10, window_seconds=60)
         # Validate request
         if request.credits <= 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Credits must be a positive value")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Credits must be a positive value"
+            )
 
         amount_usd = payment_service.get_credit_pack_price_usd(request.credits)
         if amount_usd is None:
@@ -139,18 +146,24 @@ async def initialize_credit_topup(
                 "credit_definition": "1 AI Credit = 1 email processed (or 1,000 tokens)",
             }
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.get("message"))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=result.get("message")
+            )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error initializing credit topup: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to initialize payment")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to initialize payment"
+        )
 
 
 @router.get("/credits/topup/{reference}")
 async def check_topup_status(
-    reference: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db)
+    reference: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ):
     """Check status of a credit top-up (step 2)"""
     try:
@@ -165,11 +178,14 @@ async def check_topup_status(
         )
         transaction = tx_result.scalar_one_or_none()
         if not transaction:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Top-up reference not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Top-up reference not found"
+            )
 
         if transaction.payment_method != "paystack":
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported payment method for top-up verification"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unsupported payment method for top-up verification",
             )
 
         result = await payment_service.paystack.verify_payment(reference)
@@ -186,7 +202,10 @@ async def check_topup_status(
 
     except Exception as e:
         logger.error(f"Error checking topup status: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to check payment status")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to check payment status",
+        )
 
 
 # ============================

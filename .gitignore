@@ -65,6 +65,7 @@ build/
 .coverage
 coverage.json
 htmlcov/
+coverage/
 
 # Railway
 .railway/

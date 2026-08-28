@@ -22,7 +22,9 @@ async def _process_email_intelligence(self):
     try:
         async with AsyncSessionLocal() as session:
             # Get emails with processing_status = "pending"
-            result = await session.execute(select(Email).where(Email.processing_status == "pending").limit(100))
+            result = await session.execute(
+                select(Email).where(Email.processing_status == "pending").limit(100)
+            )
             emails = result.scalars().all()
 
             processed = 0
@@ -44,15 +46,21 @@ async def _process_email_intelligence(self):
 
                     # Analyze sentiment
                     sentiment = await llm_service.analyze_sentiment(
-                        email_body=f"{email.subject}\n{email.body_text}", user_id=email.user_id, session=session
+                        email_body=f"{email.subject}\n{email.body_text}",
+                        user_id=email.user_id,
+                        session=session,
                     )
 
                     # Update email with results (be defensive about returned shapes)
                     email.ai_category = (
                         classification.get("category") if isinstance(classification, dict) else None
                     ) or "FYI"
-                    email.action_items = (actions.get("actions") if isinstance(actions, dict) else []) or []
-                    email.sentiment = (sentiment.get("sentiment") if isinstance(sentiment, dict) else None) or "neutral"
+                    email.action_items = (
+                        actions.get("actions") if isinstance(actions, dict) else []
+                    ) or []
+                    email.sentiment = (
+                        sentiment.get("sentiment") if isinstance(sentiment, dict) else None
+                    ) or "neutral"
                     email.processing_status = "completed"
 
                     processed += 1
@@ -109,7 +117,9 @@ async def _summarize_email_thread(self, thread_id: str):
 
             # Store summary in first email
             emails[0].ai_summary = (
-                summary if isinstance(summary, str) else (summary.get("summary") if isinstance(summary, dict) else None)
+                summary
+                if isinstance(summary, str)
+                else (summary.get("summary") if isinstance(summary, dict) else None)
             )
             await session.commit()
 

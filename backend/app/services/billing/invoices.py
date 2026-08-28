@@ -1,26 +1,14 @@
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict
 
-import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.security import logger
 from app.models.billing_models import (
-    AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
-    SUBSCRIPTION_PLANS,
-    AICredits,
-    CreditTransaction,
-    OutboundCredits,
     Payment,
     PaymentTransaction,
-    Subscription,
-    UsageLog,
 )
-from app.models.database import SystemSetting, User
 from app.services.billing.subscriptions import SubscriptionService
 
 
@@ -89,13 +77,17 @@ class CreditPurchaseMixin:
         else:
             transaction.status = "failed"
             transaction.failure_reason = result.get("message")
-            payment_row = await session.execute(select(Payment).where(Payment.reference == reference))
+            payment_row = await session.execute(
+                select(Payment).where(Payment.reference == reference)
+            )
             payment = payment_row.scalar_one_or_none()
             if payment:
                 payment.status = "failed"
             return {"success": False, "message": result.get("message")}
 
-    async def handle_payment_callback(self, reference: str, session: AsyncSession) -> Dict[str, Any]:
+    async def handle_payment_callback(
+        self, reference: str, session: AsyncSession
+    ) -> Dict[str, Any]:
         """Handle Paystack payment callback"""
         # Verify payment
         verification = await self.paystack.verify_payment(reference)
@@ -104,7 +96,8 @@ class CreditPurchaseMixin:
         # Update transaction
         result = await session.execute(
             select(PaymentTransaction).where(
-                PaymentTransaction.payment_reference == reference, PaymentTransaction.charge_type == "credit_topup"
+                PaymentTransaction.payment_reference == reference,
+                PaymentTransaction.charge_type == "credit_topup",
             )
         )
         transaction = result.scalar()
@@ -120,7 +113,9 @@ class CreditPurchaseMixin:
         credits = 0
         if transaction.payment_metadata and transaction.payment_metadata.get("credits"):
             credits = int(transaction.payment_metadata.get("credits"))
-        success = await self.credit_service.add_credits(transaction.user_id, credits, "credit_purchase", session)
+        success = await self.credit_service.add_credits(
+            transaction.user_id, credits, "credit_purchase", session
+        )
         if success:
             return {
                 "success": True,
@@ -137,7 +132,9 @@ class CreditPurchaseMixin:
 
 
 class PaymentFinalizeMixin:
-    async def process_upgrade_payment(self, transaction_id: str, session: AsyncSession) -> Dict[str, Any]:
+    async def process_upgrade_payment(
+        self, transaction_id: str, session: AsyncSession
+    ) -> Dict[str, Any]:
         """
         Process a completed upgrade payment and update subscription
         Args:
@@ -148,7 +145,9 @@ class PaymentFinalizeMixin:
         """
         try:
             # Get transaction
-            result = await session.execute(select(PaymentTransaction).where(PaymentTransaction.id == transaction_id))
+            result = await session.execute(
+                select(PaymentTransaction).where(PaymentTransaction.id == transaction_id)
+            )
             transaction = result.scalar()
             if not transaction:
                 return {"success": False, "message": "Transaction not found"}
@@ -157,7 +156,11 @@ class PaymentFinalizeMixin:
             # Verify payment with gateway
             verification_success = False
             if transaction.payment_method == "paypal":
-                order_id = transaction.payment_metadata.get("order_id") if transaction.payment_metadata else None
+                order_id = (
+                    transaction.payment_metadata.get("order_id")
+                    if transaction.payment_metadata
+                    else None
+                )
                 if order_id:
                     verify_result = await self.paypal.capture_order(order_id)
                     verification_success = verify_result.get("success", False)
@@ -172,10 +175,15 @@ class PaymentFinalizeMixin:
                 verify_result = {"success": True, "message": "Crypto payment accepted"}
                 verification_success = True
             else:
-                verify_result = {"success": False, "message": f"Unknown gateway: {transaction.payment_method}"}
+                verify_result = {
+                    "success": False,
+                    "message": f"Unknown gateway: {transaction.payment_method}",
+                }
             if not verification_success:
                 transaction.status = "failed"
-                transaction.failure_reason = verify_result.get("message", "Payment verification failed")
+                transaction.failure_reason = verify_result.get(
+                    "message", "Payment verification failed"
+                )
                 payment_res = await session.execute(
                     select(Payment).where(Payment.reference == transaction.payment_reference)
                 )
@@ -194,7 +202,11 @@ class PaymentFinalizeMixin:
                 payment.status = "completed"
             # Get subscription service
             subscription_service = SubscriptionService()
-            plan_id = transaction.payment_metadata.get("plan_id") if transaction.payment_metadata else None
+            plan_id = (
+                transaction.payment_metadata.get("plan_id")
+                if transaction.payment_metadata
+                else None
+            )
             if not plan_id:
                 return {"success": False, "message": "Plan ID not found in transaction"}
             # Update user subscription
@@ -210,5 +222,7 @@ class PaymentFinalizeMixin:
                 "payment_gateway": transaction.payment_method,
             }
         except Exception as e:
-            logger.error(f"❌ Failed to process upgrade payment for transaction {transaction_id}: {str(e)}")
+            logger.error(
+                f"❌ Failed to process upgrade payment for transaction {transaction_id}: {str(e)}"
+            )
             return {"success": False, "message": f"Failed to process payment: {str(e)}"}

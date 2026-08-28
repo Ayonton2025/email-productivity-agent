@@ -33,7 +33,11 @@ def create_system_router(runtime: RuntimeContext) -> APIRouter:
 
     @router.post("/api/v1/test-register")
     async def test_register():
-        return {"message": "Test endpoint working", "status": "success", "timestamp": datetime.utcnow().isoformat()}
+        return {
+            "message": "Test endpoint working",
+            "status": "success",
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
     @router.get("/api/v1/test-auth")
     async def test_auth():
@@ -81,7 +85,10 @@ def create_system_router(runtime: RuntimeContext) -> APIRouter:
             }.items()
         }
         health_status["startup_ready"] = runtime.is_ready()
-        health_status["cors"] = {"enabled": True, "allowed_origins_count": len(runtime.allowed_origins)}
+        health_status["cors"] = {
+            "enabled": True,
+            "allowed_origins_count": len(runtime.allowed_origins),
+        }
         return health_status
 
     @router.get("/api/v1/health")
@@ -92,7 +99,9 @@ def create_system_router(runtime: RuntimeContext) -> APIRouter:
     async def ready():
         if runtime.is_ready():
             return {"status": "ready", "service": "bylix-email-platform"}
-        return JSONResponse(status_code=503, content={"status": "starting", "service": "bylix-email-platform"})
+        return JSONResponse(
+            status_code=503, content={"status": "starting", "service": "bylix-email-platform"}
+        )
 
     @router.get("/")
     async def root():

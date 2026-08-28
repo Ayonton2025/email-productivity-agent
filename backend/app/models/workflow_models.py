@@ -35,8 +35,12 @@ class Workflow(Base):
     is_system = Column(Boolean, default=False)  # System workflows cannot be deleted
 
     # Trigger Conditions (when to run)
-    trigger_type = Column(String, nullable=False, index=True)  # email_received, email_sent, schedule, manual
-    trigger_conditions = Column(JSON, default=dict)  # Match criteria (category, sender, subject, etc.)
+    trigger_type = Column(
+        String, nullable=False, index=True
+    )  # email_received, email_sent, schedule, manual
+    trigger_conditions = Column(
+        JSON, default=dict
+    )  # Match criteria (category, sender, subject, etc.)
 
     # Execution Settings
     run_on_match = Column(Boolean, default=True)  # Run automatically when conditions match
@@ -74,7 +78,8 @@ class Workflow(Base):
             "failed_runs": self.failed_runs,
             "last_run_at": self.last_run_at.isoformat() if self.last_run_at else None,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -86,7 +91,9 @@ class WorkflowStep(Base):
     __tablename__ = "workflow_steps"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    workflow_id = Column(String, ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
+    workflow_id = Column(
+        String, ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Step Identity
     step_order = Column(Integer, nullable=False)  # Order of execution
@@ -94,7 +101,9 @@ class WorkflowStep(Base):
     step_type = Column(String, nullable=False, index=True)  # action, condition, delay, integration
 
     # Step Configuration
-    action_type = Column(String, nullable=True)  # send_email, create_draft, tag, archive, notify, call_api, etc.
+    action_type = Column(
+        String, nullable=True
+    )  # send_email, create_draft, tag, archive, notify, call_api, etc.
     action_config = Column(JSON, default=dict)  # Configuration for the action
 
     # Conditional Branching
@@ -136,7 +145,8 @@ class WorkflowStep(Base):
             "delay_seconds": self.delay_seconds,
             "on_error": self.on_error,
             "max_retries": self.max_retries,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -153,11 +163,15 @@ class WorkflowExecution(Base):
 
     # Trigger Context
     trigger_type = Column(String, nullable=False)  # email_received, email_sent, schedule, manual
-    trigger_email_id = Column(String, nullable=True, index=True)  # Email that triggered this execution
+    trigger_email_id = Column(
+        String, nullable=True, index=True
+    )  # Email that triggered this execution
     trigger_data = Column(JSON, default=dict)  # Additional trigger context
 
     # Execution Status
-    status = Column(String, default="running", index=True)  # running, completed, failed, stopped, waiting_approval
+    status = Column(
+        String, default="running", index=True
+    )  # running, completed, failed, stopped, waiting_approval
     current_step_id = Column(String, nullable=True)
 
     # Results
@@ -195,7 +209,8 @@ class WorkflowExecution(Base):
             "duration_seconds": self.duration_seconds,
             "error_message": self.error_message,
             "error_step_id": self.error_step_id,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
         }
 
 

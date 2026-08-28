@@ -1,106 +1,107 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { X, Mail, Lock, AlertCircle, CheckCircle, Loader, LogIn, Key } from 'lucide-react'
-import { emailApi } from '../../services/api'
-import { useAuth } from '../../context/AuthContext'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, AlertCircle, CheckCircle, Loader, LogIn, Key } from 'lucide-react';
+import { emailApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
-  const { isAuthenticated, user } = useAuth()
-  const [connectionMode, setConnectionMode] = useState('select') // select, oauth, manual
+  const { isAuthenticated, user } = useAuth();
+  const [connectionMode, setConnectionMode] = useState('select'); // select, oauth, manual
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     app_password: '',
     display_name: '',
-  })
-  const [selectedProvider, setSelectedProvider] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
+  });
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleYahooConnect = () => {
     // Use manual connect flow prefilled for Yahoo
-    setSelectedProvider('yahoo')
-    setFormData({ ...formData, email: '' })
-    setConnectionMode('manual')
-  }
+    setSelectedProvider('yahoo');
+    setFormData({ ...formData, email: '' });
+    setConnectionMode('manual');
+  };
 
   // Auto-show provider selection if authenticated
   useEffect(() => {
     if (isOpen && isAuthenticated) {
-      setConnectionMode('select')
+      setConnectionMode('select');
     } else if (isOpen && !isAuthenticated) {
-      setConnectionMode('manual')
+      setConnectionMode('manual');
     }
-  }, [isOpen, isAuthenticated])
+  }, [isOpen, isAuthenticated]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-  }
+    });
+    setError('');
+  };
 
   const handleOAuthConnect = async (provider) => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
       // Use relative URL in development to leverage Vite proxy
       // Only use full URL in production
-      let apiBaseUrl = '/api/v1'
+      let apiBaseUrl = '/api/v1';
       if (import.meta.env.MODE === 'production' && import.meta.env.VITE_API_URL) {
-        let url = import.meta.env.VITE_API_URL
+        let url = import.meta.env.VITE_API_URL;
         if (!url.endsWith('/api/v1')) {
-          url = url.replace(/\/+$/, '') + '/api/v1'
+          url = url.replace(/\/+$/, '') + '/api/v1';
         }
-        apiBaseUrl = url
+        apiBaseUrl = url;
       }
 
-      const token = localStorage.getItem('auth_token')
+      const token = localStorage.getItem('auth_token');
       // Use environment variable for redirect URI, fallback to hardcoded value
-      const redirectUri = import.meta.env.VITE_OAUTH_REDIRECT_URI || `${window.location.origin}/oauth/callback`
+      const redirectUri =
+        import.meta.env.VITE_OAUTH_REDIRECT_URI || `${window.location.origin}/oauth/callback`;
 
       // Get OAuth URL from backend based on provider
-      let endpoint
+      let endpoint;
       if (provider === 'gmail') {
         // Use public endpoint if no token, authenticated endpoint if token exists
         endpoint = token
           ? `${apiBaseUrl}/email-accounts/gmail/auth-url?redirect_uri=${encodeURIComponent(redirectUri)}`
-          : `${apiBaseUrl}/email-accounts/gmail/auth-url/public?redirect_uri=${encodeURIComponent(redirectUri)}`
+          : `${apiBaseUrl}/email-accounts/gmail/auth-url/public?redirect_uri=${encodeURIComponent(redirectUri)}`;
       } else {
-        endpoint = `${apiBaseUrl}/oauth/microsoft/auth-url`
+        endpoint = `${apiBaseUrl}/oauth/microsoft/auth-url`;
       }
 
       const response = await fetch(endpoint, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
 
       if (data.auth_url) {
         // Redirect to OAuth provider
-        window.location.href = data.auth_url
+        window.location.href = data.auth_url;
       } else {
-        setError(data?.detail || 'Failed to get OAuth URL from backend')
+        setError(data?.detail || 'Failed to get OAuth URL from backend');
       }
     } catch (err) {
-      setError(`OAuth connection failed: ${err.message}`)
+      setError(`OAuth connection failed: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleManualConnect = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.email || !formData.app_password) {
-      setError('Please enter both email and password')
-      return
+      setError('Please enter both email and password');
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
       const response = await emailApi.connectAccount({
@@ -108,35 +109,35 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
         password: formData.app_password,
         display_name: formData.display_name || formData.email,
         connection_type: 'smtp',
-      })
+      });
 
       if (response.success) {
-        setSuccessMessage('✅ Email account connected successfully!')
+        setSuccessMessage('✅ Email account connected successfully!');
 
         setTimeout(() => {
-          onClose()
-          if (onSuccess) onSuccess(response.data)
+          onClose();
+          if (onSuccess) onSuccess(response.data);
           setFormData({
             email: '',
             password: '',
             app_password: '',
             display_name: '',
-          })
-          setConnectionMode('select')
-          setSuccessMessage('')
-        }, 2000)
+          });
+          setConnectionMode('select');
+          setSuccessMessage('');
+        }, 2000);
       } else {
-        setError(response.message || 'Failed to connect account')
+        setError(response.message || 'Failed to connect account');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to connect account')
-      logger.error('Connection error:', err)
+      setError(err.response?.data?.detail || 'Failed to connect account');
+      logger.error('Connection error:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -152,7 +153,10 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
               <p className="text-sm text-gray-600">Add your email account</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -180,7 +184,9 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
                 <p className="text-sm text-blue-900 font-medium">
                   Connected as: <span className="font-bold">{user?.email}</span>
                 </p>
-                <p className="text-xs text-blue-700 mt-2">Select a provider to connect your email account</p>
+                <p className="text-xs text-blue-700 mt-2">
+                  Select a provider to connect your email account
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -219,15 +225,17 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
                   <Mail className="h-6 w-6 text-purple-600" />
                   <div className="text-left">
                     <p className="font-medium text-purple-700">Yahoo</p>
-                    <p className="text-xs text-purple-600">Connect with Yahoo (App Password recommended)</p>
+                    <p className="text-xs text-purple-600">
+                      Connect with Yahoo (App Password recommended)
+                    </p>
                   </div>
                 </button>
 
                 {/* Manual Connection */}
                 <button
                   onClick={() => {
-                    setSelectedProvider(null)
-                    setConnectionMode('manual')
+                    setSelectedProvider(null);
+                    setConnectionMode('manual');
                   }}
                   disabled={loading}
                   className="w-full p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 flex items-center gap-3"
@@ -255,7 +263,9 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
           {connectionMode === 'manual' && (
             <form onSubmit={handleManualConnect} className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">✅ Supports Gmail, Yahoo, Outlook, and other IMAP providers</p>
+                <p className="text-sm text-blue-800">
+                  ✅ Supports Gmail, Yahoo, Outlook, and other IMAP providers
+                </p>
                 <p className="text-sm text-blue-800 mt-2">
                   💡 <strong>For Gmail:</strong> Use an{' '}
                   <a
@@ -270,7 +280,9 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -300,13 +312,15 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
               {/* Provider specific hint */}
               {selectedProvider === 'yahoo' && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
-                  Yahoo often requires an <strong>App Password</strong> for IMAP/SMTP access. See Yahoo account security
-                  settings to generate an app password.
+                  Yahoo often requires an <strong>App Password</strong> for IMAP/SMTP access. See
+                  Yahoo account security settings to generate an app password.
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display Name (optional)
+                </label>
                 <input
                   type="text"
                   name="display_name"
@@ -354,7 +368,7 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ConnectEmailModal
+export default ConnectEmailModal;

@@ -20,7 +20,9 @@ from app.models.user_models import User
 router = APIRouter(prefix="/deliverability", tags=["deliverability"])
 
 
-def compute_deliverability_payload(campaigns: list[Campaign], hosted_logs: list[HostedEmailSendLog]) -> Dict[str, Any]:
+def compute_deliverability_payload(
+    campaigns: list[Campaign], hosted_logs: list[HostedEmailSendLog]
+) -> Dict[str, Any]:
     total_sent = sum(int(c.emails_sent or 0) for c in campaigns)
     total_bounces = sum(int(c.bounces or 0) for c in campaigns)
     total_opens = sum(int(c.emails_opened or 0) for c in campaigns)
@@ -62,15 +64,25 @@ def compute_deliverability_payload(campaigns: list[Campaign], hosted_logs: list[
 
     recommendations = []
     if bounce_rate > 0.04:
-        recommendations.append("Bounce rate is high. Clean your lead list and verify domains before sending.")
+        recommendations.append(
+            "Bounce rate is high. Clean your lead list and verify domains before sending."
+        )
     if block_rate > 0.08:
-        recommendations.append("Blocked send rate is elevated. Reduce links and simplify content to improve trust.")
+        recommendations.append(
+            "Blocked send rate is elevated. Reduce links and simplify content to improve trust."
+        )
     if avg_spam_score > 0.55:
-        recommendations.append("Spam score trend is high. Remove aggressive wording and excessive CTAs.")
+        recommendations.append(
+            "Spam score trend is high. Remove aggressive wording and excessive CTAs."
+        )
     if reply_rate < 0.02 and total_sent > 0:
-        recommendations.append("Reply rate is low. Improve subject relevance and personalization quality.")
+        recommendations.append(
+            "Reply rate is low. Improve subject relevance and personalization quality."
+        )
     if not recommendations:
-        recommendations.append("Deliverability health is stable. Maintain list hygiene and gradual volume increases.")
+        recommendations.append(
+            "Deliverability health is stable. Maintain list hygiene and gradual volume increases."
+        )
 
     risks = []
     if bounce_rate > 0.06:
@@ -105,11 +117,16 @@ async def get_deliverability_score(
 ):
     since = datetime.utcnow() - timedelta(days=days)
     campaigns_result = await db.execute(
-        select(Campaign).where(and_(Campaign.user_id == current_user.id, Campaign.created_at >= since))
+        select(Campaign).where(
+            and_(Campaign.user_id == current_user.id, Campaign.created_at >= since)
+        )
     )
     hosted_result = await db.execute(
         select(HostedEmailSendLog).where(
-            and_(HostedEmailSendLog.user_id == current_user.id, HostedEmailSendLog.created_at >= since)
+            and_(
+                HostedEmailSendLog.user_id == current_user.id,
+                HostedEmailSendLog.created_at >= since,
+            )
         )
     )
     payload = compute_deliverability_payload(

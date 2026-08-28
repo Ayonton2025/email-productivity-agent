@@ -122,7 +122,9 @@ async def test_smtp_failure_returns_false_after_retries(monkeypatch):
             return None
 
     monkeypatch.setattr(smtp_module.aiosmtplib, "SMTP", FailingSMTP)
-    success, message = await SMTPService().send_email(account(), None, "to@example.test", "Subject", "Body")
+    success, message = await SMTPService().send_email(
+        account(), None, "to@example.test", "Subject", "Body"
+    )
     assert success is False
     assert attempts["count"] == 2
     assert "unavailable" in message

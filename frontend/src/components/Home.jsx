@@ -1,7 +1,7 @@
-import React from 'react'
-import { useAuth } from '../context/AuthContext'
-import LandingPage from './landing/LandingPage'
-import { AppContent } from '../App'
+import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import LandingPage from './landing/LandingPage';
+import { AppContent } from '../App';
 
 /**
  * Home Component
@@ -9,7 +9,7 @@ import { AppContent } from '../App'
  * or the main dashboard (authenticated)
  */
 export const Home = () => {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -21,10 +21,10 @@ export const Home = () => {
           <div className="loading-subtext">Loading your workspace...</div>
         </div>
       </div>
-    )
+    );
   }
 
-  return isAuthenticated ? <AppContent /> : <LandingPage />
-}
+  return isAuthenticated ? <AppContent /> : <LandingPage />;
+};
 
-export default Home
+export default Home;

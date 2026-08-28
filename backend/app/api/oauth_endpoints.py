@@ -26,7 +26,10 @@ async def google_oauth_callback(code: str, state: str = None, db: AsyncSession =
 
         if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
             logger.error("❌ [Google OAuth] Missing Google credentials in environment")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Google OAuth not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google OAuth not configured",
+            )
 
         # In production, you would exchange the code for tokens using the Google API
         # For now, we'll extract email from the code or return success for manual processing
@@ -39,11 +42,15 @@ async def google_oauth_callback(code: str, state: str = None, db: AsyncSession =
         }
     except Exception as e:
         logger.error(f"❌ [Google OAuth] Error: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}"
+        )
 
 
 @router.post("/oauth/microsoft/callback")
-async def microsoft_oauth_callback(code: str, state: str = None, db: AsyncSession = Depends(get_db)):
+async def microsoft_oauth_callback(
+    code: str, state: str = None, db: AsyncSession = Depends(get_db)
+):
     """
     Handle Microsoft OAuth callback
     Exchange authorization code for access token and create/update user
@@ -62,7 +69,9 @@ async def microsoft_oauth_callback(code: str, state: str = None, db: AsyncSessio
         }
     except Exception as e:
         logger.error(f"❌ [Microsoft OAuth] Error: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}"
+        )
 
 
 @router.get("/oauth/google/auth-url")
@@ -73,7 +82,10 @@ async def get_google_auth_url():
     try:
         if not settings.GOOGLE_CLIENT_ID:
             logger.error("❌ [Google OAuth] Missing GOOGLE_CLIENT_ID")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Google OAuth not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google OAuth not configured",
+            )
 
         # Generate OAuth URL
         redirect_uri = f"{settings.FRONTEND_URL}/auth/google/callback"
@@ -92,7 +104,9 @@ async def get_google_auth_url():
         return {"status": "success", "auth_url": auth_url}
     except Exception as e:
         logger.error(f"❌ [Google OAuth] Error generating auth URL: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to generate auth URL: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to generate auth URL: {str(e)}"
+        )
 
 
 @router.get("/oauth/microsoft/auth-url")
@@ -117,11 +131,15 @@ async def get_microsoft_auth_url():
         return {"status": "success", "auth_url": auth_url}
     except Exception as e:
         logger.error(f"❌ [Microsoft OAuth] Error generating auth URL: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to generate auth URL: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to generate auth URL: {str(e)}"
+        )
 
 
 @router.post("/oauth/callback")
-async def oauth_callback(code: str, state: str = None, provider: str = None, db: AsyncSession = Depends(get_db)):
+async def oauth_callback(
+    code: str, state: str = None, provider: str = None, db: AsyncSession = Depends(get_db)
+):
     """
     Generic OAuth callback handler
     Routes to provider-specific handlers
@@ -134,10 +152,15 @@ async def oauth_callback(code: str, state: str = None, provider: str = None, db:
         elif provider == "microsoft":
             return await microsoft_oauth_callback(code, state, db)
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown OAuth provider: {provider}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown OAuth provider: {provider}",
+            )
     except Exception as e:
         logger.error(f"❌ [OAuth] Error: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"OAuth callback failed: {str(e)}"
+        )
 
 
 @router.get("/oauth/status")

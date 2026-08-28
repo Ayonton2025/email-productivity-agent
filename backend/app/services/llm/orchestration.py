@@ -33,11 +33,21 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
             settings, "LLM_MODEL", "qwen2.5-7b-instruct-q4_k_m-00001-of-00002"
         )
         # Use more flexible defaults that most accounts have access to
-        self.openai_model = getattr(settings, "OPENAI_MODEL", "gpt-3.5-turbo")  # More widely available
-        self.anthropic_model = getattr(settings, "ANTHROPIC_MODEL", "claude-3-sonnet-20240229")  # Stable model
+        self.openai_model = getattr(
+            settings, "OPENAI_MODEL", "gpt-3.5-turbo"
+        )  # More widely available
+        self.anthropic_model = getattr(
+            settings, "ANTHROPIC_MODEL", "claude-3-sonnet-20240229"
+        )  # Stable model
         self.safety_settings = [
-            {"category": HarmCategory.HARM_CATEGORY_HARASSMENT, "threshold": HarmBlockThreshold.BLOCK_ONLY_HIGH},
-            {"category": HarmCategory.HARM_CATEGORY_HATE_SPEECH, "threshold": HarmBlockThreshold.BLOCK_ONLY_HIGH},
+            {
+                "category": HarmCategory.HARM_CATEGORY_HARASSMENT,
+                "threshold": HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            },
+            {
+                "category": HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                "threshold": HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            },
         ]
         self._redis = None
         self._redis_init_done = False
@@ -73,7 +83,8 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
             return None
         try:
             self._redis = redis_async.from_url(
-                getattr(settings, "CELERY_BROKER_URL", "redis://redis:6379/0"), decode_responses=True
+                getattr(settings, "CELERY_BROKER_URL", "redis://redis:6379/0"),
+                decode_responses=True,
             )
             await self._redis.ping()
         except Exception as e:
@@ -101,13 +112,17 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
             return
 
     @staticmethod
-    def _cache_key(prompt: str, system_prompt: Optional[str], feature: Optional[str], model: str) -> str:
+    def _cache_key(
+        prompt: str, system_prompt: Optional[str], feature: Optional[str], model: str
+    ) -> str:
         norm = " ".join((prompt or "").split()).lower()[:5000]
         sys = " ".join((system_prompt or "").split()).lower()[:1000]
         digest = hashlib.sha256(f"{feature}|{model}|{sys}|{norm}".encode("utf-8")).hexdigest()
         return f"semantic:llm:{digest}"
 
-    async def _runtime_configs(self, session: Optional[AsyncSession]) -> List[RuntimeProviderConfig]:
+    async def _runtime_configs(
+        self, session: Optional[AsyncSession]
+    ) -> List[RuntimeProviderConfig]:
         if session:
             cfgs = await LLMProviderConfigService.get_runtime_configs(session)
         else:
@@ -150,7 +165,9 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
 
             return mock_llm_response(prompt=prompt, feature=feature, model=model)
         requested_provider = (getattr(settings, "LLM_PROVIDER", "auto") or "auto").lower()
-        should_bill = bool(user_id and feature and session and not self._is_free_workplace_feature(feature))
+        should_bill = bool(
+            user_id and feature and session and not self._is_free_workplace_feature(feature)
+        )
         try:
             if should_bill:
                 from app.services.billing_service import CreditService
@@ -158,12 +175,15 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
                 credit_service = CreditService()
                 if await credit_service._is_user_blocked(user_id=user_id, session=session):
                     raise ValueError("User access is blocked by admin policy.")
-                bypass_billing = await credit_service._has_payment_bypass(user_id=user_id, session=session)
+                bypass_billing = await credit_service._has_payment_bypass(
+                    user_id=user_id, session=session
+                )
                 # Hard anti-abuse cap for AI actions.
                 daily_used_query = await session.execute(
                     select(func.coalesce(func.sum(UsageLog.credits_used), 0)).where(
                         UsageLog.user_id == user_id,
-                        UsageLog.timestamp >= datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0),
+                        UsageLog.timestamp
+                        >= datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0),
                     )
                 )
                 daily_used = int(daily_used_query.scalar() or 0)
@@ -222,7 +242,9 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
                 from app.services.billing_service import CreditService
 
                 credit_service = CreditService()
-                bypass_billing = await credit_service._has_payment_bypass(user_id=user_id, session=session)
+                bypass_billing = await credit_service._has_payment_bypass(
+                    user_id=user_id, session=session
+                )
                 if not bypass_billing:
                     await credit_service.deduct_credits_for_ai_action(
                         user_id=user_id,
@@ -233,7 +255,11 @@ class LLMOrchestrationService(ProviderGatewayMixin, ProviderHealthMixin, Structu
 
             payload = {
                 "response": response_text,
-                "tokens": {"input": input_tokens, "output": output_tokens, "total": input_tokens + output_tokens},
+                "tokens": {
+                    "input": input_tokens,
+                    "output": output_tokens,
+                    "total": input_tokens + output_tokens,
+                },
                 "cost": cost,
                 "model": resolved_model,
                 "provider": resolved_provider,

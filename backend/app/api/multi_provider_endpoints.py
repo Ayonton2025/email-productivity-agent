@@ -52,7 +52,9 @@ async def get_provider_config(provider: str):
         config = MultiProviderService.get_provider_config(provider)
 
         if not config:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown provider: {provider}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown provider: {provider}"
+            )
 
         return {
             "provider": provider.lower(),
@@ -66,7 +68,8 @@ async def get_provider_config(provider: str):
     except Exception as e:
         logger.error(f"❌ Failed to get provider config: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get provider configuration"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get provider configuration",
         )
 
 
@@ -105,19 +108,24 @@ async def connect_provider(
     try:
         # Validate provider
         if provider.lower() not in [p.value for p in EmailProvider]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported provider: {provider}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported provider: {provider}"
+            )
 
         # Get provider instance
         provider_instance = MultiProviderService.get_provider(provider, access_token, refresh_token)
 
         if not provider_instance:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create provider instance"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create provider instance",
             )
 
         # Verify credentials
         if not await provider_instance.authenticate():
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid {provider} credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid {provider} credentials"
+            )
 
         # Get user email (provider-specific)
         user_email = "unknown@example.com"
@@ -136,7 +144,9 @@ async def connect_provider(
 
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {access_token}"}
-                    async with session.get("https://graph.microsoft.com/v1.0/me", headers=headers) as resp:
+                    async with session.get(
+                        "https://graph.microsoft.com/v1.0/me", headers=headers
+                    ) as resp:
                         if resp.status == 200:
                             data = await resp.json()
                             user_email = data.get("userPrincipalName", "unknown@example.com")
@@ -146,7 +156,9 @@ async def connect_provider(
 
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {access_token}"}
-                    async with session.get("https://api.mail.yahoo.com/user", headers=headers) as resp:
+                    async with session.get(
+                        "https://api.mail.yahoo.com/user", headers=headers
+                    ) as resp:
                         if resp.status == 200:
                             data = await resp.json()
                             user_email = data.get("email", "unknown@example.com")
@@ -212,11 +224,16 @@ async def connect_provider(
         raise
     except Exception as e:
         logger.error(f"❌ Failed to connect {provider} account: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to connect email account")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to connect email account",
+        )
 
 
 @router.get("/accounts")
-async def list_provider_accounts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def list_provider_accounts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """
     List all connected email provider accounts for the current user.
 
@@ -259,12 +276,16 @@ async def list_provider_accounts(current_user: User = Depends(get_current_user),
 
     except Exception as e:
         logger.error(f"❌ Failed to list accounts: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list accounts")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list accounts"
+        )
 
 
 @router.patch("/accounts/{account_id}/sync")
 async def trigger_sync(
-    account_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    account_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Manually trigger a sync for a specific email account.
@@ -344,7 +365,8 @@ async def trigger_sync(
 
             if not provider_instance:
                 raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create provider instance"
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create provider instance",
                 )
 
             # Fetch messages
@@ -366,12 +388,16 @@ async def trigger_sync(
         raise
     except Exception as e:
         logger.error(f"❌ Failed to sync account: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to sync account")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to sync account"
+        )
 
 
 @router.delete("/accounts/{account_id}")
 async def disconnect_provider(
-    account_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    account_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Disconnect an email provider account.
@@ -410,4 +436,6 @@ async def disconnect_provider(
         raise
     except Exception as e:
         logger.error(f"❌ Failed to disconnect account: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to disconnect account")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to disconnect account"
+        )

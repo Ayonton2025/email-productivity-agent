@@ -1,26 +1,14 @@
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import httpx
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import logger
 from app.models.billing_models import (
-    AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
     SUBSCRIPTION_PLANS,
-    AICredits,
-    CreditTransaction,
-    OutboundCredits,
-    Payment,
     PaymentTransaction,
-    Subscription,
-    UsageLog,
 )
-from app.models.database import SystemSetting, User
 
 
 class UpgradeSessionMixin:
@@ -182,14 +170,22 @@ class UpgradeSessionMixin:
                 else:
                     return result
             # Crypto payment via Bybit Pay (primary) or Coinbase fallback
-            elif payment_method in ["crypto", "coinbase", "crypto_btc", "crypto_eth", "crypto_usdc"]:
+            elif payment_method in [
+                "crypto",
+                "coinbase",
+                "crypto_btc",
+                "crypto_eth",
+                "crypto_usdc",
+            ]:
                 order_ref = f"{user_id}-crypto-{plan_id}-{int(datetime.utcnow().timestamp())}"
                 result = None
                 hosted = None
                 charge_id = None
                 processor = "coinbase"
                 if self._is_bybit_configured():
-                    logger.info(f"🔗 [Crypto] Creating Bybit Pay order for user {user_id} plan {plan_id}")
+                    logger.info(
+                        f"🔗 [Crypto] Creating Bybit Pay order for user {user_id} plan {plan_id}"
+                    )
                     bybit_res = await self.bybit.create_order(
                         order_id=order_ref,
                         amount_usd=amount_usd,
@@ -205,7 +201,9 @@ class UpgradeSessionMixin:
                             f"⚠️ [Crypto] Bybit unavailable, trying Coinbase fallback: {bybit_res.get('message')}"
                         )
                 if result is None and self._is_coinbase_configured():
-                    logger.info(f"🔗 [Crypto] Creating Coinbase Commerce charge for user {user_id} plan {plan_id}")
+                    logger.info(
+                        f"🔗 [Crypto] Creating Coinbase Commerce charge for user {user_id} plan {plan_id}"
+                    )
                     coinbase_res = await self.coinbase.create_charge(
                         name=f"{plan_name} subscription",
                         description=f"Upgrade to {plan_name} ({plan_id})",
@@ -261,10 +259,23 @@ class UpgradeSessionMixin:
                         "resolved_payment_method": payment_method,
                     }
                 else:
-                    logger.error(f"❌ [Crypto] Charge creation failed: {(result or {}).get('message')}")
-                    return {"success": False, "message": (result or {}).get("message", "Crypto checkout not available")}
+                    logger.error(
+                        f"❌ [Crypto] Charge creation failed: {(result or {}).get('message')}"
+                    )
+                    return {
+                        "success": False,
+                        "message": (result or {}).get("message", "Crypto checkout not available"),
+                    }
             # Paystack payment methods (card, mpesa, bank_transfer, mobile_money, ussd, qr)
-            elif payment_method in ["card", "mpesa", "bank_transfer", "mobile_money", "ussd", "qr", "stripe"]:
+            elif payment_method in [
+                "card",
+                "mpesa",
+                "bank_transfer",
+                "mobile_money",
+                "ussd",
+                "qr",
+                "stripe",
+            ]:
                 paystack_method = "card" if payment_method == "stripe" else payment_method
                 logger.info(
                     f"💰 [Paystack] Creating Paystack payment for user {user_id} "
@@ -273,7 +284,9 @@ class UpgradeSessionMixin:
                 supported_currencies = self._paystack_supported_currencies()
                 local_currency, _ = await self.get_currency_for_country(country_code)
                 fallback_currency = (settings.PAYSTACK_FALLBACK_CURRENCY or "NGN").upper()
-                charge_currency = (getattr(settings, "BILLING_CHARGE_CURRENCY", "USD") or "USD").upper()
+                charge_currency = (
+                    getattr(settings, "BILLING_CHARGE_CURRENCY", "USD") or "USD"
+                ).upper()
                 strict_usd = bool(getattr(settings, "BILLING_STRICT_USD", True))
                 fx_buffer = float(getattr(settings, "BILLING_FX_BUFFER_PERCENT", 0.0) or 0.0)
                 preferred_currency = local_currency if prefer_local_currency else charge_currency
@@ -296,7 +309,9 @@ class UpgradeSessionMixin:
                             candidate_currencies.append(cur_u)
                 reference = f"{user_id}-upgrade-{plan_id}-{int(datetime.utcnow().timestamp())}"
                 logger.info(f"📝 [Paystack] Payment reference: {reference}")
-                channels = None if is_auto_request else self._paystack_channels_for_method(paystack_method)
+                channels = (
+                    None if is_auto_request else self._paystack_channels_for_method(paystack_method)
+                )
                 result = None
                 currency = None
                 conversion_rate = 1.0
@@ -341,9 +356,7 @@ class UpgradeSessionMixin:
                         amount_minor = candidate_amount_minor
                         currency_fallback_applied = idx > 0
                         if currency_fallback_applied:
-                            currency_fallback_reason = (
-                                f"Gateway rejected prior currency option(s); successful with {candidate_currency}."
-                            )
+                            currency_fallback_reason = f"Gateway rejected prior currency option(s); successful with {candidate_currency}."
                         break
                     # Continue trying only for unsupported currency errors.
                     if not self._is_currency_unsupported_error(attempt.get("message", "")):
@@ -393,7 +406,9 @@ class UpgradeSessionMixin:
                         "processor": "paystack",
                         "payment_method": paystack_method,
                         "currency": currency,
-                        "display_amount": amount_usd if currency == "USD" else round(amount_usd * conversion_rate, 2),
+                        "display_amount": amount_usd
+                        if currency == "USD"
+                        else round(amount_usd * conversion_rate, 2),
                         "display_currency": currency,
                         "currency_fallback_applied": currency_fallback_applied,
                         "currency_fallback_reason": currency_fallback_reason,
@@ -403,7 +418,9 @@ class UpgradeSessionMixin:
                 else:
                     # For auto checkout, try global processor fallback instead of hard-failing.
                     if self._is_paypal_configured() and (is_auto_request or strict_usd):
-                        logger.warning("⚠️ [Paystack] Paystack currency attempt(s) failed. Falling back to PayPal.")
+                        logger.warning(
+                            "⚠️ [Paystack] Paystack currency attempt(s) failed. Falling back to PayPal."
+                        )
                         paypal_result = await self.paypal.create_order(
                             user_email=user_email,
                             plan_id=plan_id,
@@ -463,7 +480,12 @@ class UpgradeSessionMixin:
                     }
             else:
                 logger.error(f"❌ [PaymentService] Unsupported payment method: {payment_method}")
-                return {"success": False, "message": f"Unsupported payment method: {payment_method}"}
+                return {
+                    "success": False,
+                    "message": f"Unsupported payment method: {payment_method}",
+                }
         except Exception as e:
-            logger.error(f"❌ [PaymentService] Error creating upgrade session: {str(e)}", exc_info=True)
+            logger.error(
+                f"❌ [PaymentService] Error creating upgrade session: {str(e)}", exc_info=True
+            )
             return {"success": False, "message": f"Failed to create payment session: {str(e)}"}

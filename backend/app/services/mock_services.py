@@ -17,14 +17,28 @@ def mock_llm_response(prompt: str, feature: Optional[str], model: str) -> Dict[s
     prompt_excerpt = " ".join((prompt or "").split())[:160]
 
     if "classif" in normalized_feature:
-        response = {"category": "Work", "confidence": 0.99, "reasoning": "Offline mock classification"}
+        response = {
+            "category": "Work",
+            "confidence": 0.99,
+            "reasoning": "Offline mock classification",
+        }
     elif "sentiment" in normalized_feature:
         response = {"sentiment": "neutral", "tone": "professional", "confidence": 0.99}
     elif "summar" in normalized_feature:
-        response = {"summary": prompt_excerpt or "Mock email summary", "key_points": ["Generated offline"]}
+        response = {
+            "summary": prompt_excerpt or "Mock email summary",
+            "key_points": ["Generated offline"],
+        }
     elif "action" in normalized_feature or "extract" in normalized_feature:
         response = {
-            "actions": [{"action": "Review and respond", "deadline": None, "priority": "Medium", "assigned_to": "You"}]
+            "actions": [
+                {
+                    "action": "Review and respond",
+                    "deadline": None,
+                    "priority": "Medium",
+                    "assigned_to": "You",
+                }
+            ]
         }
     elif "reply" in normalized_feature:
         response = {
@@ -32,7 +46,11 @@ def mock_llm_response(prompt: str, feature: Optional[str], model: str) -> Dict[s
             "tone": "professional",
         }
     elif "relationship" in normalized_feature:
-        response = {"relationship_score": 0.75, "relationship_type": "professional", "engagement_level": "active"}
+        response = {
+            "relationship_score": 0.75,
+            "relationship_type": "professional",
+            "engagement_level": "active",
+        }
     else:
         response = {"message": "Mock AI response", "excerpt": prompt_excerpt}
 
@@ -41,7 +59,11 @@ def mock_llm_response(prompt: str, feature: Optional[str], model: str) -> Dict[s
     output_tokens = max(1, len(text.split()))
     return {
         "response": text,
-        "tokens": {"input": input_tokens, "output": output_tokens, "total": input_tokens + output_tokens},
+        "tokens": {
+            "input": input_tokens,
+            "output": output_tokens,
+            "total": input_tokens + output_tokens,
+        },
         "cost": 0.0,
         "model": f"mock:{model}",
         "provider": "mock",

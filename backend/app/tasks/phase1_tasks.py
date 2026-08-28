@@ -39,7 +39,9 @@ async def _generate_daily_briefings_for_due_users(self):
                     )
                     pref = pref_result.scalar_one_or_none()
                     if not pref:
-                        pref = await briefing_service.get_or_create_preference(user_id=user_id, session=session)
+                        pref = await briefing_service.get_or_create_preference(
+                            user_id=user_id, session=session
+                        )
 
                     if not pref.enabled:
                         continue
@@ -57,7 +59,9 @@ async def _generate_daily_briefings_for_due_users(self):
                     )
                     generated += 1
                 except Exception as user_error:
-                    logger.error("Daily briefing dispatch failed for user %s: %s", user_id, str(user_error))
+                    logger.error(
+                        "Daily briefing dispatch failed for user %s: %s", user_id, str(user_error)
+                    )
 
             await session.commit()
             return {"success": True, "generated": generated}

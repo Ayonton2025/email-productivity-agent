@@ -1,5 +1,5 @@
-import { logger } from '../utils/logger.js'
-import apiClient from './api'
+import { logger } from '../utils/logger.js';
+import apiClient from './api';
 
 /**
  * AttachmentService - API calls for attachment and document analysis operations
@@ -16,12 +16,12 @@ class AttachmentService {
    */
   async getAttachmentInfo(attachmentId) {
     try {
-      const response = await apiClient.get(`/attachments/${attachmentId}/info`)
-      logger.debug('✅ [AttachmentService] Retrieved attachment info:', attachmentId)
-      return response.data
+      const response = await apiClient.get(`/attachments/${attachmentId}/info`);
+      logger.debug('✅ [AttachmentService] Retrieved attachment info:', attachmentId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error getting attachment info:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error getting attachment info:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -34,12 +34,12 @@ class AttachmentService {
     try {
       const response = await apiClient.get(`/attachments/${attachmentId}/download`, {
         responseType: 'blob', // Request as blob for file download
-      })
-      logger.debug('✅ [AttachmentService] Downloaded attachment:', attachmentId)
-      return response.data
+      });
+      logger.debug('✅ [AttachmentService] Downloaded attachment:', attachmentId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error downloading attachment:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error downloading attachment:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -51,12 +51,12 @@ class AttachmentService {
    */
   async getAttachmentAnalysis(attachmentId) {
     try {
-      const response = await apiClient.get(`/attachments/${attachmentId}/analysis`)
-      logger.debug('✅ [AttachmentService] Retrieved attachment analysis:', attachmentId)
-      return response.data
+      const response = await apiClient.get(`/attachments/${attachmentId}/analysis`);
+      logger.debug('✅ [AttachmentService] Retrieved attachment analysis:', attachmentId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error getting attachment analysis:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error getting attachment analysis:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -67,12 +67,12 @@ class AttachmentService {
    */
   async triggerAttachmentAnalysis(attachmentId) {
     try {
-      const response = await apiClient.post(`/attachments/${attachmentId}/analyze`)
-      logger.debug('✅ [AttachmentService] Triggered attachment analysis:', attachmentId)
-      return response.data
+      const response = await apiClient.post(`/attachments/${attachmentId}/analyze`);
+      logger.debug('✅ [AttachmentService] Triggered attachment analysis:', attachmentId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error triggering attachment analysis:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error triggering attachment analysis:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -86,13 +86,13 @@ class AttachmentService {
    */
   async getEmailAttachments(emailId, includeAnalysis = false) {
     try {
-      const params = includeAnalysis ? { include_analysis: true } : {}
-      const response = await apiClient.get(`/emails/${emailId}/attachments`, { params })
-      logger.debug('✅ [AttachmentService] Retrieved email attachments:', emailId)
-      return response.data
+      const params = includeAnalysis ? { include_analysis: true } : {};
+      const response = await apiClient.get(`/emails/${emailId}/attachments`, { params });
+      logger.debug('✅ [AttachmentService] Retrieved email attachments:', emailId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error getting email attachments:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error getting email attachments:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -103,12 +103,12 @@ class AttachmentService {
    */
   async getEmailAttachmentCount(emailId) {
     try {
-      const response = await apiClient.get(`/emails/${emailId}/attachments/count`)
-      logger.debug('✅ [AttachmentService] Retrieved attachment count:', emailId)
-      return response.data
+      const response = await apiClient.get(`/emails/${emailId}/attachments/count`);
+      logger.debug('✅ [AttachmentService] Retrieved attachment count:', emailId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error getting attachment count:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error getting attachment count:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -119,12 +119,12 @@ class AttachmentService {
    */
   async analyzeEmailAttachments(emailId) {
     try {
-      const response = await apiClient.post(`/emails/${emailId}/attachments/analyze-all`)
-      logger.debug('✅ [AttachmentService] Triggered batch email analysis:', emailId)
-      return response.data
+      const response = await apiClient.post(`/emails/${emailId}/attachments/analyze-all`);
+      logger.debug('✅ [AttachmentService] Triggered batch email analysis:', emailId);
+      return response.data;
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error analyzing email attachments:', error)
-      throw this._handleError(error)
+      logger.error('❌ [AttachmentService] Error analyzing email attachments:', error);
+      throw this._handleError(error);
     }
   }
 
@@ -135,17 +135,17 @@ class AttachmentService {
    */
   _handleError(error) {
     if (error.response?.status === 404) {
-      return { error: 'Attachment or analysis not found' }
+      return { error: 'Attachment or analysis not found' };
     } else if (error.response?.status === 403) {
-      return { error: 'You do not have permission to access this attachment' }
+      return { error: 'You do not have permission to access this attachment' };
     } else if (error.response?.status === 401) {
-      return { error: 'Please log in again to access attachments' }
+      return { error: 'Please log in again to access attachments' };
     } else if (error.response?.status === 500) {
-      return { error: 'Server error processing attachment' }
+      return { error: 'Server error processing attachment' };
     } else if (error.message === 'Network Error') {
-      return { error: 'Network error - check your connection' }
+      return { error: 'Network error - check your connection' };
     }
-    return { error: error.message || 'Failed to process attachment' }
+    return { error: error.message || 'Failed to process attachment' };
   }
 
   /**
@@ -153,22 +153,22 @@ class AttachmentService {
    */
   async downloadAttachmentFile(attachmentId, filename) {
     try {
-      const blob = await this.downloadAttachment(attachmentId)
+      const blob = await this.downloadAttachment(attachmentId);
 
       // Create blob URL and trigger download
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename || 'attachment'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      logger.debug('✅ [AttachmentService] File download initiated:', filename)
+      logger.debug('✅ [AttachmentService] File download initiated:', filename);
     } catch (error) {
-      logger.error('❌ [AttachmentService] Error initiating download:', error)
-      throw error
+      logger.error('❌ [AttachmentService] Error initiating download:', error);
+      throw error;
     }
   }
 
@@ -176,32 +176,32 @@ class AttachmentService {
    * Format file size for display
    */
   formatFileSize(bytes) {
-    if (!bytes || bytes === 0) return 'Unknown'
-    const units = ['B', 'KB', 'MB', 'GB']
-    const size = Math.abs(bytes)
-    let unitIndex = 0
-    let fileSize = size
+    if (!bytes || bytes === 0) return 'Unknown';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const size = Math.abs(bytes);
+    let unitIndex = 0;
+    let fileSize = size;
     while (fileSize >= 1024 && unitIndex < units.length - 1) {
-      fileSize /= 1024
-      unitIndex++
+      fileSize /= 1024;
+      unitIndex++;
     }
-    return `${fileSize.toFixed(1)} ${units[unitIndex]}`
+    return `${fileSize.toFixed(1)} ${units[unitIndex]}`;
   }
 
   /**
    * Get file extension from filename
    */
   getFileExtension(filename) {
-    if (!filename) return ''
-    const parts = filename.split('.')
-    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : ''
+    if (!filename) return '';
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
   }
 
   /**
    * Get file icon name based on extension
    */
   getFileIcon(filename) {
-    const ext = this.getFileExtension(filename)
+    const ext = this.getFileExtension(filename);
     const iconMap = {
       pdf: 'FileText',
       doc: 'FileText',
@@ -220,9 +220,9 @@ class AttachmentService {
       mov: 'Video',
       mp3: 'Music',
       wav: 'Music',
-    }
-    return iconMap[ext] || 'FileText'
+    };
+    return iconMap[ext] || 'FileText';
   }
 }
 
-export default new AttachmentService()
+export default new AttachmentService();

@@ -1,206 +1,219 @@
-import React, { useEffect, useState } from 'react'
-import { Inbox, Plus, UserPlus, Link2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
-import { sharedInboxApi } from '../../services/api'
-import { getSubscription } from '../../services/paymentService'
-import { useAuth } from '../../context/AuthContext'
+import React, { useEffect, useState } from 'react';
+import { Inbox, Plus, UserPlus, Link2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { sharedInboxApi } from '../../services/api';
+import { getSubscription } from '../../services/paymentService';
+import { useAuth } from '../../context/AuthContext';
 
 const SharedInboxCenter = () => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  const [loading, setLoading] = useState(true)
-  const [inboxes, setInboxes] = useState([])
-  const [selectedInbox, setSelectedInbox] = useState(null)
-  const [members, setMembers] = useState([])
-  const [items, setItems] = useState([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [createForm, setCreateForm] = useState({ name: '', description: '' })
-  const [memberEmail, setMemberEmail] = useState('')
-  const [emailIdToAdd, setEmailIdToAdd] = useState('')
-  const [subscription, setSubscription] = useState(null)
-  const [subscriptionLoadFailed, setSubscriptionLoadFailed] = useState(false)
-  const [assignedToMeOnly, setAssignedToMeOnly] = useState(false)
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  const [loading, setLoading] = useState(true);
+  const [inboxes, setInboxes] = useState([]);
+  const [selectedInbox, setSelectedInbox] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [items, setItems] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [createForm, setCreateForm] = useState({ name: '', description: '' });
+  const [memberEmail, setMemberEmail] = useState('');
+  const [emailIdToAdd, setEmailIdToAdd] = useState('');
+  const [subscription, setSubscription] = useState(null);
+  const [subscriptionLoadFailed, setSubscriptionLoadFailed] = useState(false);
+  const [assignedToMeOnly, setAssignedToMeOnly] = useState(false);
 
   const loadInboxes = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
     try {
-      const res = await sharedInboxApi.list()
-      const items = res.data?.items || []
-      setInboxes(items)
-      if (items.length > 0 && !selectedInbox) setSelectedInbox(items[0])
+      const res = await sharedInboxApi.list();
+      const items = res.data?.items || [];
+      setInboxes(items);
+      if (items.length > 0 && !selectedInbox) setSelectedInbox(items[0]);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load shared inboxes')
+      setError(e?.response?.data?.detail || 'Failed to load shared inboxes');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadInboxDetails = async (inboxId) => {
     try {
-      const [mRes, eRes] = await Promise.all([sharedInboxApi.listMembers(inboxId), sharedInboxApi.listEmails(inboxId)])
-      setMembers(mRes.data?.members || [])
-      setItems(eRes.data?.items || [])
+      const [mRes, eRes] = await Promise.all([
+        sharedInboxApi.listMembers(inboxId),
+        sharedInboxApi.listEmails(inboxId),
+      ]);
+      setMembers(mRes.data?.members || []);
+      setItems(eRes.data?.items || []);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load shared inbox details')
+      setError(e?.response?.data?.detail || 'Failed to load shared inbox details');
     }
-  }
+  };
 
   useEffect(() => {
-    loadInboxes()
-  }, [])
+    loadInboxes();
+  }, []);
 
   useEffect(() => {
     const loadSubscription = async () => {
       try {
-        const data = await getSubscription()
-        setSubscription(data || null)
-        setSubscriptionLoadFailed(false)
+        const data = await getSubscription();
+        setSubscription(data || null);
+        setSubscriptionLoadFailed(false);
       } catch (_e) {
-        setSubscription(null)
-        setSubscriptionLoadFailed(true)
+        setSubscription(null);
+        setSubscriptionLoadFailed(true);
       }
-    }
-    loadSubscription()
-  }, [])
+    };
+    loadSubscription();
+  }, []);
 
   useEffect(() => {
-    if (selectedInbox?.id) loadInboxDetails(selectedInbox.id)
-  }, [selectedInbox?.id])
+    if (selectedInbox?.id) loadInboxDetails(selectedInbox.id);
+  }, [selectedInbox?.id]);
 
   const sharedInboxPlanLimits = {
     team: 5,
     enterprise: 100,
-  }
+  };
 
-  const currentPlanId = subscription?.plan_id || null
-  const hasSharedInboxFeature = isSuperAdmin || currentPlanId === 'team' || currentPlanId === 'enterprise'
-  const sharedInboxLimit = currentPlanId ? sharedInboxPlanLimits[currentPlanId] || 0 : 0
-  const ownedInboxCount = inboxes.filter((i) => i.member_role === 'owner').length
-  const selectedRole = selectedInbox?.member_role || null
-  const canManageMembers = selectedRole === 'owner' || selectedRole === 'admin'
-  const teamMemberLimit = Number(subscription?.team_members_limit || 0)
-  const memberCount = members.length
+  const currentPlanId = subscription?.plan_id || null;
+  const hasSharedInboxFeature =
+    isSuperAdmin || currentPlanId === 'team' || currentPlanId === 'enterprise';
+  const sharedInboxLimit = currentPlanId ? sharedInboxPlanLimits[currentPlanId] || 0 : 0;
+  const ownedInboxCount = inboxes.filter((i) => i.member_role === 'owner').length;
+  const selectedRole = selectedInbox?.member_role || null;
+  const canManageMembers = selectedRole === 'owner' || selectedRole === 'admin';
+  const teamMemberLimit = Number(subscription?.team_members_limit || 0);
+  const memberCount = members.length;
 
   const createInbox = async () => {
-    if (!createForm.name.trim()) return
-    setError('')
-    setSuccess('')
+    if (!createForm.name.trim()) return;
+    setError('');
+    setSuccess('');
 
     if (!isSuperAdmin && !subscriptionLoadFailed && !hasSharedInboxFeature) {
-      setError('Your current plan does not include shared inbox. Upgrade to Team or Enterprise.')
-      return
+      setError('Your current plan does not include shared inbox. Upgrade to Team or Enterprise.');
+      return;
     }
     if (!isSuperAdmin && !subscriptionLoadFailed && ownedInboxCount >= sharedInboxLimit) {
-      setError(`Plan limit reached: ${sharedInboxLimit} shared inbox(es) allowed.`)
-      return
+      setError(`Plan limit reached: ${sharedInboxLimit} shared inbox(es) allowed.`);
+      return;
     }
 
     try {
-      await sharedInboxApi.create(createForm)
-      setCreateForm({ name: '', description: '' })
-      setSuccess('Shared inbox created.')
-      await loadInboxes()
+      await sharedInboxApi.create(createForm);
+      setCreateForm({ name: '', description: '' });
+      setSuccess('Shared inbox created.');
+      await loadInboxes();
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to create shared inbox')
+      setError(e?.response?.data?.detail || 'Failed to create shared inbox');
     }
-  }
+  };
 
   const addMember = async () => {
-    if (!selectedInbox?.id || !memberEmail.trim()) return
-    setError('')
-    setSuccess('')
+    if (!selectedInbox?.id || !memberEmail.trim()) return;
+    setError('');
+    setSuccess('');
 
     if (!canManageMembers) {
-      setError('Only owner or admin can add members to this shared inbox.')
-      return
+      setError('Only owner or admin can add members to this shared inbox.');
+      return;
     }
     if (!isSuperAdmin && !subscriptionLoadFailed && !hasSharedInboxFeature) {
-      setError('Your current plan does not include shared inbox. Upgrade to Team or Enterprise.')
-      return
+      setError('Your current plan does not include shared inbox. Upgrade to Team or Enterprise.');
+      return;
     }
-    if (!isSuperAdmin && !subscriptionLoadFailed && teamMemberLimit > 0 && memberCount >= teamMemberLimit) {
-      setError(`Team seat limit reached: ${teamMemberLimit} member(s) allowed for your plan.`)
-      return
+    if (
+      !isSuperAdmin &&
+      !subscriptionLoadFailed &&
+      teamMemberLimit > 0 &&
+      memberCount >= teamMemberLimit
+    ) {
+      setError(`Team seat limit reached: ${teamMemberLimit} member(s) allowed for your plan.`);
+      return;
     }
 
     try {
-      await sharedInboxApi.addMember(selectedInbox.id, { user_email: memberEmail.trim() })
-      setMemberEmail('')
-      setSuccess('Member added to shared inbox.')
-      await loadInboxDetails(selectedInbox.id)
+      await sharedInboxApi.addMember(selectedInbox.id, { user_email: memberEmail.trim() });
+      setMemberEmail('');
+      setSuccess('Member added to shared inbox.');
+      await loadInboxDetails(selectedInbox.id);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to add member')
+      setError(e?.response?.data?.detail || 'Failed to add member');
     }
-  }
+  };
 
   const addEmail = async () => {
-    if (!selectedInbox?.id || !emailIdToAdd.trim()) return
-    setError('')
-    setSuccess('')
+    if (!selectedInbox?.id || !emailIdToAdd.trim()) return;
+    setError('');
+    setSuccess('');
     try {
-      await sharedInboxApi.addEmail(selectedInbox.id, emailIdToAdd.trim())
-      setEmailIdToAdd('')
-      setSuccess('Email added to shared inbox.')
-      await loadInboxDetails(selectedInbox.id)
+      await sharedInboxApi.addEmail(selectedInbox.id, emailIdToAdd.trim());
+      setEmailIdToAdd('');
+      setSuccess('Email added to shared inbox.');
+      await loadInboxDetails(selectedInbox.id);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to add email')
+      setError(e?.response?.data?.detail || 'Failed to add email');
     }
-  }
+  };
 
   const setStatus = async (emailId, status) => {
-    if (!selectedInbox?.id) return
+    if (!selectedInbox?.id) return;
     try {
-      await sharedInboxApi.updateEmail(selectedInbox.id, emailId, { status })
-      await loadInboxDetails(selectedInbox.id)
+      await sharedInboxApi.updateEmail(selectedInbox.id, emailId, { status });
+      await loadInboxDetails(selectedInbox.id);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to update status')
+      setError(e?.response?.data?.detail || 'Failed to update status');
     }
-  }
+  };
 
   const setAssignment = async (emailId, assignedToUserEmail) => {
-    if (!selectedInbox?.id) return
-    setError('')
+    if (!selectedInbox?.id) return;
+    setError('');
     if (!canManageMembers) {
-      setError('Only owner or admin can assign inbox items.')
-      return
+      setError('Only owner or admin can assign inbox items.');
+      return;
     }
     try {
-      await sharedInboxApi.updateEmail(selectedInbox.id, emailId, { assigned_to_user_email: assignedToUserEmail })
-      await loadInboxDetails(selectedInbox.id)
+      await sharedInboxApi.updateEmail(selectedInbox.id, emailId, {
+        assigned_to_user_email: assignedToUserEmail,
+      });
+      await loadInboxDetails(selectedInbox.id);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to update assignee')
+      setError(e?.response?.data?.detail || 'Failed to update assignee');
     }
-  }
+  };
 
   const memberEmailById = members.reduce((acc, m) => {
-    acc[m.user_id] = m.email
-    return acc
-  }, {})
+    acc[m.user_id] = m.email;
+    return acc;
+  }, {});
 
   const memberDisplayByEmail = members.reduce((acc, m) => {
-    acc[m.email] = m.full_name || m.email
-    return acc
-  }, {})
+    acc[m.email] = m.full_name || m.email;
+    return acc;
+  }, {});
 
-  const currentUserId = user?.id || null
-  const currentUserEmail = user?.email || null
-  const currentMember = members.find((m) => m.email === currentUserEmail)
-  const currentMemberId = currentMember?.user_id || null
+  const currentUserId = user?.id || null;
+  const currentUserEmail = user?.email || null;
+  const currentMember = members.find((m) => m.email === currentUserEmail);
+  const currentMemberId = currentMember?.user_id || null;
   const filteredItems = assignedToMeOnly
     ? items.filter((item) => {
-        const assignee = item?.shared?.assigned_to_user_id
-        if (!assignee) return false
-        return assignee === currentUserId || assignee === currentMemberId
+        const assignee = item?.shared?.assigned_to_user_id;
+        if (!assignee) return false;
+        return assignee === currentUserId || assignee === currentMemberId;
       })
-    : items
+    : items;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Shared Inbox</h1>
-          <p className="text-sm text-slate-500">Collaborative inbox for team triage and assignment.</p>
+          <p className="text-sm text-slate-500">
+            Collaborative inbox for team triage and assignment.
+          </p>
         </div>
         <button
           onClick={loadInboxes}
@@ -250,11 +263,18 @@ const SharedInboxCenter = () => {
             Create
           </button>
           {!isSuperAdmin && !subscriptionLoadFailed && !hasSharedInboxFeature && (
-            <p className="text-xs text-amber-700">Team or Enterprise plan required for shared inbox.</p>
+            <p className="text-xs text-amber-700">
+              Team or Enterprise plan required for shared inbox.
+            </p>
           )}
-          {!isSuperAdmin && !subscriptionLoadFailed && hasSharedInboxFeature && ownedInboxCount >= sharedInboxLimit && (
-            <p className="text-xs text-amber-700">You reached your shared inbox plan limit ({sharedInboxLimit}).</p>
-          )}
+          {!isSuperAdmin &&
+            !subscriptionLoadFailed &&
+            hasSharedInboxFeature &&
+            ownedInboxCount >= sharedInboxLimit && (
+              <p className="text-xs text-amber-700">
+                You reached your shared inbox plan limit ({sharedInboxLimit}).
+              </p>
+            )}
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 lg:col-span-2">
@@ -270,16 +290,22 @@ const SharedInboxCenter = () => {
                   key={inbox.id}
                   onClick={() => setSelectedInbox(inbox)}
                   className={`rounded-lg border p-3 text-left ${
-                    selectedInbox?.id === inbox.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'
+                    selectedInbox?.id === inbox.id
+                      ? 'border-indigo-500 bg-indigo-50'
+                      : 'border-slate-200 bg-white'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Inbox className="h-4 w-4 text-indigo-600" />
                     <p className="font-medium text-slate-900">{inbox.name}</p>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{inbox.description || 'No description'}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {inbox.description || 'No description'}
+                  </p>
                   <p className="text-xs text-slate-600 mt-1">Items: {inbox.email_count || 0}</p>
-                  <p className="text-xs text-slate-600 mt-1">Role: {inbox.member_role || 'member'}</p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Role: {inbox.member_role || 'member'}
+                  </p>
                 </button>
               ))}
             </div>
@@ -302,20 +328,27 @@ const SharedInboxCenter = () => {
                 onClick={addMember}
                 disabled={
                   !canManageMembers ||
-                  (!isSuperAdmin && !subscriptionLoadFailed && teamMemberLimit > 0 && memberCount >= teamMemberLimit)
+                  (!isSuperAdmin &&
+                    !subscriptionLoadFailed &&
+                    teamMemberLimit > 0 &&
+                    memberCount >= teamMemberLimit)
                 }
                 className="rounded-lg bg-slate-900 px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <UserPlus className="h-4 w-4" />
               </button>
             </div>
-            {!canManageMembers && <p className="text-xs text-amber-700">Only owner/admin can add members.</p>}
+            {!canManageMembers && (
+              <p className="text-xs text-amber-700">Only owner/admin can add members.</p>
+            )}
             {canManageMembers &&
               !isSuperAdmin &&
               !subscriptionLoadFailed &&
               teamMemberLimit > 0 &&
               memberCount >= teamMemberLimit && (
-                <p className="text-xs text-amber-700">Team seat limit reached ({teamMemberLimit}).</p>
+                <p className="text-xs text-amber-700">
+                  Team seat limit reached ({teamMemberLimit}).
+                </p>
               )}
             <div className="space-y-2 text-sm">
               {members.map((m) => (
@@ -344,7 +377,9 @@ const SharedInboxCenter = () => {
               </button>
             </div>
             {!canManageMembers && (
-              <p className="text-xs text-amber-700">Assignment changes are limited to owner/admin.</p>
+              <p className="text-xs text-amber-700">
+                Assignment changes are limited to owner/admin.
+              </p>
             )}
             <div className="flex gap-2">
               <input
@@ -365,7 +400,9 @@ const SharedInboxCenter = () => {
                 <div key={item.shared.id} className="rounded-lg border border-slate-200 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.email.subject || '(No subject)'}</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.email.subject || '(No subject)'}
+                      </p>
                       <p className="text-xs text-slate-500">{item.email.sender}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -398,7 +435,9 @@ const SharedInboxCenter = () => {
                     ) : (
                       <span className="text-xs text-slate-700">
                         {item.shared.assigned_to_user_id
-                          ? memberDisplayByEmail[memberEmailById[item.shared.assigned_to_user_id]] || 'assigned'
+                          ? memberDisplayByEmail[
+                              memberEmailById[item.shared.assigned_to_user_id]
+                            ] || 'assigned'
                           : 'unassigned'}
                       </span>
                     )}
@@ -408,7 +447,9 @@ const SharedInboxCenter = () => {
               ))}
               {filteredItems.length === 0 && (
                 <p className="text-sm text-slate-500">
-                  {assignedToMeOnly ? 'No items currently assigned to you.' : 'No shared items yet.'}
+                  {assignedToMeOnly
+                    ? 'No items currently assigned to you.'
+                    : 'No shared items yet.'}
                 </p>
               )}
             </div>
@@ -416,7 +457,7 @@ const SharedInboxCenter = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default SharedInboxCenter
+export default SharedInboxCenter;

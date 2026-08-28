@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Try to import Elasticsearch client
 try:
     from elasticsearch import Elasticsearch  # type: ignore[import]
-    from elasticsearch.helpers import bulk  # type: ignore[import]
 
     HAS_ELASTICSEARCH = True
 except ImportError:
@@ -74,7 +73,11 @@ class ElasticsearchService:
                 "settings": {
                     "number_of_shards": 1,
                     "number_of_replicas": 0,
-                    "analysis": {"analyzer": {"email_analyzer": {"type": "standard", "stopwords": "_english_"}}},
+                    "analysis": {
+                        "analyzer": {
+                            "email_analyzer": {"type": "standard", "stopwords": "_english_"}
+                        }
+                    },
                 },
                 "mappings": {
                     "properties": {
@@ -163,7 +166,12 @@ class ElasticsearchService:
             return False
 
     async def search(
-        self, user_id: str, query: str, limit: int = 50, offset: int = 0, filters: Optional[Dict[str, Any]] = None
+        self,
+        user_id: str,
+        query: str,
+        limit: int = 50,
+        offset: int = 0,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Full-text search across user's emails.
@@ -212,17 +220,30 @@ class ElasticsearchService:
             # Apply optional filters
             if filters:
                 if "category" in filters:
-                    es_query["query"]["bool"]["must"].append({"term": {"ai_category": filters["category"]}})
+                    es_query["query"]["bool"]["must"].append(
+                        {"term": {"ai_category": filters["category"]}}
+                    )
 
                 if "is_read" in filters:
-                    es_query["query"]["bool"]["must"].append({"term": {"is_read": filters["is_read"]}})
+                    es_query["query"]["bool"]["must"].append(
+                        {"term": {"is_read": filters["is_read"]}}
+                    )
 
                 if "is_flagged" in filters:
-                    es_query["query"]["bool"]["must"].append({"term": {"is_flagged": filters["is_flagged"]}})
+                    es_query["query"]["bool"]["must"].append(
+                        {"term": {"is_flagged": filters["is_flagged"]}}
+                    )
 
                 if "date_from" in filters and "date_to" in filters:
                     es_query["query"]["bool"]["must"].append(
-                        {"range": {"received_at": {"gte": filters["date_from"], "lte": filters["date_to"]}}}
+                        {
+                            "range": {
+                                "received_at": {
+                                    "gte": filters["date_from"],
+                                    "lte": filters["date_to"],
+                                }
+                            }
+                        }
                     )
 
             # Execute search
@@ -239,12 +260,19 @@ class ElasticsearchService:
                         "sender": source["sender"],
                         "received_at": source["received_at"],
                         "ai_category": source.get("ai_category"),
-                        "snippet": (source["body_text"][:200] + "...") if source["body_text"] else "",
+                        "snippet": (source["body_text"][:200] + "...")
+                        if source["body_text"]
+                        else "",
                         "score": hit["_score"],
                     }
                 )
 
-            return {"hits": hits, "total": response["hits"]["total"]["value"], "offset": offset, "limit": limit}
+            return {
+                "hits": hits,
+                "total": response["hits"]["total"]["value"],
+                "offset": offset,
+                "limit": limit,
+            }
 
         except Exception as e:
             logger.error(f"❌ Search failed: {e}")
@@ -316,7 +344,9 @@ class ElasticsearchService:
             return {
                 "enabled": True,
                 "document_count": stats["indices"][self.INDEX_NAME]["primaries"]["docs"]["count"],
-                "index_size_bytes": stats["indices"][self.INDEX_NAME]["primaries"]["store"]["size_in_bytes"],
+                "index_size_bytes": stats["indices"][self.INDEX_NAME]["primaries"]["store"][
+                    "size_in_bytes"
+                ],
                 "status": stats["indices"][self.INDEX_NAME]["status"],
             }
 

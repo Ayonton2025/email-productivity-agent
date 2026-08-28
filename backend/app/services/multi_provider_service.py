@@ -97,7 +97,12 @@ class GmailProvider(BaseEmailProvider):
             full_messages = []
             for msg in messages:
                 try:
-                    message = service.users().messages().get(userId="me", id=msg["id"], format="full").execute()
+                    message = (
+                        service.users()
+                        .messages()
+                        .get(userId="me", id=msg["id"], format="full")
+                        .execute()
+                    )
                     full_messages.append(message)
                 except Exception as e:
                     logger.warning(f"Failed to fetch message {msg['id']}: {e}")
@@ -118,7 +123,9 @@ class GmailProvider(BaseEmailProvider):
             creds = Credentials(token=self.access_token)
             service = build("gmail", "v1", credentials=creds)
 
-            message = service.users().messages().get(userId="me", id=message_id, format="full").execute()
+            message = (
+                service.users().messages().get(userId="me", id=message_id, format="full").execute()
+            )
 
             return message
 
@@ -135,7 +142,9 @@ class GmailProvider(BaseEmailProvider):
             creds = Credentials(token=self.access_token)
             service = build("gmail", "v1", credentials=creds)
 
-            service.users().messages().modify(userId="me", id=message_id, body={"removeLabelIds": ["UNREAD"]}).execute()
+            service.users().messages().modify(
+                userId="me", id=message_id, body={"removeLabelIds": ["UNREAD"]}
+            ).execute()
 
             logger.debug(f"✅ Marked Gmail message {message_id} as read")
             return True
@@ -242,7 +251,10 @@ class OutlookProvider(BaseEmailProvider):
             import aiohttp  # type: ignore[import]
 
             async with aiohttp.ClientSession() as session:
-                headers = {"Authorization": f"Bearer {self.access_token}", "Content-Type": "application/json"}
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
 
                 url = f"{self.base_url}/me/messages/{message_id}"
                 body = {"isRead": True}
@@ -265,7 +277,10 @@ class OutlookProvider(BaseEmailProvider):
             import aiohttp  # type: ignore[import]
 
             async with aiohttp.ClientSession() as session:
-                headers = {"Authorization": f"Bearer {self.access_token}", "Content-Type": "application/json"}
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
 
                 url = f"{self.base_url}/subscriptions"
                 body = {
@@ -367,7 +382,10 @@ class YahooProvider(BaseEmailProvider):
             import aiohttp  # type: ignore[import]
 
             async with aiohttp.ClientSession() as session:
-                headers = {"Authorization": f"Bearer {self.access_token}", "Content-Type": "application/json"}
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
 
                 url = f"{self.base_url}/user/messages/{message_id}"
                 body = {"read": True}
@@ -390,7 +408,10 @@ class YahooProvider(BaseEmailProvider):
             import aiohttp  # type: ignore[import]
 
             async with aiohttp.ClientSession() as session:
-                headers = {"Authorization": f"Bearer {self.access_token}", "Content-Type": "application/json"}
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
 
                 url = f"{self.base_url}/user/register_webhook"
                 body = {"webhookUrl": webhook_url}

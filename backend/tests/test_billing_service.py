@@ -10,7 +10,9 @@ from app.services.billing_service import PaymentService, PaystackService, Subscr
 
 @pytest.mark.asyncio
 async def test_mock_payment_initialization_success():
-    result = await PaystackService().initialize_payment("buyer@example.test", 1200, "ref-success", currency="USD")
+    result = await PaystackService().initialize_payment(
+        "buyer@example.test", 1200, "ref-success", currency="USD"
+    )
     assert result["success"] is True
     assert result["payment_status"] == "completed"
 
@@ -33,7 +35,10 @@ async def test_payment_initialization_maps_provider_200(monkeypatch):
             return None
 
         def json(self):
-            return {"status": True, "data": {"authorization_url": "https://pay.test", "access_code": "access"}}
+            return {
+                "status": True,
+                "data": {"authorization_url": "https://pay.test", "access_code": "access"},
+            }
 
     async def post(*args, **kwargs):
         return Response()
@@ -91,9 +96,13 @@ async def test_create_subscription_persists_plan_and_credits(db_session):
     user = User(id="create-sub", email="create@example.test", password_hash="hash")
     db_session.add(user)
     await db_session.flush()
-    subscription = await SubscriptionService().create_subscription(user.id, "tenant", "plus", db_session)
+    subscription = await SubscriptionService().create_subscription(
+        user.id, "tenant", "plus", db_session
+    )
     await db_session.commit()
-    credits = (await db_session.execute(select(AICredits).where(AICredits.user_id == user.id))).scalar_one()
+    credits = (
+        await db_session.execute(select(AICredits).where(AICredits.user_id == user.id))
+    ).scalar_one()
     assert subscription.plan_id == "plus"
     assert credits.balance == SUBSCRIPTION_PLANS["plus"]["ai_credits_monthly"]
 
@@ -121,7 +130,9 @@ async def test_renew_subscription_advances_period(db_session):
     user = User(id="renew-sub", email="renew@example.test", password_hash="hash")
     db_session.add(user)
     await db_session.flush()
-    subscription = await SubscriptionService().create_subscription(user.id, "tenant", "plus", db_session)
+    subscription = await SubscriptionService().create_subscription(
+        user.id, "tenant", "plus", db_session
+    )
     old_end = subscription.current_period_end
     subscription.status = "cancelled"
     renewed = await SubscriptionService().renew_subscription(user.id, db_session)

@@ -27,7 +27,11 @@ async def _cleanup_old_data(self):
 
             result = await session.execute(
                 select(Email).where(
-                    and_(Email.received_at < cutoff_date, Email.ai_category != "URGENT", Email.is_flagged == False)
+                    and_(
+                        Email.received_at < cutoff_date,
+                        Email.ai_category != "URGENT",
+                        Email.is_flagged == False,
+                    )
                 )
             )
             old_emails = result.scalars().all()

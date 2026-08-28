@@ -1,8 +1,19 @@
-import React, { useState } from 'react'
-import { X, Zap, Lock, ArrowRight, Star, Check, AlertTriangle, Mail, Users, Workflow } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import './PremiumPrompt.css'
+import React, { useState } from 'react';
+import {
+  X,
+  Zap,
+  Lock,
+  ArrowRight,
+  Star,
+  Check,
+  AlertTriangle,
+  Mail,
+  Users,
+  Workflow,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import './PremiumPrompt.css';
 
 export const PremiumPrompt = ({
   isOpen,
@@ -11,12 +22,12 @@ export const PremiumPrompt = ({
   currentUsage = 0,
   monthlyLimit = 0,
 }) => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [selectedPlan] = useState('plus')
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [selectedPlan] = useState('plus');
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
 
-  if (!isOpen || isSuperAdmin) return null
+  if (!isOpen || isSuperAdmin) return null;
 
   const limitMessages = {
     credits: {
@@ -33,24 +44,26 @@ export const PremiumPrompt = ({
     },
     contacts: {
       title: 'Contact Limit Reached',
-      description: "You've reached the maximum number of contacts. Upgrade to manage more relationships.",
+      description:
+        "You've reached the maximum number of contacts. Upgrade to manage more relationships.",
       icon: Users,
       color: 'from-green-400 to-emerald-500',
     },
     workflows: {
       title: 'Workflow Limit Reached',
-      description: "You've reached the maximum number of automated workflows. Upgrade for more automation.",
+      description:
+        "You've reached the maximum number of automated workflows. Upgrade for more automation.",
       icon: Workflow,
       color: 'from-purple-400 to-pink-500',
     },
-  }
+  };
 
-  const message = limitMessages[limitType] || limitMessages.credits
-  const IconComponent = message.icon
+  const message = limitMessages[limitType] || limitMessages.credits;
+  const IconComponent = message.icon;
 
   // Non-blocking top banner for credits
   if (limitType === 'credits') {
-    const percentage = monthlyLimit ? (currentUsage / monthlyLimit) * 100 : 100
+    const percentage = monthlyLimit ? (currentUsage / monthlyLimit) * 100 : 100;
     return (
       <div className="premium-top-banner" role="status">
         <div className="banner-inner">
@@ -68,16 +81,23 @@ export const PremiumPrompt = ({
             </div>
           </div>
           <div className="banner-actions">
-            <button className="btn btn-primary" onClick={() => navigate('/billing/upgrade?plan=plus')}>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate('/billing/upgrade?plan=plus')}
+            >
               Upgrade
             </button>
-            <button className="btn btn-outline" onClick={() => onClose(limitType, true)} style={{ marginLeft: 8 }}>
+            <button
+              className="btn btn-outline"
+              onClick={() => onClose(limitType, true)}
+              style={{ marginLeft: 8 }}
+            >
               Dismiss
             </button>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Modal fallback for other limit types
@@ -120,7 +140,10 @@ export const PremiumPrompt = ({
                   <span>Email Analytics</span>
                 </li>
               </ul>
-              <button className="btn btn-primary" onClick={() => navigate('/billing/upgrade?plan=plus')}>
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate('/billing/upgrade?plan=plus')}
+              >
                 Upgrade to Plus
               </button>
             </div>
@@ -149,7 +172,10 @@ export const PremiumPrompt = ({
                   <span>Advanced Analytics</span>
                 </li>
               </ul>
-              <button className="btn btn-primary" onClick={() => navigate('/billing/upgrade?plan=professional')}>
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate('/billing/upgrade?plan=professional')}
+              >
                 Upgrade to Professional
               </button>
             </div>
@@ -165,15 +191,15 @@ export const PremiumPrompt = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const CreditWarningBanner = ({ creditsUsed, creditsLimit, onUpgradeClick }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  const percentage = creditsLimit ? (creditsUsed / creditsLimit) * 100 : 0
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  const percentage = creditsLimit ? (creditsUsed / creditsLimit) * 100 : 0;
 
-  if (isSuperAdmin || percentage < 80) return null
+  if (isSuperAdmin || percentage < 80) return null;
 
   return (
     <div className="credit-warning-banner">
@@ -199,8 +225,8 @@ export const CreditWarningBanner = ({ creditsUsed, creditsLimit, onUpgradeClick 
         <div className="progress-fill" style={{ width: `${Math.min(percentage, 100)}%` }}></div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const SubscribeButton = ({
   variant = 'floating', // 'floating', 'inline', 'outline'
@@ -208,16 +234,16 @@ export const SubscribeButton = ({
   showIcon = true,
   label = 'Upgrade to Premium',
 }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
   if (variant === 'floating') {
     return (
       <button className="subscribe-button-floating" onClick={onClick} title={label}>
         <Star size={20} />
         <span>{label}</span>
       </button>
-    )
+    );
   }
 
   if (variant === 'inline') {
@@ -226,7 +252,7 @@ export const SubscribeButton = ({
         {showIcon && <Lock size={16} />}
         <span>{label}</span>
       </button>
-    )
+    );
   }
 
   return (
@@ -234,13 +260,13 @@ export const SubscribeButton = ({
       {showIcon && <Zap size={16} />}
       <span>{label}</span>
     </button>
-  )
-}
+  );
+};
 
 export const FeatureLockBanner = ({ featureName, requiredPlan = 'plus', onUpgradeClick }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
   return (
     <div className="feature-lock-banner">
       <div className="lock-icon">
@@ -248,11 +274,12 @@ export const FeatureLockBanner = ({ featureName, requiredPlan = 'plus', onUpgrad
       </div>
       <h3>Premium Feature</h3>
       <p>
-        <strong>{featureName}</strong> is available in the <strong>{requiredPlan}</strong> plan and above.
+        <strong>{featureName}</strong> is available in the <strong>{requiredPlan}</strong> plan and
+        above.
       </p>
       <button className="btn btn-primary" onClick={onUpgradeClick}>
         Upgrade Now <ArrowRight size={16} />
       </button>
     </div>
-  )
-}
+  );
+};

@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from app.models.database import Email
 from app.services.llm_service import LLMService
@@ -41,8 +40,12 @@ class EmailService(
 
             # First, check if user already has emails to avoid duplicates - MORE ROBUST CHECK
             existing_emails = await self.get_user_emails(user_id)
-            if existing_emails and len(existing_emails) >= 5:  # Changed from 0 to 5 to be more conservative
-                logger.info(f"📧 [EmailService] User already has {len(existing_emails)} emails, skipping mock load")
+            if (
+                existing_emails and len(existing_emails) >= 5
+            ):  # Changed from 0 to 5 to be more conservative
+                logger.info(
+                    f"📧 [EmailService] User already has {len(existing_emails)} emails, skipping mock load"
+                )
                 return existing_emails
 
             # Try multiple possible paths for the mock data file
@@ -71,7 +74,9 @@ class EmailService(
                         continue
 
             if not file_found:
-                logger.error(f"❌ [EmailService] Mock data file not found in any location. Tried: {possible_paths}")
+                logger.error(
+                    f"❌ [EmailService] Mock data file not found in any location. Tried: {possible_paths}"
+                )
                 # Use hardcoded mock data as fallback - WITH ALL 20 EMAILS
                 mock_emails = self._get_hardcoded_mock_emails()
 
@@ -87,7 +92,9 @@ class EmailService(
 
                 if existing_similar:
                     duplicate_count += 1
-                    logger.info(f"⚠️ [EmailService] Skipping duplicate email: {email_data.get('subject', 'No Subject')}")
+                    logger.info(
+                        f"⚠️ [EmailService] Skipping duplicate email: {email_data.get('subject', 'No Subject')}"
+                    )
                     processed_emails.append(existing_similar)
                     continue
 
@@ -113,7 +120,9 @@ class EmailService(
             if duplicate_count > 0:
                 logger.info(f"⚠️ [EmailService] Skipped {duplicate_count} duplicate emails")
 
-            logger.info(f"✅ [EmailService] Successfully loaded {len(processed_emails)} mock emails")
+            logger.info(
+                f"✅ [EmailService] Successfully loaded {len(processed_emails)} mock emails"
+            )
             return processed_emails
 
         except Exception as e:
@@ -123,7 +132,9 @@ class EmailService(
             logger.info(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
             return []
 
-    async def process_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+    async def process_email(
+        self, email_data: Dict[str, Any], user_id: str = None
+    ) -> Dict[str, Any]:
         """Validate, deduplicate, and persist one inbound email."""
         normalized = validate_email_payload(email_data)
         duplicate = await self._check_duplicate_email(user_id, normalized)
@@ -131,10 +142,14 @@ class EmailService(
             return duplicate
         return await self.process_single_email(normalized, user_id)
 
-    async def process_single_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+    async def process_single_email(
+        self, email_data: Dict[str, Any], user_id: str = None
+    ) -> Dict[str, Any]:
         """Process a single email and save to database"""
         try:
-            logger.info(f"📧 [EmailService] Processing email: {email_data.get('subject', 'No Subject')}")
+            logger.info(
+                f"📧 [EmailService] Processing email: {email_data.get('subject', 'No Subject')}"
+            )
 
             # Handle timestamp conversion
             raw_ts = email_data.get("timestamp", datetime.utcnow().isoformat())
@@ -150,7 +165,9 @@ class EmailService(
             # If we have an LLM service and want to regenerate AI data
             if self.llm_service and not category:
                 try:
-                    categorization_prompt = await self.prompt_service.get_active_prompt("categorization")
+                    categorization_prompt = await self.prompt_service.get_active_prompt(
+                        "categorization"
+                    )
                     action_prompt = await self.prompt_service.get_active_prompt("action_extraction")
                     summary_prompt = await self.prompt_service.get_active_prompt("summary")
 
@@ -158,7 +175,9 @@ class EmailService(
 
                     # Run AI processing in parallel
                     tasks = [
-                        self.llm_service.process_prompt(categorization_prompt.template, email_content),
+                        self.llm_service.process_prompt(
+                            categorization_prompt.template, email_content
+                        ),
                         self.llm_service.process_prompt(action_prompt.template, email_content),
                         self.llm_service.process_prompt(summary_prompt.template, email_content),
                     ]
@@ -167,7 +186,9 @@ class EmailService(
 
                     # Parse action items
                     try:
-                        if action_items_raw.strip().startswith("{") or action_items_raw.strip().startswith("["):
+                        if action_items_raw.strip().startswith(
+                            "{"
+                        ) or action_items_raw.strip().startswith("["):
                             action_items = json.loads(action_items_raw)
                         else:
                             action_items = [{"task": action_items_raw, "deadline": None}]

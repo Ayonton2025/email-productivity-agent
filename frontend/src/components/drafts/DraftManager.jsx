@@ -1,19 +1,33 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { Plus, Save, Edit, Trash2, Send, Copy, Eye, EyeOff, Search, Clock, User, Mail, FileText } from 'lucide-react'
-import { draftApi } from '../../services/api'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import {
+  Plus,
+  Save,
+  Edit,
+  Trash2,
+  Send,
+  Copy,
+  Eye,
+  EyeOff,
+  Search,
+  Clock,
+  User,
+  Mail,
+  FileText,
+} from 'lucide-react';
+import { draftApi } from '../../services/api';
 
 const DraftManager = () => {
-  const [drafts, setDrafts] = useState([])
-  const [selectedDraft, setSelectedDraft] = useState(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [showPreview, setShowPreview] = useState(true)
-  const [loading, setLoading] = useState(true)
+  const [drafts, setDrafts] = useState([]);
+  const [selectedDraft, setSelectedDraft] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [showPreview, setShowPreview] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const normalizeDraft = (draft) => {
-    const metadata = draft?.metadata || {}
+    const metadata = draft?.metadata || {};
     return {
       ...draft,
       subject: draft?.subject || '',
@@ -27,47 +41,47 @@ const DraftManager = () => {
         sentiment: metadata.sentiment || 'neutral',
         ...metadata,
       },
-    }
-  }
+    };
+  };
 
   const loadDrafts = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await draftApi.getDrafts()
-      const list = Array.isArray(res?.data) ? res.data.map(normalizeDraft) : []
-      setDrafts(list)
+      const res = await draftApi.getDrafts();
+      const list = Array.isArray(res?.data) ? res.data.map(normalizeDraft) : [];
+      setDrafts(list);
       setSelectedDraft((prev) => {
-        if (!list.length) return null
-        if (!prev) return list[0]
-        return list.find((d) => d.id === prev.id) || list[0]
-      })
+        if (!list.length) return null;
+        if (!prev) return list[0];
+        return list.find((d) => d.id === prev.id) || list[0];
+      });
     } catch (error) {
-      logger.error('Failed to load drafts:', error)
-      setDrafts([])
-      setSelectedDraft(null)
+      logger.error('Failed to load drafts:', error);
+      setDrafts([]);
+      setSelectedDraft(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadDrafts()
-  }, [])
+    loadDrafts();
+  }, []);
 
   const filteredDrafts = drafts.filter((draft) => {
     const matchesSearch =
       draft.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       draft.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      draft.body.toLowerCase().includes(searchTerm.toLowerCase())
+      draft.body.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === 'all' || draft.status === filterStatus
+    const matchesStatus = filterStatus === 'all' || draft.status === filterStatus;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const handleCreateDraft = async () => {
     try {
-      const now = new Date().toISOString()
+      const now = new Date().toISOString();
       const payload = {
         subject: 'Untitled Draft',
         body: '',
@@ -79,67 +93,67 @@ const DraftManager = () => {
           word_count: 0,
           sentiment: 'neutral',
         },
-      }
-      const res = await draftApi.createDraft(payload)
+      };
+      const res = await draftApi.createDraft(payload);
       const created = normalizeDraft(
         res?.data || { ...payload, id: `temp-${Date.now()}`, created_at: now, updated_at: now }
-      )
-      setDrafts((prev) => [created, ...prev])
-      setSelectedDraft(created)
-      setIsEditing(true)
+      );
+      setDrafts((prev) => [created, ...prev]);
+      setSelectedDraft(created);
+      setIsEditing(true);
     } catch (error) {
-      logger.error('Failed to create draft:', error)
-      alert('Failed to create draft')
+      logger.error('Failed to create draft:', error);
+      alert('Failed to create draft');
     }
-  }
+  };
 
   const handleSaveDraft = async () => {
-    if (!selectedDraft) return
+    if (!selectedDraft) return;
 
     try {
       const metadata = {
         ...(selectedDraft.metadata || {}),
         status: selectedDraft.status || 'draft',
         tone: selectedDraft.tone || 'professional',
-      }
+      };
       const payload = {
         subject: selectedDraft.subject || 'Untitled Draft',
         body: selectedDraft.body || '',
         recipient: selectedDraft.recipient || '',
         metadata,
-      }
-      const res = await draftApi.updateDraft(selectedDraft.id, payload)
+      };
+      const res = await draftApi.updateDraft(selectedDraft.id, payload);
       const updated = normalizeDraft(
         res?.data || { ...selectedDraft, ...payload, updated_at: new Date().toISOString() }
-      )
+      );
 
-      setDrafts((prev) => prev.map((draft) => (draft.id === updated.id ? updated : draft)))
-      setSelectedDraft(updated)
-      setIsEditing(false)
+      setDrafts((prev) => prev.map((draft) => (draft.id === updated.id ? updated : draft)));
+      setSelectedDraft(updated);
+      setIsEditing(false);
     } catch (error) {
-      logger.error('Failed to save draft:', error)
-      alert('Failed to save draft')
+      logger.error('Failed to save draft:', error);
+      alert('Failed to save draft');
     }
-  }
+  };
 
   const handleDeleteDraft = async (draftId) => {
     try {
-      await draftApi.deleteDraft(draftId)
+      await draftApi.deleteDraft(draftId);
       setDrafts((prev) => {
-        const remaining = prev.filter((draft) => draft.id !== draftId)
+        const remaining = prev.filter((draft) => draft.id !== draftId);
         if (selectedDraft?.id === draftId) {
-          setSelectedDraft(remaining.length ? remaining[0] : null)
+          setSelectedDraft(remaining.length ? remaining[0] : null);
         }
-        return remaining
-      })
+        return remaining;
+      });
     } catch (error) {
-      logger.error('Failed to delete draft:', error)
-      alert('Failed to delete draft')
+      logger.error('Failed to delete draft:', error);
+      alert('Failed to delete draft');
     }
-  }
+  };
 
   const handleInputChange = (field, value) => {
-    if (!selectedDraft) return
+    if (!selectedDraft) return;
 
     setSelectedDraft((prev) => ({
       ...prev,
@@ -147,38 +161,40 @@ const DraftManager = () => {
       metadata: {
         ...prev.metadata,
         word_count:
-          field === 'body' ? value.split(/\s+/).filter((word) => word.length > 0).length : prev.metadata.word_count,
+          field === 'body'
+            ? value.split(/\s+/).filter((word) => word.length > 0).length
+            : prev.metadata.word_count,
       },
-    }))
-  }
+    }));
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'draft':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'ready':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'sent':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
   const getToneColor = (tone) => {
     switch (tone) {
       case 'professional':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-100 text-purple-800';
       case 'casual':
-        return 'bg-orange-100 text-orange-800'
+        return 'bg-orange-100 text-orange-800';
       case 'formal':
-        return 'bg-indigo-100 text-indigo-800'
+        return 'bg-indigo-100 text-indigo-800';
       case 'friendly':
-        return 'bg-teal-100 text-teal-800'
+        return 'bg-teal-100 text-teal-800';
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -186,8 +202,8 @@ const DraftManager = () => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }
+    });
+  };
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -213,11 +229,15 @@ const DraftManager = () => {
           <div className="text-sm text-gray-600">Total Drafts</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-yellow-600">{drafts.filter((d) => d.status === 'draft').length}</div>
+          <div className="text-2xl font-bold text-yellow-600">
+            {drafts.filter((d) => d.status === 'draft').length}
+          </div>
           <div className="text-sm text-gray-600">In Progress</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-green-600">{drafts.filter((d) => d.status === 'ready').length}</div>
+          <div className="text-2xl font-bold text-green-600">
+            {drafts.filter((d) => d.status === 'ready').length}
+          </div>
           <div className="text-sm text-gray-600">Ready to Send</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -273,15 +293,19 @@ const DraftManager = () => {
                   <div
                     key={draft.id}
                     onClick={() => {
-                      setSelectedDraft(draft)
-                      setIsEditing(false)
+                      setSelectedDraft(draft);
+                      setIsEditing(false);
                     }}
                     className={`p-4 cursor-pointer transition-colors ${
-                      selectedDraft?.id === draft.id ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-50'
+                      selectedDraft?.id === draft.id
+                        ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                        : 'hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900 truncate">{draft.subject || 'Untitled Draft'}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">
+                        {draft.subject || 'Untitled Draft'}
+                      </h3>
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(draft.status)}`}
                       >
@@ -366,7 +390,9 @@ const DraftManager = () => {
                         className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1 min-w-0"
                       />
                     ) : (
-                      <span className="text-gray-900">{selectedDraft.recipient || 'No recipient'}</span>
+                      <span className="text-gray-900">
+                        {selectedDraft.recipient || 'No recipient'}
+                      </span>
                     )}
                   </div>
 
@@ -400,9 +426,13 @@ const DraftManager = () => {
                   <div className="flex-1 p-4 overflow-y-auto">
                     <div className="prose max-w-none">
                       {selectedDraft.body ? (
-                        <pre className="whitespace-pre-wrap font-sans text-gray-900">{selectedDraft.body}</pre>
+                        <pre className="whitespace-pre-wrap font-sans text-gray-900">
+                          {selectedDraft.body}
+                        </pre>
                       ) : (
-                        <p className="text-gray-500 italic">No content yet. Start editing to add your email content.</p>
+                        <p className="text-gray-500 italic">
+                          No content yet. Start editing to add your email content.
+                        </p>
                       )}
                     </div>
                   </div>
@@ -462,7 +492,7 @@ const DraftManager = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DraftManager
+export default DraftManager;

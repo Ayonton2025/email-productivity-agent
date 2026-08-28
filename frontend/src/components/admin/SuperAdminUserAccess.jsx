@@ -1,62 +1,66 @@
-import React, { useState } from 'react'
-import { getUserAccessProfile, getUserSendReadiness, updateUserAccessProfile } from '../../services/adminService'
+import React, { useState } from 'react';
+import {
+  getUserAccessProfile,
+  getUserSendReadiness,
+  updateUserAccessProfile,
+} from '../../services/adminService';
 
 const SuperAdminUserAccess = () => {
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [data, setData] = useState(null)
-  const [sendReadiness, setSendReadiness] = useState(null)
-  const [readinessLoading, setReadinessLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [data, setData] = useState(null);
+  const [sendReadiness, setSendReadiness] = useState(null);
+  const [readinessLoading, setReadinessLoading] = useState(false);
   const [form, setForm] = useState({
     allow_all: false,
     block_all: false,
     payment_bypass: false,
     is_active: true,
     status_note: '',
-  })
+  });
 
   const loadProfile = async () => {
-    setError('')
+    setError('');
     if (!email.trim()) {
-      setError('Enter user email')
-      return
+      setError('Enter user email');
+      return;
     }
     try {
-      setLoading(true)
-      const res = await getUserAccessProfile(email.trim())
-      setData(res)
-      setReadinessLoading(true)
+      setLoading(true);
+      const res = await getUserAccessProfile(email.trim());
+      setData(res);
+      setReadinessLoading(true);
       try {
-        const readiness = await getUserSendReadiness(email.trim())
-        setSendReadiness(readiness)
+        const readiness = await getUserSendReadiness(email.trim());
+        setSendReadiness(readiness);
       } catch {
-        setSendReadiness(null)
+        setSendReadiness(null);
       } finally {
-        setReadinessLoading(false)
+        setReadinessLoading(false);
       }
-      const ov = res?.override || {}
+      const ov = res?.override || {};
       setForm({
         allow_all: !!ov.allow_all,
         block_all: !!ov.block_all,
         payment_bypass: !!ov.payment_bypass,
         is_active: !!res?.user?.is_active,
         status_note: ov.status_note || '',
-      })
+      });
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to load user profile')
-      setSendReadiness(null)
+      setError(e?.response?.data?.detail || e.message || 'Failed to load user profile');
+      setSendReadiness(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const saveOverrides = async () => {
-    if (!data?.user?.email) return
+    if (!data?.user?.email) return;
     try {
-      setSaving(true)
-      setError('')
+      setSaving(true);
+      setError('');
       await updateUserAccessProfile(data.user.email, {
         allow_all: form.allow_all,
         block_all: form.block_all,
@@ -64,14 +68,14 @@ const SuperAdminUserAccess = () => {
         is_active: form.is_active,
         status_note: form.status_note,
         feature_overrides: data?.override?.feature_overrides || {},
-      })
-      await loadProfile()
+      });
+      await loadProfile();
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to save overrides')
+      setError(e?.response?.data?.detail || e.message || 'Failed to save overrides');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6 text-slate-900">
@@ -108,7 +112,8 @@ const SuperAdminUserAccess = () => {
             <h2 className="text-lg font-semibold text-slate-900">User Status</h2>
             <div className="mt-3 grid grid-cols-1 gap-3 text-sm text-slate-800 md:grid-cols-2">
               <div>
-                <span className="text-slate-500">Email:</span> <span className="break-all">{data.user.email}</span>
+                <span className="text-slate-500">Email:</span>{' '}
+                <span className="break-all">{data.user.email}</span>
               </div>
               <div>
                 <span className="text-slate-500">Name:</span> {data.user.full_name || '-'}
@@ -121,13 +126,16 @@ const SuperAdminUserAccess = () => {
                 <span className="text-slate-500">Subscription:</span> {data.subscription?.status}
               </div>
               <div>
-                <span className="text-slate-500">AI Credits Balance:</span> {data.credits?.balance ?? 0}
+                <span className="text-slate-500">AI Credits Balance:</span>{' '}
+                {data.credits?.balance ?? 0}
               </div>
               <div>
-                <span className="text-slate-500">Account Active:</span> {String(data.user.is_active)}
+                <span className="text-slate-500">Account Active:</span>{' '}
+                {String(data.user.is_active)}
               </div>
               <div>
-                <span className="text-slate-500">Super Admin:</span> {String(data.user.is_super_admin)}
+                <span className="text-slate-500">Super Admin:</span>{' '}
+                {String(data.user.is_super_admin)}
               </div>
             </div>
           </div>
@@ -159,18 +167,28 @@ const SuperAdminUserAccess = () => {
                 </div>
                 <div className="text-xs text-slate-600">
                   Global checks:
-                  <span className="ml-2">User active: {String(sendReadiness?.global_checks?.user_active)}</span>
-                  <span className="ml-2">Celery: {String(sendReadiness?.global_checks?.celery_enabled)}</span>
-                  <span className="ml-2">Redis config: {String(sendReadiness?.global_checks?.redis_configured)}</span>
+                  <span className="ml-2">
+                    User active: {String(sendReadiness?.global_checks?.user_active)}
+                  </span>
+                  <span className="ml-2">
+                    Celery: {String(sendReadiness?.global_checks?.celery_enabled)}
+                  </span>
+                  <span className="ml-2">
+                    Redis config: {String(sendReadiness?.global_checks?.redis_configured)}
+                  </span>
                 </div>
                 <div className="space-y-2">
                   {(sendReadiness?.accounts || []).map((acc) => (
                     <div key={acc.id} className="rounded border border-slate-200 p-2">
                       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-900">
                         <span className="font-medium break-all">{acc.email}</span>
-                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{acc.provider}</span>
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                          {acc.provider}
+                        </span>
                         {acc.is_primary && (
-                          <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">Primary</span>
+                          <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">
+                            Primary
+                          </span>
                         )}
                         <span
                           className={`rounded px-2 py-0.5 text-xs font-semibold ${acc.campaign_send_ready ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
@@ -184,7 +202,9 @@ const SuperAdminUserAccess = () => {
                         </span>
                       </div>
                       {!!acc.issues?.length && (
-                        <div className="mt-1 text-xs text-rose-700 break-all">Issues: {acc.issues.join(', ')}</div>
+                        <div className="mt-1 text-xs text-rose-700 break-all">
+                          Issues: {acc.issues.join(', ')}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -247,13 +267,14 @@ const SuperAdminUserAccess = () => {
               {saving ? 'Saving...' : 'Save Controls'}
             </button>
             <p className="text-xs text-slate-500">
-              Feature-level allow/deny rules are now in the <strong>Feature Rules</strong> admin page.
+              Feature-level allow/deny rules are now in the <strong>Feature Rules</strong> admin
+              page.
             </p>
           </div>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default SuperAdminUserAccess
+export default SuperAdminUserAccess;

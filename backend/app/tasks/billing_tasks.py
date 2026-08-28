@@ -53,7 +53,9 @@ async def _reset_monthly_credits(self):
 
                     # Reset outbound credits
                     out_result = await session.execute(
-                        select(OutboundCredits).where(OutboundCredits.user_id == subscription.user_id)
+                        select(OutboundCredits).where(
+                            OutboundCredits.user_id == subscription.user_id
+                        )
                     )
                     outbound_credits = out_result.scalar()
 
@@ -68,7 +70,9 @@ async def _reset_monthly_credits(self):
                     reset_count += 1
 
                 except Exception as e:
-                    logger.error(f"Error resetting credits for subscription {subscription.id}: {str(e)}")
+                    logger.error(
+                        f"Error resetting credits for subscription {subscription.id}: {str(e)}"
+                    )
                     continue
 
             await session.commit()
@@ -98,7 +102,9 @@ async def _reset_daily_free_credits(self):
             subscriptions = result.scalars().all()
             reset_count = 0
             for subscription in subscriptions:
-                ai_result = await session.execute(select(AICredits).where(AICredits.user_id == subscription.user_id))
+                ai_result = await session.execute(
+                    select(AICredits).where(AICredits.user_id == subscription.user_id)
+                )
                 ai_credits = ai_result.scalar_one_or_none()
                 if not ai_credits:
                     continue
@@ -163,7 +169,9 @@ async def _check_subscription_renewals(self):
                     renewed += 1
 
                 except Exception as e:
-                    logger.error(f"Error processing renewal for subscription {subscription.id}: {str(e)}")
+                    logger.error(
+                        f"Error processing renewal for subscription {subscription.id}: {str(e)}"
+                    )
                     continue
 
             await session.commit()

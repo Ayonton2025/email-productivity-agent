@@ -1,72 +1,75 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { CalendarClock, RefreshCw, Save, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { briefingsApi } from '../../services/api'
+import React, { useEffect, useMemo, useState } from 'react';
+import { CalendarClock, RefreshCw, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { briefingsApi } from '../../services/api';
 
 const DailyBriefing = () => {
-  const [loading, setLoading] = useState(true)
-  const [savingPrefs, setSavingPrefs] = useState(false)
-  const [regenerating, setRegenerating] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [briefing, setBriefing] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [briefing, setBriefing] = useState(null);
   const [prefs, setPrefs] = useState({
     timezone: 'UTC',
     send_hour: 6,
     enabled: true,
-  })
+  });
 
-  const metrics = useMemo(() => briefing?.content?.metrics || {}, [briefing])
+  const metrics = useMemo(() => briefing?.content?.metrics || {}, [briefing]);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError('');
       try {
-        const [briefingRes, prefsRes] = await Promise.all([briefingsApi.getToday(), briefingsApi.getPreferences()])
-        setBriefing(briefingRes.data?.briefing || null)
-        setPrefs(prefsRes.data?.preferences || prefs)
+        const [briefingRes, prefsRes] = await Promise.all([
+          briefingsApi.getToday(),
+          briefingsApi.getPreferences(),
+        ]);
+        setBriefing(briefingRes.data?.briefing || null);
+        setPrefs(prefsRes.data?.preferences || prefs);
       } catch (e) {
-        setError(e?.response?.data?.detail || 'Failed to load daily briefing')
+        setError(e?.response?.data?.detail || 'Failed to load daily briefing');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    load()
-  }, [])
+    };
+    load();
+  }, []);
 
   const handleSavePreferences = async () => {
-    setSavingPrefs(true)
-    setError('')
-    setSuccess('')
+    setSavingPrefs(true);
+    setError('');
+    setSuccess('');
     try {
       const res = await briefingsApi.updatePreferences({
         timezone: prefs.timezone,
         send_hour: Number(prefs.send_hour),
         enabled: Boolean(prefs.enabled),
-      })
-      setPrefs(res.data?.preferences || prefs)
-      setSuccess('Briefing preferences updated.')
+      });
+      setPrefs(res.data?.preferences || prefs);
+      setSuccess('Briefing preferences updated.');
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to update preferences')
+      setError(e?.response?.data?.detail || 'Failed to update preferences');
     } finally {
-      setSavingPrefs(false)
+      setSavingPrefs(false);
     }
-  }
+  };
 
   const handleRegenerate = async () => {
-    setRegenerating(true)
-    setError('')
-    setSuccess('')
+    setRegenerating(true);
+    setError('');
+    setSuccess('');
     try {
-      const res = await briefingsApi.regenerateToday()
-      setBriefing(res.data?.briefing || null)
-      setSuccess('Daily briefing regenerated.')
+      const res = await briefingsApi.regenerateToday();
+      setBriefing(res.data?.briefing || null);
+      setSuccess('Daily briefing regenerated.');
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to regenerate briefing')
+      setError(e?.response?.data?.detail || 'Failed to regenerate briefing');
     } finally {
-      setRegenerating(false)
+      setRegenerating(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -74,7 +77,7 @@ const DailyBriefing = () => {
         <RefreshCw className="h-5 w-5 animate-spin text-indigo-600" />
         <span className="text-gray-700">Loading daily briefing...</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -82,7 +85,9 @@ const DailyBriefing = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Daily AI Briefing</h1>
-          <p className="text-sm text-gray-600">Your cached morning digest of priorities, risks, and follow-ups.</p>
+          <p className="text-sm text-gray-600">
+            Your cached morning digest of priorities, risks, and follow-ups.
+          </p>
         </div>
         <button
           type="button"
@@ -111,11 +116,15 @@ const DailyBriefing = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-sm text-gray-500">Unresolved Commitments</div>
-          <div className="text-2xl font-semibold text-gray-900">{metrics.unresolved_commitments || 0}</div>
+          <div className="text-2xl font-semibold text-gray-900">
+            {metrics.unresolved_commitments || 0}
+          </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-sm text-gray-500">Negative Sentiment Emails</div>
-          <div className="text-2xl font-semibold text-gray-900">{metrics.high_sentiment_negative_emails || 0}</div>
+          <div className="text-2xl font-semibold text-gray-900">
+            {metrics.high_sentiment_negative_emails || 0}
+          </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-sm text-gray-500">Idle Threads</div>
@@ -201,11 +210,11 @@ const DailyBriefing = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const BriefingList = ({ title, items, itemRender }) => {
-  const list = Array.isArray(items) ? items : []
+  const list = Array.isArray(items) ? items : [];
   return (
     <div className="border border-gray-100 rounded-lg p-3 bg-gray-50">
       <h3 className="text-sm font-semibold text-gray-700 mb-2">{title}</h3>
@@ -215,13 +224,17 @@ const BriefingList = ({ title, items, itemRender }) => {
         <ul className="space-y-2 text-sm text-gray-700">
           {list.map((item, idx) => (
             <li key={`${title}-${idx}`} className="bg-white border border-gray-100 rounded p-2">
-              {itemRender ? itemRender(item) : typeof item === 'string' ? item : JSON.stringify(item)}
+              {itemRender
+                ? itemRender(item)
+                : typeof item === 'string'
+                  ? item
+                  : JSON.stringify(item)}
             </li>
           ))}
         </ul>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default DailyBriefing
+export default DailyBriefing;

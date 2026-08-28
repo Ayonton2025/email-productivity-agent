@@ -367,17 +367,23 @@ Return only valid JSON array."""
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_active_opportunities(self, user_id: str, status: Optional[str] = None) -> List[Opportunity]:
+    async def get_active_opportunities(
+        self, user_id: str, status: Optional[str] = None
+    ) -> List[Opportunity]:
         """Get active opportunities, optionally filtered by status"""
         query = select(Opportunity).where(
-            and_(Opportunity.user_id == user_id, Opportunity.status.in_(["new", "qualified", "in_progress"]))
+            and_(
+                Opportunity.user_id == user_id,
+                Opportunity.status.in_(["new", "qualified", "in_progress"]),
+            )
         )
 
         if status:
             query = query.where(Opportunity.status == status)
 
         query = query.order_by(
-            Opportunity.estimated_value.desc().nullslast(), Opportunity.probability.desc().nullslast()
+            Opportunity.estimated_value.desc().nullslast(),
+            Opportunity.probability.desc().nullslast(),
         )
 
         result = await self.db.execute(query)

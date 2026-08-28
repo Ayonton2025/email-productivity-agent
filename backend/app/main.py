@@ -1,13 +1,11 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 load_dotenv()
@@ -57,7 +55,6 @@ async def lifespan(app: FastAPI):
 
     async def run_startup_tasks():
         """Run DB and bootstrap tasks in background without blocking server startup."""
-        from sqlalchemy import text
 
         skip_init = settings.SKIP_DB_INIT
         max_retries = 10

@@ -1,5 +1,5 @@
-import React from 'react'
+import React from 'react';
 
-const ThemeProvider = ({ children }) => <React.Fragment>{children}</React.Fragment>
+const ThemeProvider = ({ children }) => <React.Fragment>{children}</React.Fragment>;
 
-export default ThemeProvider
+export default ThemeProvider;

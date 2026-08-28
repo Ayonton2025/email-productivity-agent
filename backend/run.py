@@ -46,7 +46,9 @@ def main():
     print("=" * 60)
 
     # Start the server
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload, log_level=log_level, access_log=True)
+    uvicorn.run(
+        "app.main:app", host=host, port=port, reload=reload, log_level=log_level, access_log=True
+    )
 
 
 if __name__ == "__main__":

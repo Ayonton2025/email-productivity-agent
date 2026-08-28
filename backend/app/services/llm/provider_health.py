@@ -1,15 +1,12 @@
 """LLM provider health probes and administrative diagnostics."""
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.security import logger
 from app.models.database import AsyncSessionLocal
-from app.services.llm_provider_config_service import LLMProviderConfigService, RuntimeProviderConfig
+from app.services.llm_provider_config_service import LLMProviderConfigService
 
 
 class ProviderHealthMixin:
@@ -21,7 +18,9 @@ class ProviderHealthMixin:
     ) -> Dict[str, Any]:
         # For health checks, include disabled providers too (user may test them before enabling)
         if session:
-            cfgs = await LLMProviderConfigService.get_runtime_configs(session, include_disabled=True)
+            cfgs = await LLMProviderConfigService.get_runtime_configs(
+                session, include_disabled=True
+            )
         else:
             async with AsyncSessionLocal() as s:
                 cfgs = await LLMProviderConfigService.get_runtime_configs(s, include_disabled=True)
@@ -47,7 +46,9 @@ class ProviderHealthMixin:
             if include_live_checks:
                 start = datetime.utcnow()
                 try:
-                    await self._call_with_retry(cfg, 'Return {"ok":true}', "Health check", cfg.model, 0.0, 16)
+                    await self._call_with_retry(
+                        cfg, 'Return {"ok":true}', "Health check", cfg.model, 0.0, 16
+                    )
                     status = "healthy"
                 except Exception as e:
                     status = "unhealthy"
@@ -77,7 +78,12 @@ class ProviderHealthMixin:
             msg = "No LLM providers configured. Configure at least one provider via Admin LLM settings."
             if provider_filter:
                 msg = f"Provider '{provider_filter}' is not configured with a usable key."
-            return {"success": True, "overall_status": "unconfigured", "message": msg, "providers": []}
+            return {
+                "success": True,
+                "overall_status": "unconfigured",
+                "message": msg,
+                "providers": [],
+            }
 
         # Determine overall status: healthy if any configured provider is healthy/works
         if any(p["status"] in {"healthy", "configured"} for p in providers):
@@ -106,7 +112,9 @@ class ProviderHealthMixin:
         """
         # For testing, include disabled providers too (user may want to test before enabling)
         if session:
-            cfgs = await LLMProviderConfigService.get_runtime_configs(session, include_disabled=True)
+            cfgs = await LLMProviderConfigService.get_runtime_configs(
+                session, include_disabled=True
+            )
         else:
             async with AsyncSessionLocal() as s:
                 cfgs = await LLMProviderConfigService.get_runtime_configs(s, include_disabled=True)
@@ -123,10 +131,14 @@ class ProviderHealthMixin:
                 continue
 
             tested_count += 1
-            prompt = sample_prompt or 'Return JSON {"ok": true, "probe": "health"} and nothing else.'
+            prompt = (
+                sample_prompt or 'Return JSON {"ok": true, "probe": "health"} and nothing else.'
+            )
             start = datetime.utcnow()
             try:
-                text, model = await self._call_with_retry(cfg, prompt, None, cfg.model or self.default_model, 0.0, 120)
+                text, model = await self._call_with_retry(
+                    cfg, prompt, None, cfg.model or self.default_model, 0.0, 120
+                )
                 latency_ms = int((datetime.utcnow() - start).total_seconds() * 1000)
                 snippet = (text or "").strip()[:800]
                 results.append(
@@ -160,4 +172,8 @@ class ProviderHealthMixin:
                 msg = f"Provider '{provider_filter}' is not configured with a usable key to run tests."
             return {"success": False, "message": msg, "results": []}
 
-        return {"success": True, "message": f"Tested {tested_count} configured provider(s)", "results": results}
+        return {
+            "success": True,
+            "message": f"Tested {tested_count} configured provider(s)",
+            "results": results,
+        }

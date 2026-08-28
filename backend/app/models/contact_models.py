@@ -15,7 +15,18 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 
 from app.models.database import Base
 
@@ -42,7 +53,9 @@ class Contact(Base):
     is_decision_maker = Column(Boolean, default=False, index=True)
 
     # Relationship Intelligence
-    relationship_status = Column(String, default="cold", index=True)  # cold, warming, active, ghosting, dormant
+    relationship_status = Column(
+        String, default="cold", index=True
+    )  # cold, warming, active, ghosting, dormant
     relationship_score = Column(Float, default=0.0)  # 0-100, based on frequency, recency, sentiment
     trust_score = Column(Float, default=50.0)
     stress_level = Column(Float, default=50.0)
@@ -55,7 +68,9 @@ class Contact(Base):
     total_emails_received = Column(Integer, default=0)
     last_contact_date = Column(DateTime, nullable=True, index=True)
     first_contact_date = Column(DateTime, nullable=True)
-    average_response_time_hours = Column(Float, nullable=True)  # Average time to respond to their emails
+    average_response_time_hours = Column(
+        Float, nullable=True
+    )  # Average time to respond to their emails
 
     # Sentiment Tracking
     overall_sentiment = Column(String, nullable=True)  # positive, neutral, negative
@@ -97,15 +112,20 @@ class Contact(Base):
             "loyalty_score": self.loyalty_score,
             "total_emails_sent": self.total_emails_sent,
             "total_emails_received": self.total_emails_received,
-            "last_contact_date": self.last_contact_date.isoformat() if self.last_contact_date else None,
-            "first_contact_date": self.first_contact_date.isoformat() if self.first_contact_date else None,
+            "last_contact_date": self.last_contact_date.isoformat()
+            if self.last_contact_date
+            else None,
+            "first_contact_date": self.first_contact_date.isoformat()
+            if self.first_contact_date
+            else None,
             "average_response_time_hours": self.average_response_time_hours,
             "overall_sentiment": self.overall_sentiment,
             "sentiment_trend": self.sentiment_trend,
             "last_sentiment_score": self.last_sentiment_score,
             "tags": self.tags or [],
             "notes": self.notes,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "needs_crm_sync": self.needs_crm_sync,
             "last_synced_at": self.last_synced_at.isoformat() if self.last_synced_at else None,
             "created_at": self.created_at.isoformat(),
@@ -129,7 +149,9 @@ class Company(Base):
     # Company Intelligence
     industry = Column(String, nullable=True)
     company_size = Column(String, nullable=True)  # startup, small, medium, large, enterprise
-    relationship_status = Column(String, default="cold", index=True)  # cold, warming, active, partner, client
+    relationship_status = Column(
+        String, default="cold", index=True
+    )  # cold, warming, active, partner, client
 
     # Communication Metrics
     total_contacts = Column(Integer, default=0)
@@ -168,15 +190,20 @@ class Company(Base):
             "relationship_status": self.relationship_status,
             "total_contacts": self.total_contacts,
             "total_emails": self.total_emails,
-            "last_contact_date": self.last_contact_date.isoformat() if self.last_contact_date else None,
-            "first_contact_date": self.first_contact_date.isoformat() if self.first_contact_date else None,
+            "last_contact_date": self.last_contact_date.isoformat()
+            if self.last_contact_date
+            else None,
+            "first_contact_date": self.first_contact_date.isoformat()
+            if self.first_contact_date
+            else None,
             "is_client": self.is_client,
             "is_prospect": self.is_prospect,
             "is_vendor": self.is_vendor,
             "revenue_impact": self.revenue_impact,
             "tags": self.tags or [],
             "notes": self.notes,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -228,6 +255,7 @@ class ContactInteraction(Base):
             "sentiment_score": self.sentiment_score,
             "interaction_date": self.interaction_date.isoformat(),
             "response_time_hours": self.response_time_hours,
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
         }

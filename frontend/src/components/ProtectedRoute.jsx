@@ -1,30 +1,30 @@
-import { logger } from '../utils/logger.js'
-import React from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { logger } from '../utils/logger.js';
+import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   React.useEffect(() => {
     logger.debug('🔒 [ProtectedRoute] Checking authentication:', {
       isAuthenticated,
       loading,
       currentPath: location.pathname,
-    })
+    });
 
     if (!loading && !isAuthenticated) {
-      logger.debug('🚫 [ProtectedRoute] User not authenticated, redirecting to login')
+      logger.debug('🚫 [ProtectedRoute] User not authenticated, redirecting to login');
       // Store the attempted URL for redirect after login
-      const redirectUrl = location.pathname + location.search
+      const redirectUrl = location.pathname + location.search;
       if (redirectUrl !== '/login') {
-        sessionStorage.setItem('redirectUrl', redirectUrl)
-        navigate('/login', { replace: true })
+        sessionStorage.setItem('redirectUrl', redirectUrl);
+        navigate('/login', { replace: true });
       }
     }
-  }, [isAuthenticated, loading, navigate, location])
+  }, [isAuthenticated, loading, navigate, location]);
 
   if (loading) {
     return (
@@ -36,7 +36,7 @@ const ProtectedRoute = ({ children }) => {
           <div className="loading-subtext">Please wait while we verify your session...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
@@ -48,11 +48,11 @@ const ProtectedRoute = ({ children }) => {
           <div className="loading-subtext">Redirecting to login page...</div>
         </div>
       </div>
-    )
+    );
   }
 
-  logger.debug('✅ [ProtectedRoute] User authenticated, rendering children')
-  return children
-}
+  logger.debug('✅ [ProtectedRoute] User authenticated, rendering children');
+  return children;
+};
 
-export default ProtectedRoute
+export default ProtectedRoute;

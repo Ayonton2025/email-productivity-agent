@@ -1,58 +1,68 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Workflow, Plus, Play, Pause, Trash2, Edit, ChevronRight, Zap, RefreshCw } from 'lucide-react'
-import { workflowsApi } from '../../services/api'
-import { FeatureLockBanner } from '../premium/PremiumPrompt'
-import { useSubscription } from '../../hooks/useSubscription'
-import { useAuth } from '../../context/AuthContext'
-import WorkflowBuilder from './WorkflowBuilder'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Workflow,
+  Plus,
+  Play,
+  Pause,
+  Trash2,
+  Edit,
+  ChevronRight,
+  Zap,
+  RefreshCw,
+} from 'lucide-react';
+import { workflowsApi } from '../../services/api';
+import { FeatureLockBanner } from '../premium/PremiumPrompt';
+import { useSubscription } from '../../hooks/useSubscription';
+import { useAuth } from '../../context/AuthContext';
+import WorkflowBuilder from './WorkflowBuilder';
 
 const Workflows = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  const { hasFeatureAccess } = useSubscription()
-  const [workflows, setWorkflows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [editingWorkflow, setEditingWorkflow] = useState(null)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  const { hasFeatureAccess } = useSubscription();
+  const [workflows, setWorkflows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState(null);
 
   useEffect(() => {
-    loadWorkflows()
-  }, [])
+    loadWorkflows();
+  }, []);
 
   const loadWorkflows = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await workflowsApi.getWorkflows()
-      setWorkflows(res.data || [])
+      const res = await workflowsApi.getWorkflows();
+      setWorkflows(res.data || []);
     } catch (error) {
-      logger.error('Failed to load workflows:', error)
+      logger.error('Failed to load workflows:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (workflowId) => {
-    if (!window.confirm('Are you sure you want to delete this workflow?')) return
+    if (!window.confirm('Are you sure you want to delete this workflow?')) return;
     try {
-      await workflowsApi.deleteWorkflow(workflowId)
-      await loadWorkflows()
+      await workflowsApi.deleteWorkflow(workflowId);
+      await loadWorkflows();
     } catch (error) {
-      logger.error('Failed to delete workflow:', error)
-      alert('Failed to delete workflow')
+      logger.error('Failed to delete workflow:', error);
+      alert('Failed to delete workflow');
     }
-  }
+  };
 
   const handleToggleActive = async (workflow) => {
     try {
-      await workflowsApi.updateWorkflow(workflow.id, { is_active: !workflow.is_active })
-      await loadWorkflows()
+      await workflowsApi.updateWorkflow(workflow.id, { is_active: !workflow.is_active });
+      await loadWorkflows();
     } catch (error) {
-      logger.error('Failed to update workflow:', error)
+      logger.error('Failed to update workflow:', error);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -67,7 +77,9 @@ const Workflows = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Workflows</h1>
-          <p className="mt-1 text-sm text-slate-500">Automate your email tasks with no-code workflows</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Automate your email tasks with no-code workflows
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -137,7 +149,9 @@ const Workflows = () => {
                   {workflow.is_active ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              {workflow.description && <p className="text-sm text-slate-600 mb-4">{workflow.description}</p>}
+              {workflow.description && (
+                <p className="text-sm text-slate-600 mb-4">{workflow.description}</p>
+              )}
               <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
                 <span>Runs: {workflow.total_runs || 0}</span>
                 <span>Success: {workflow.successful_runs || 0}</span>
@@ -154,7 +168,11 @@ const Workflows = () => {
                   onClick={() => handleToggleActive(workflow)}
                   className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
-                  {workflow.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  {workflow.is_active ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
                 </button>
                 <button
                   onClick={() => handleDelete(workflow.id)}
@@ -172,14 +190,14 @@ const Workflows = () => {
         <WorkflowBuilder
           workflow={editingWorkflow}
           onClose={() => {
-            setShowCreateModal(false)
-            setEditingWorkflow(null)
+            setShowCreateModal(false);
+            setEditingWorkflow(null);
           }}
           onSave={loadWorkflows}
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Workflows
+export default Workflows;

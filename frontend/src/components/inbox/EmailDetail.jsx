@@ -1,47 +1,47 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import AttachmentsSection from './AttachmentsSection'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import AttachmentsSection from './AttachmentsSection';
 
 const EmailDetail = ({ email = null, onClose = () => {} }) => {
-  const [showFull, setShowFull] = useState(false)
+  const [showFull, setShowFull] = useState(false);
 
-  if (!email) return null
+  if (!email) return null;
 
   // Determine which body to show (prefer HTML)
-  const hasHtmlBody = email.body_html && email.body_html.trim().length > 0
-  const bodyContent = hasHtmlBody ? email.body_html : email.body_text || email.body || 'No content'
+  const hasHtmlBody = email.body_html && email.body_html.trim().length > 0;
+  const bodyContent = hasHtmlBody ? email.body_html : email.body_text || email.body || 'No content';
 
   // Parse date
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'Unknown date'
+    if (!dateStr) return 'Unknown date';
     try {
-      const date = new Date(dateStr)
+      const date = new Date(dateStr);
       return date.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-      })
+      });
     } catch (e) {
-      return dateStr
+      return dateStr;
     }
-  }
+  };
 
   // Extract recipient emails from strings like "Name <email@domain.com>"
   const extractEmail = (str) => {
-    if (!str) return str
-    const match = str.match(/<([^>]+)>/)
-    return match ? match[1] : str
-  }
+    if (!str) return str;
+    const match = str.match(/<([^>]+)>/);
+    return match ? match[1] : str;
+  };
 
-  const senderEmail = extractEmail(email.sender)
-  const recipients = (email.recipients || []).map(extractEmail)
-  const ccRecipients = (email.cc || []).map(extractEmail)
+  const senderEmail = extractEmail(email.sender);
+  const recipients = (email.recipients || []).map(extractEmail);
+  const ccRecipients = (email.cc || []).map(extractEmail);
 
   // Format attachments
-  const attachments = email.attachments || []
-  const hasAttachments = attachments.length > 0
+  const attachments = email.attachments || [];
+  const hasAttachments = attachments.length > 0;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -49,7 +49,9 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
       <div className="border-b px-6 py-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{email.subject || '(No Subject)'}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {email.subject || '(No Subject)'}
+            </h2>
             <div className="space-y-1 text-sm text-gray-600">
               <div>
                 <span className="font-semibold">From:</span> {email.sender || 'Unknown'}
@@ -109,7 +111,9 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
             />
           ) : (
             // Plain text fallback
-            <div className="whitespace-pre-wrap text-gray-700 font-sans text-sm leading-6">{bodyContent}</div>
+            <div className="whitespace-pre-wrap text-gray-700 font-sans text-sm leading-6">
+              {bodyContent}
+            </div>
           )}
         </div>
       </div>
@@ -128,7 +132,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
             className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
             onClick={() => {
               // Mark as read/unread
-              logger.debug('Toggle read status')
+              logger.debug('Toggle read status');
             }}
           >
             {email.is_read ? 'Mark Unread' : 'Mark Read'}
@@ -141,7 +145,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
             }`}
             onClick={() => {
               // Toggle flag
-              logger.debug('Toggle flag')
+              logger.debug('Toggle flag');
             }}
           >
             {email.is_flagged ? '★ Flagged' : '☆ Flag'}
@@ -149,7 +153,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EmailDetail
+export default EmailDetail;

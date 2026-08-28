@@ -54,9 +54,16 @@ Run backend checks:
 
 ```bash
 python -m pytest tests --cov=app --cov-report=term-missing
-python -m ruff check app tests
-python -m mypy app
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy
 ```
+
+Ruff enforces pycodestyle errors, Pyflakes, import sorting, and bugbear rules
+at a 100-column line length. Mypy applies strict defaults to the typed migration
+boundary declared in `pyproject.toml`. Its named legacy exceptions remain
+visible beside the strict setting and should be removed individually as generic
+parameters, third-party stubs, and function annotations are completed.
 
 ## Local frontend
 
@@ -66,9 +73,18 @@ Run these commands from `frontend/`:
 cp .env.example .env
 npm ci
 npm run dev
+npm run format:check
+npm run lint
+npm run typecheck
 npm test -- --run
 npm run build
 ```
+
+Prettier is the formatting authority for JavaScript, JSX, and CSS. ESLint owns
+code-quality and React Hooks rules and extends `eslint-config-prettier` last so
+the tools cannot issue conflicting style rules. `npm run lint` enforces the
+recorded legacy warning ceiling; `npm run lint:strict` is the zero-warning
+target for new and progressively cleaned code.
 
 ## Dependency policy
 

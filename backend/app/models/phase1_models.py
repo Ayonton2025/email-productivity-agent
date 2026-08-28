@@ -63,7 +63,9 @@ class DailyBriefing(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    __table_args__ = (Index("idx_daily_briefing_user_date", "user_id", "briefing_date", unique=True),)
+    __table_args__ = (
+        Index("idx_daily_briefing_user_date", "user_id", "briefing_date", unique=True),
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         return {

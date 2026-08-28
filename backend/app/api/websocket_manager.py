@@ -47,7 +47,9 @@ class ConnectionManager:
             "connected_at": datetime.utcnow().isoformat(),
         }
 
-        logger.info(f"✅ WebSocket connected: {user_id} ({len(self.active_connections[user_id])} connections)")
+        logger.info(
+            f"✅ WebSocket connected: {user_id} ({len(self.active_connections[user_id])} connections)"
+        )
 
     def disconnect(self, websocket: WebSocket, user_id: str) -> None:
         """
@@ -136,7 +138,9 @@ class ConnectionManager:
 
         await self.broadcast_to_user(user_id, message)
 
-    async def broadcast_sync_started(self, user_id: str, account_email: str, provider: str = "gmail") -> None:
+    async def broadcast_sync_started(
+        self, user_id: str, account_email: str, provider: str = "gmail"
+    ) -> None:
         """
         Broadcast email sync started event.
 

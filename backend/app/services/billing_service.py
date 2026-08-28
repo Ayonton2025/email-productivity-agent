@@ -3,7 +3,12 @@
 from app.services.billing.credits import CreditService, FeatureGatingService
 from app.services.billing.invoices import CreditPurchaseMixin, PaymentFinalizeMixin
 from app.services.billing.payments import PaymentInfrastructureMixin
-from app.services.billing.paypal import BybitPayService, CoinbaseCommerceService, PayPalService, StripeService
+from app.services.billing.paypal import (
+    BybitPayService,
+    CoinbaseCommerceService,
+    PayPalService,
+    StripeService,
+)
 from app.services.billing.paystack import PaymentRequiredError, PaystackService
 from app.services.billing.subscriptions import SubscriptionService
 from app.services.billing.upgrades import UpgradeSessionMixin

@@ -74,7 +74,10 @@ class DocumentAnalysisTaskHandler:
             async with AsyncSessionLocal() as session:
                 try:
                     await self.analysis_task.process_attachment_analysis(
-                        session=session, attachment_id=attachment_id, user_id=user_id, user_plan=user_plan
+                        session=session,
+                        attachment_id=attachment_id,
+                        user_id=user_id,
+                        user_plan=user_plan,
                     )
                     logger.info(f"✅ Analyzed attachment: {attachment_id}")
                 except Exception as e:
@@ -104,7 +107,9 @@ class DocumentAnalysisTaskHandler:
 
                 # Queue/process each attachment
                 for attachment in attachments:
-                    await self.analyze_attachment(attachment_id=attachment.id, user_id=user_id, user_plan=user_plan)
+                    await self.analyze_attachment(
+                        attachment_id=attachment.id, user_id=user_id, user_plan=user_plan
+                    )
 
                 logger.info(f"📊 Queued analysis for {len(attachments)} attachments")
 
@@ -137,14 +142,21 @@ if CELERY_AVAILABLE:
                 async with AsyncSessionLocal() as session:
                     analysis_handler = DocumentAnalysisBackgroundTask()
                     return await analysis_handler.process_attachment_analysis(
-                        session=session, attachment_id=attachment_id, user_id=user_id, user_plan=user_plan
+                        session=session,
+                        attachment_id=attachment_id,
+                        user_id=user_id,
+                        user_plan=user_plan,
                     )
 
             result = loop.run_until_complete(run_analysis())
             loop.close()
 
             logger.info(f"✅ Analysis completed for attachment: {attachment_id}")
-            return {"status": "success", "attachment_id": attachment_id, "analysis_id": result.id if result else None}
+            return {
+                "status": "success",
+                "attachment_id": attachment_id,
+                "analysis_id": result.id if result else None,
+            }
 
         except Exception as e:
             logger.error(f"❌ Task failed for attachment {attachment_id}: {e}")
@@ -188,7 +200,10 @@ if CELERY_AVAILABLE:
                     for attachment in attachments:
                         try:
                             await analysis_handler.process_attachment_analysis(
-                                session=session, attachment_id=attachment.id, user_id=user_id, user_plan=user_plan
+                                session=session,
+                                attachment_id=attachment.id,
+                                user_id=user_id,
+                                user_plan=user_plan,
                             )
                             processed += 1
                         except Exception as e:

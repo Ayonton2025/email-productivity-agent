@@ -51,7 +51,9 @@ class EmailValidator:
             return ""
 
         # Remove script tags and event handlers
-        sanitized = re.sub(r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", "", content, flags=re.IGNORECASE)
+        sanitized = re.sub(
+            r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", "", content, flags=re.IGNORECASE
+        )
         sanitized = re.sub(r'on\w+=\s*["\'][^"\']*["\']', "", sanitized)
         sanitized = re.sub(r"javascript:", "", sanitized, flags=re.IGNORECASE)
         sanitized = re.sub(r"vbscript:", "", sanitized, flags=re.IGNORECASE)
@@ -73,7 +75,13 @@ class PromptValidator:
                 errors.append(f"Missing required field: {field}")
 
         # Validate category
-        valid_categories = ["categorization", "action_extraction", "reply_draft", "summary", "analysis"]
+        valid_categories = [
+            "categorization",
+            "action_extraction",
+            "reply_draft",
+            "summary",
+            "analysis",
+        ]
         if "category" in template_data and template_data["category"] not in valid_categories:
             errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
 
@@ -93,7 +101,7 @@ class PromptValidator:
         if not isinstance(parameters, dict):
             return False
 
-        for param_name, param_config in parameters.items():
+        for _param_name, param_config in parameters.items():
             if not isinstance(param_config, dict):
                 return False
 
@@ -132,7 +140,9 @@ class JSONValidator:
             for field, value in data.items():
                 if field in properties:
                     field_schema = properties[field]
-                    is_valid, field_errors = JSONValidator.validate_json_structure(value, field_schema)
+                    is_valid, field_errors = JSONValidator.validate_json_structure(
+                        value, field_schema
+                    )
                     if not is_valid:
                         errors.extend([f"{field}.{error}" for error in field_errors])
 

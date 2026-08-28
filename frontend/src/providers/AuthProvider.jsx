@@ -1,6 +1,6 @@
-import React from 'react'
-import { AuthProvider as ContextAuthProvider } from '../context/AuthContext'
+import React from 'react';
+import { AuthProvider as ContextAuthProvider } from '../context/AuthContext';
 
-const AuthProvider = ({ children }) => <ContextAuthProvider>{children}</ContextAuthProvider>
+const AuthProvider = ({ children }) => <ContextAuthProvider>{children}</ContextAuthProvider>;
 
-export default AuthProvider
+export default AuthProvider;

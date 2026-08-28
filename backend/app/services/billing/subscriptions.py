@@ -1,27 +1,18 @@
-import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.exceptions import SubscriptionError
-from app.core.security import logger
 from app.models.billing_models import (
-    AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
     SUBSCRIPTION_PLANS,
     AICredits,
     CreditTransaction,
     OutboundCredits,
-    Payment,
-    PaymentTransaction,
     Subscription,
-    UsageLog,
 )
-from app.models.database import SystemSetting, User
+from app.models.database import User
 from app.services.billing.paystack import PaystackService
 
 
@@ -82,7 +73,10 @@ class SubscriptionService:
 
         # Initialize AI and Outbound credits
         ai_credits = AICredits(
-            user_id=user_id, tenant_id=tenant_id, balance=credits_allocation, monthly_allocation=credits_allocation
+            user_id=user_id,
+            tenant_id=tenant_id,
+            balance=credits_allocation,
+            monthly_allocation=credits_allocation,
         )
 
         outbound_credits = OutboundCredits(
@@ -110,7 +104,9 @@ class SubscriptionService:
 
         return subscription
 
-    async def upgrade_subscription(self, user_id: str, new_plan_id: str, session: AsyncSession) -> Subscription:
+    async def upgrade_subscription(
+        self, user_id: str, new_plan_id: str, session: AsyncSession
+    ) -> Subscription:
         """Upgrade a subscription to a different plan"""
 
         result = await session.execute(select(Subscription).where(Subscription.user_id == user_id))

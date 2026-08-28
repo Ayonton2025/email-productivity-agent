@@ -18,7 +18,9 @@ class LLMService:
         self.max_tokens = int(getattr(settings, "MAX_TOKENS", 1000) or 1000)
         self.orchestrator = orchestrator
 
-    async def process_prompt(self, prompt: str, email_content: str, system_message: str = None) -> str:
+    async def process_prompt(
+        self, prompt: str, email_content: str, system_message: str = None
+    ) -> str:
         """Process a prompt with email content using orchestrated provider chain."""
         try:
             full_prompt = f"Email Content:\n{email_content}\n\nInstruction: {prompt}"
@@ -54,7 +56,9 @@ class LLMService:
         except json.JSONDecodeError:
             return {}
 
-    async def _mock_processing(self, prompt: str, email_content: str, system_message: str = None) -> str:
+    async def _mock_processing(
+        self, prompt: str, email_content: str, system_message: str = None
+    ) -> str:
         await asyncio.sleep(0.2)
 
         if "categoriz" in prompt.lower():
@@ -66,8 +70,18 @@ class LLMService:
             return json.dumps(
                 {
                     "tasks": [
-                        {"task": "Review the request", "deadline": None, "priority": "medium", "assigned_to": "You"},
-                        {"task": "Reply to sender", "deadline": None, "priority": "low", "assigned_to": "You"},
+                        {
+                            "task": "Review the request",
+                            "deadline": None,
+                            "priority": "medium",
+                            "assigned_to": "You",
+                        },
+                        {
+                            "task": "Reply to sender",
+                            "deadline": None,
+                            "priority": "low",
+                            "assigned_to": "You",
+                        },
                     ],
                     "mock": True,
                 }
@@ -94,7 +108,9 @@ class LLMService:
 
         return "I processed your request based on the email content. [Mock response]"
 
-    async def chat_with_agent(self, messages: List[Dict[str, str]], email_context: str = None) -> str:
+    async def chat_with_agent(
+        self, messages: List[Dict[str, str]], email_context: str = None
+    ) -> str:
         """Chat interface for the email agent."""
         system_message = "You are an intelligent email productivity assistant."
         if email_context:
@@ -207,14 +223,18 @@ Body: {email_body[:2000]}
         value = (user_name or "").strip()
         return value if value else "Team"
 
-    def _generate_mock_reply(self, sender_name: str, subject: str, body: str, signer_name: str) -> Dict[str, str]:
+    def _generate_mock_reply(
+        self, sender_name: str, subject: str, body: str, signer_name: str
+    ) -> Dict[str, str]:
         body_lower = body.lower() if body else ""
         is_meeting_request = any(
-            word in body_lower for word in ["meeting", "schedule", "calendar", "time", "availability"]
+            word in body_lower
+            for word in ["meeting", "schedule", "calendar", "time", "availability"]
         )
         is_question = "?" in body
         is_document_review = any(
-            word in body_lower for word in ["document", "review", "feedback", "attached", "see attached"]
+            word in body_lower
+            for word in ["document", "review", "feedback", "attached", "see attached"]
         )
 
         if is_meeting_request:

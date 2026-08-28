@@ -1,8 +1,8 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Star, Zap, TrendingUp } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import './UpgradeButton.css'
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Star, Zap, TrendingUp } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import './UpgradeButton.css';
 
 /**
  * UpgradeButton Component
@@ -17,39 +17,50 @@ export const UpgradeButton = ({
   className = '',
   disabled = false,
 }) => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
 
   const handleClick = () => {
     if (onClick) {
-      onClick()
+      onClick();
     } else {
-      navigate('/billing/upgrade')
+      navigate('/billing/upgrade');
     }
-  }
+  };
 
-  const baseClass = `upgrade-btn upgrade-btn-${variant}`
+  const baseClass = `upgrade-btn upgrade-btn-${variant}`;
 
   return (
-    <button className={`${baseClass} ${className}`} onClick={handleClick} disabled={disabled} title={label}>
+    <button
+      className={`${baseClass} ${className}`}
+      onClick={handleClick}
+      disabled={disabled}
+      title={label}
+    >
       {showIcon && variant === 'default' && <Star size={16} />}
       {showIcon && variant === 'floating' && <Zap size={18} />}
       {showIcon && variant === 'dashboard' && <TrendingUp size={16} />}
       <span>{label}</span>
     </button>
-  )
-}
+  );
+};
 
 /**
  * UpgradePromptCard
  * Card component for displaying upgrade prompts in grids
  */
-export const UpgradePromptCard = ({ title, description, features = [], onUpgradeClick, icon: Icon = Star }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+export const UpgradePromptCard = ({
+  title,
+  description,
+  features = [],
+  onUpgradeClick,
+  icon: Icon = Star,
+}) => {
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
   return (
     <div className="upgrade-prompt-card">
       <div className="card-header">
@@ -74,17 +85,17 @@ export const UpgradePromptCard = ({ title, description, features = [], onUpgrade
         Get Started <Zap size={14} />
       </button>
     </div>
-  )
-}
+  );
+};
 
 /**
  * UpgradeAlert
  * Alert-style component for showing upgrade recommendations
  */
 export const UpgradeAlert = ({ message, detail, onDismiss, onUpgrade }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
   return (
     <div className="upgrade-alert">
       <div className="alert-content">
@@ -102,8 +113,8 @@ export const UpgradeAlert = ({ message, detail, onDismiss, onUpgrade }) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 /**
  * PremiumBadge
@@ -119,8 +130,8 @@ export const PremiumBadge = ({
       <Star size={size === 'small' ? 12 : 14} />
       {label}
     </div>
-  )
-}
+  );
+};
 
 /**
  * FeatureComparisionHint
@@ -133,16 +144,16 @@ export const FeatureComparisonHint = ({
   onViewPlans,
   onUpgrade,
 }) => {
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  if (isSuperAdmin) return null
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  if (isSuperAdmin) return null;
   const planUpgradeMap = {
     personal: 'plus',
     plus: 'professional',
     professional: 'enterprise',
-  }
+  };
 
-  const upgradeRequired = planUpgradeMap[currentPlan] || requiredPlan
+  const upgradeRequired = planUpgradeMap[currentPlan] || requiredPlan;
 
   return (
     <div className="feature-comparison-hint">
@@ -151,10 +162,12 @@ export const FeatureComparisonHint = ({
       </div>
       <div className="hint-text">
         <p className="hint-title">
-          <strong>{featureName}</strong> requires {upgradeRequired.charAt(0).toUpperCase() + upgradeRequired.slice(1)}{' '}
-          plan
+          <strong>{featureName}</strong> requires{' '}
+          {upgradeRequired.charAt(0).toUpperCase() + upgradeRequired.slice(1)} plan
         </p>
-        <p className="hint-subtitle">You're on the {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan</p>
+        <p className="hint-subtitle">
+          You're on the {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan
+        </p>
       </div>
       <div className="hint-buttons">
         {onViewPlans && (
@@ -167,5 +180,5 @@ export const FeatureComparisonHint = ({
         </button>
       </div>
     </div>
-  )
-}
+  );
+};

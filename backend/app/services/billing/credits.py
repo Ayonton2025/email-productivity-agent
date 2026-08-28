@@ -1,8 +1,7 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,13 +9,10 @@ from app.core.config import settings
 from app.core.security import logger
 from app.models.billing_models import (
     AI_ACTION_COSTS,
-    CREDIT_PACK_PRICING_USD,
     SUBSCRIPTION_PLANS,
     AICredits,
     CreditTransaction,
     OutboundCredits,
-    Payment,
-    PaymentTransaction,
     Subscription,
     UsageLog,
 )
@@ -46,7 +42,9 @@ class CreditService:
         row = await session.execute(select(User).where(User.id == user_id))
         return row.scalar_one_or_none()
 
-    async def _get_user_access_override(self, user_id: str, session: AsyncSession) -> Dict[str, Any]:
+    async def _get_user_access_override(
+        self, user_id: str, session: AsyncSession
+    ) -> Dict[str, Any]:
         user = await self._get_user(user_id, session)
         if not user or not user.email:
             return {}
@@ -99,11 +97,17 @@ class CreditService:
             return True
         raise PaymentRequiredError(f"Insufficient credits: need {credits_needed}")
 
-    async def check_credits_for_ai_action(self, user_id: str, action: str, session: AsyncSession) -> bool:
+    async def check_credits_for_ai_action(
+        self, user_id: str, action: str, session: AsyncSession
+    ) -> bool:
         credits_needed = self._credits_for_action(action)
-        return await self.check_credits(user_id=user_id, credits_needed=credits_needed, session=session)
+        return await self.check_credits(
+            user_id=user_id, credits_needed=credits_needed, session=session
+        )
 
-    async def deduct_credits(self, user_id: str, feature: str, credits: int, session: AsyncSession) -> bool:
+    async def deduct_credits(
+        self, user_id: str, feature: str, credits: int, session: AsyncSession
+    ) -> bool:
         """Deduct credits for a feature use"""
         if await self._is_user_blocked(user_id, session):
             logger.warning(f"User {user_id} blocked by admin policy")
@@ -121,7 +125,9 @@ class CreditService:
 
         ai_credits.balance -= credits
         ai_credits.monthly_used += credits
-        subscription_result = await session.execute(select(Subscription).where(Subscription.user_id == user_id))
+        subscription_result = await session.execute(
+            select(Subscription).where(Subscription.user_id == user_id)
+        )
         subscription = subscription_result.scalar_one_or_none()
         if subscription:
             subscription.ai_credits_monthly_used += credits
@@ -168,7 +174,9 @@ class CreditService:
     ) -> Dict[str, Any]:
         credits = self._credits_for_action(action)
         await self.check_credits(user_id=user_id, credits_needed=credits, session=session)
-        ok = await self.deduct_credits(user_id=user_id, feature=action, credits=credits, session=session)
+        ok = await self.deduct_credits(
+            user_id=user_id, feature=action, credits=credits, session=session
+        )
         if not ok:
             raise PaymentRequiredError(f"Insufficient credits: need {credits}")
         return {
@@ -177,7 +185,9 @@ class CreditService:
             "tokens_used": tokens_used,
         }
 
-    async def add_credits(self, user_id: str, credits: int, reason: str, session: AsyncSession) -> bool:
+    async def add_credits(
+        self, user_id: str, credits: int, reason: str, session: AsyncSession
+    ) -> bool:
         """Add credits to a user account"""
 
         result = await session.execute(select(AICredits).where(AICredits.user_id == user_id))
@@ -227,10 +237,14 @@ class CreditService:
             "credit_definition": "1 AI Credit = 1 email processed (or 1,000 tokens)",
         }
 
-    async def deduct_outbound_credits(self, user_id: str, emails_count: int, session: AsyncSession) -> bool:
+    async def deduct_outbound_credits(
+        self, user_id: str, emails_count: int, session: AsyncSession
+    ) -> bool:
         """Deduct outbound credits for sending emails"""
 
-        result = await session.execute(select(OutboundCredits).where(OutboundCredits.user_id == user_id))
+        result = await session.execute(
+            select(OutboundCredits).where(OutboundCredits.user_id == user_id)
+        )
         outbound = result.scalar()
 
         if not outbound or outbound.balance < emails_count:
@@ -258,12 +272,27 @@ class FeatureGatingService:
     """Enforce feature access based on subscription tier and credits"""
 
     FEATURE_ALIASES: Dict[str, List[str]] = {
-        "email_classification": ["email_classification", "email_categorization", "categorization", "classify"],
+        "email_classification": [
+            "email_classification",
+            "email_categorization",
+            "categorization",
+            "classify",
+        ],
         "action_extraction": ["action_extraction"],
-        "thread_summarization": ["thread_summarization", "email_summaries", "summarization", "summary"],
+        "thread_summarization": [
+            "thread_summarization",
+            "email_summaries",
+            "summarization",
+            "summary",
+        ],
         "sentiment_analysis": ["sentiment_analysis"],
         "shared_inbox": ["shared_inbox", "shared_inboxes", "team_shared_inbox"],
-        "workflow_automation": ["workflow_automation", "workflows", "workflow_builder", "unlimited_workflows"],
+        "workflow_automation": [
+            "workflow_automation",
+            "workflows",
+            "workflow_builder",
+            "unlimited_workflows",
+        ],
         "crm_sync": ["crm_sync", "crm_lite", "auto_crm"],
         "advanced_analytics": ["advanced_analytics", "analytics_dashboard", "dashboard"],
         "api_access": ["api_access"],
@@ -279,7 +308,9 @@ class FeatureGatingService:
         return f
 
     @classmethod
-    def _feature_matches_override(cls, override_map: Dict[str, Any], feature: str) -> Optional[bool]:
+    def _feature_matches_override(
+        cls, override_map: Dict[str, Any], feature: str
+    ) -> Optional[bool]:
         if not override_map:
             return None
         normalized = cls._normalize_feature(feature)
@@ -299,7 +330,9 @@ class FeatureGatingService:
         """Check if user can access a feature"""
         user_row = await session.execute(select(User).where(User.id == user_id))
         user = user_row.scalar_one_or_none()
-        allowed_admins = {e.strip().lower() for e in (settings.ADMIN_EMAILS or "").split(",") if e.strip()}
+        allowed_admins = {
+            e.strip().lower() for e in (settings.ADMIN_EMAILS or "").split(",") if e.strip()
+        }
         if user and user.email and user.email.lower() in allowed_admins:
             return True
 
@@ -374,4 +407,6 @@ class FeatureGatingService:
         if not subscription:
             return False
 
-        return (subscription.seats_current or 0) < (subscription.seats_max or subscription.seats_included or 0)
+        return (subscription.seats_current or 0) < (
+            subscription.seats_max or subscription.seats_included or 0
+        )

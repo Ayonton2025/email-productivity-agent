@@ -11,18 +11,27 @@ from app.core.exceptions import ApplicationError
 async def application_error_handler(_request: Request, exc: ApplicationError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content={"success": False, "error": {"code": exc.code, "message": exc.message, "details": exc.details}},
+        content={
+            "success": False,
+            "error": {"code": exc.code, "message": exc.message, "details": exc.details},
+        },
     )
 
 
-async def request_validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+async def request_validation_error_handler(
+    _request: Request, exc: RequestValidationError
+) -> JSONResponse:
     return JSONResponse(
         status_code=422,
         content=jsonable_encoder(
             {
                 "success": False,
                 "detail": exc.errors(),
-                "error": {"code": "validation_error", "message": "Request validation failed", "details": exc.errors()},
+                "error": {
+                    "code": "validation_error",
+                    "message": "Request validation failed",
+                    "details": exc.errors(),
+                },
             }
         ),
     )

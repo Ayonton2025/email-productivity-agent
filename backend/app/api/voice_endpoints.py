@@ -33,12 +33,20 @@ async def read_email(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id)))
+    result = await db.execute(
+        select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id))
+    )
     email = result.scalar_one_or_none()
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
-    spoken = f"From {email.sender}. Subject {email.subject or 'No subject'}. {email.body_text or ''}"
-    return {"success": True, "transcript": spoken[:1200], "tts_hint": "Use Google TTS or browser speech synthesis"}
+    spoken = (
+        f"From {email.sender}. Subject {email.subject or 'No subject'}. {email.body_text or ''}"
+    )
+    return {
+        "success": True,
+        "transcript": spoken[:1200],
+        "tts_hint": "Use Google TTS or browser speech synthesis",
+    }
 
 
 @router.post("/reply", response_model=Dict[str, Any])
@@ -47,7 +55,9 @@ async def voice_reply(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id)))
+    result = await db.execute(
+        select(Email).where(and_(Email.id == body.email_id, Email.user_id == current_user.id))
+    )
     email = result.scalar_one_or_none()
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")

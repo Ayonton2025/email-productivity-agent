@@ -4,7 +4,6 @@ from typing import Any, Dict
 from fastapi import Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.websockets import manager
 from app.models.database import get_db
 from app.services.agent_service import AgentService
 
@@ -41,7 +40,9 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-async def websocket_endpoint(websocket: WebSocket, client_id: str = "default", db: AsyncSession = Depends(get_db)):
+async def websocket_endpoint(
+    websocket: WebSocket, client_id: str = "default", db: AsyncSession = Depends(get_db)
+):
     await manager.connect(websocket, client_id, db)
     try:
         while True:

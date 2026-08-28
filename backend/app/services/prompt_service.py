@@ -45,7 +45,9 @@ class PromptService:
 
         for prompt_data in default_prompts:
             # Check if prompt already exists
-            result = await self.db.execute(select(PromptTemplate).where(PromptTemplate.name == prompt_data["name"]))
+            result = await self.db.execute(
+                select(PromptTemplate).where(PromptTemplate.name == prompt_data["name"])
+            )
             existing = result.scalar_one_or_none()
 
             if not existing:
@@ -56,7 +58,9 @@ class PromptService:
 
     async def get_all_prompts(self) -> List[Dict[str, Any]]:
         """Get all prompt templates"""
-        result = await self.db.execute(select(PromptTemplate).order_by(PromptTemplate.category, PromptTemplate.name))
+        result = await self.db.execute(
+            select(PromptTemplate).order_by(PromptTemplate.category, PromptTemplate.name)
+        )
         prompts = result.scalars().all()
         return [prompt.to_dict() for prompt in prompts]
 
@@ -100,7 +104,9 @@ class PromptService:
         """Get all system prompts"""
         try:
             result = await self.db.execute(
-                select(PromptTemplate).where(PromptTemplate.is_system == True).order_by(PromptTemplate.name)
+                select(PromptTemplate)
+                .where(PromptTemplate.is_system == True)
+                .order_by(PromptTemplate.name)
             )
             prompts = result.scalars().all()
             return [prompt.to_dict() for prompt in prompts]
@@ -128,7 +134,9 @@ class PromptService:
         await self.db.refresh(prompt)
         return prompt.to_dict()
 
-    async def update_prompt(self, prompt_id: UUID, prompt_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_prompt(
+        self, prompt_id: UUID, prompt_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Update a prompt template"""
         result = await self.db.execute(select(PromptTemplate).where(PromptTemplate.id == prompt_id))
         prompt = result.scalar_one_or_none()
@@ -184,7 +192,9 @@ class PromptService:
 
     async def _deactivate_other_prompts(self, category: str, exclude_id: UUID = None):
         """Deactivate all prompts in a category except the excluded one"""
-        query = select(PromptTemplate).where((PromptTemplate.category == category) & (PromptTemplate.is_active == True))
+        query = select(PromptTemplate).where(
+            (PromptTemplate.category == category) & (PromptTemplate.is_active == True)
+        )
 
         if exclude_id:
             query = query.where(PromptTemplate.id != exclude_id)

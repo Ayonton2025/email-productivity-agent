@@ -129,7 +129,11 @@ def _map_ai_category(label_ids: List[str]) -> Optional[str]:
     labels = set(label_ids or [])
     if "SPAM" in labels:
         return "Spam"
-    if "CATEGORY_PROMOTIONS" in labels or "CATEGORY_UPDATES" in labels or "CATEGORY_FORUMS" in labels:
+    if (
+        "CATEGORY_PROMOTIONS" in labels
+        or "CATEGORY_UPDATES" in labels
+        or "CATEGORY_FORUMS" in labels
+    ):
         return "Newsletter"
     if "CATEGORY_SOCIAL" in labels:
         return "Personal"
@@ -138,7 +142,9 @@ def _map_ai_category(label_ids: List[str]) -> Optional[str]:
     return "Uncategorized"
 
 
-async def get_gmail_provider_config(db: AsyncSession, user_id: str) -> Optional[EmailProviderConfig]:
+async def get_gmail_provider_config(
+    db: AsyncSession, user_id: str
+) -> Optional[EmailProviderConfig]:
     stmt = select(EmailProviderConfig).where(
         and_(
             EmailProviderConfig.user_id == user_id,
@@ -207,7 +213,12 @@ async def sync_gmail_inbox(
     gmail = build("gmail", "v1", credentials=creds, cache_discovery=False)
 
     # Only INBOX. We intentionally do not fetch "ALL" to avoid pulling everything at once.
-    results = gmail.users().messages().list(userId="me", labelIds=["INBOX"], maxResults=max_results).execute()
+    results = (
+        gmail.users()
+        .messages()
+        .list(userId="me", labelIds=["INBOX"], maxResults=max_results)
+        .execute()
+    )
     messages = results.get("messages", []) or []
 
     emails_synced = 0
@@ -220,7 +231,12 @@ async def sync_gmail_inbox(
         if user_row:
             if getattr(user_row, "subscription_status", "free") == "active":
                 user_plan = getattr(user_row, "plan", "pro") or "pro"
-            elif (getattr(user_row, "plan", "") or "").lower() in {"pro", "plus", "professional", "enterprise"}:
+            elif (getattr(user_row, "plan", "") or "").lower() in {
+                "pro",
+                "plus",
+                "professional",
+                "enterprise",
+            }:
                 user_plan = user_row.plan
     except Exception:
         pass
@@ -249,7 +265,9 @@ async def sync_gmail_inbox(
         is_spam = "SPAM" in set(label_ids)
 
         # De-dupe by provider message-id per account
-        stmt = select(Email).where(and_(Email.account_id == account.id, Email.message_id == message_id))
+        stmt = select(Email).where(
+            and_(Email.account_id == account.id, Email.message_id == message_id)
+        )
         existing = await db.execute(stmt)
         if existing.scalars().first():
             continue

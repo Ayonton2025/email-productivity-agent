@@ -71,11 +71,15 @@ class WorkflowStepUpdate(BaseModel):
 
 
 @router.get("/", response_model=List[Dict[str, Any]])
-async def get_workflows(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_workflows(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Get all workflows for the user"""
     try:
         result = await db.execute(
-            select(Workflow).where(Workflow.user_id == current_user.id).order_by(Workflow.created_at.desc())
+            select(Workflow)
+            .where(Workflow.user_id == current_user.id)
+            .order_by(Workflow.created_at.desc())
         )
         workflows = list(result.scalars().all())
         return [w.to_dict() for w in workflows]
@@ -85,12 +89,16 @@ async def get_workflows(current_user: User = Depends(get_current_user), db: Asyn
 
 @router.get("/{workflow_id}", response_model=Dict[str, Any])
 async def get_workflow(
-    workflow_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    workflow_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get a specific workflow with its steps"""
     try:
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:
@@ -98,7 +106,9 @@ async def get_workflow(
 
         # Get steps
         steps_result = await db.execute(
-            select(WorkflowStep).where(WorkflowStep.workflow_id == workflow_id).order_by(WorkflowStep.step_order.asc())
+            select(WorkflowStep)
+            .where(WorkflowStep.workflow_id == workflow_id)
+            .order_by(WorkflowStep.step_order.asc())
         )
         steps = list(steps_result.scalars().all())
 
@@ -113,7 +123,9 @@ async def get_workflow(
 
 @router.post("/", response_model=Dict[str, Any])
 async def create_workflow(
-    workflow_data: WorkflowCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    workflow_data: WorkflowCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a new workflow"""
     try:
@@ -123,7 +135,8 @@ async def create_workflow(
         )
         if not can_access:
             raise HTTPException(
-                status_code=403, detail="Workflow automation is not available on your plan. Upgrade to Plus or Pro."
+                status_code=403,
+                detail="Workflow automation is not available on your plan. Upgrade to Plus or Pro.",
             )
 
         workflow = Workflow(
@@ -155,7 +168,9 @@ async def update_workflow(
     """Update a workflow"""
     try:
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:
@@ -188,12 +203,16 @@ async def update_workflow(
 
 @router.delete("/{workflow_id}")
 async def delete_workflow(
-    workflow_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    workflow_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete a workflow"""
     try:
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:
@@ -223,7 +242,9 @@ async def create_workflow_step(
     try:
         # Verify workflow belongs to user
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:
@@ -334,7 +355,9 @@ async def get_workflow_executions(
     try:
         # Verify workflow belongs to user
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:
@@ -364,7 +387,9 @@ async def execute_workflow(
     """Manually trigger a workflow execution"""
     try:
         result = await db.execute(
-            select(Workflow).where(and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id))
+            select(Workflow).where(
+                and_(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            )
         )
         workflow = result.scalar_one_or_none()
         if not workflow:

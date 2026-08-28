@@ -105,14 +105,20 @@ async def process_email_ai(db: AsyncSession, email: Email) -> None:
     tasks = []
     tasks.append(
         llm.process_prompt(
-            categorization_prompt.template if categorization_prompt else "Categorize this email.", email_content
+            categorization_prompt.template if categorization_prompt else "Categorize this email.",
+            email_content,
         )
     )
     tasks.append(
-        llm.process_prompt(summary_prompt.template if summary_prompt else "Summarize this email.", email_content)
+        llm.process_prompt(
+            summary_prompt.template if summary_prompt else "Summarize this email.", email_content
+        )
     )
     tasks.append(
-        llm.process_prompt(action_prompt.template if action_prompt else "Extract action items as JSON.", email_content)
+        llm.process_prompt(
+            action_prompt.template if action_prompt else "Extract action items as JSON.",
+            email_content,
+        )
     )
 
     category_raw, summary_raw, actions_raw = await asyncio.gather(*tasks, return_exceptions=True)
@@ -137,7 +143,11 @@ async def process_email_ai(db: AsyncSession, email: Email) -> None:
             action_items = parsed["tasks"]
         elif isinstance(parsed, list):
             action_items = parsed
-        elif isinstance(parsed, dict) and "action_items" in parsed and isinstance(parsed["action_items"], list):
+        elif (
+            isinstance(parsed, dict)
+            and "action_items" in parsed
+            and isinstance(parsed["action_items"], list)
+        ):
             action_items = parsed["action_items"]
 
     email.ai_category = category
@@ -163,7 +173,7 @@ async def process_email_ai(db: AsyncSession, email: Email) -> None:
     # Process Relationship Intelligence (non-blocking)
     try:
         relationship_service = RelationshipService(db)
-        relationship_data = await relationship_service.process_email_for_relationships(email)
+        _relationship_data = await relationship_service.process_email_for_relationships(email)
         # Relationship data is stored in Contact/Company tables, not in Email
     except Exception as e:
         logger.error(f"⚠️ [process_email_ai] Relationship processing failed: {e}")
@@ -171,7 +181,7 @@ async def process_email_ai(db: AsyncSession, email: Email) -> None:
     # Process Decision Intelligence (non-blocking)
     try:
         decision_service = DecisionIntelligenceService(db)
-        decision_data = await decision_service.process_email_for_decisions(email)
+        _decision_data = await decision_service.process_email_for_decisions(email)
         # Decision data is stored in Commitment/Risk/Opportunity tables
     except Exception as e:
         logger.error(f"⚠️ [process_email_ai] Decision intelligence processing failed: {e}")

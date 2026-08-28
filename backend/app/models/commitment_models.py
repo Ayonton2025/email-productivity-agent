@@ -30,16 +30,22 @@ class Commitment(Base):
     # Commitment Details
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    commitment_type = Column(String, nullable=False, index=True)  # deadline, promise, agreement, task, meeting
+    commitment_type = Column(
+        String, nullable=False, index=True
+    )  # deadline, promise, agreement, task, meeting
 
     # Who committed
     committed_by = Column(String, nullable=True)  # "user" or "contact" or email address
-    is_user_commitment = Column(Boolean, default=False)  # True if user committed, False if contact committed
+    is_user_commitment = Column(
+        Boolean, default=False
+    )  # True if user committed, False if contact committed
 
     # Deadline & Status
     deadline = Column(DateTime, nullable=True, index=True)
     is_overdue = Column(Boolean, default=False, index=True)
-    status = Column(String, default="pending", index=True)  # pending, in_progress, completed, cancelled, missed
+    status = Column(
+        String, default="pending", index=True
+    )  # pending, in_progress, completed, cancelled, missed
 
     # Priority & Impact
     priority = Column(String, default="medium")  # high, medium, low
@@ -83,7 +89,8 @@ class Commitment(Base):
             "extracted_text": self.extracted_text,
             "confidence_score": self.confidence_score,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
@@ -110,7 +117,9 @@ class Risk(Base):
     severity = Column(String, nullable=False, index=True)  # critical, high, medium, low
 
     # Risk Status
-    status = Column(String, default="open", index=True)  # open, investigating, mitigated, resolved, false_positive
+    status = Column(
+        String, default="open", index=True
+    )  # open, investigating, mitigated, resolved, false_positive
     is_acknowledged = Column(Boolean, default=False)
 
     # Impact Assessment
@@ -153,7 +162,8 @@ class Risk(Base):
             "extracted_text": self.extracted_text,
             "confidence_score": self.confidence_score,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
@@ -179,7 +189,9 @@ class Opportunity(Base):
     )  # sales_lead, partnership, job, funding, collaboration, etc.
 
     # Status & Stage
-    status = Column(String, default="new", index=True)  # new, qualified, in_progress, won, lost, closed
+    status = Column(
+        String, default="new", index=True
+    )  # new, qualified, in_progress, won, lost, closed
     stage = Column(String, nullable=True)  # discovery, proposal, negotiation, closed
 
     # Value Assessment
@@ -227,11 +239,14 @@ class Opportunity(Base):
             "priority": self.priority,
             "lead_temperature": self.lead_temperature,
             "interest_level": self.interest_level,
-            "expected_close_date": self.expected_close_date.isoformat() if self.expected_close_date else None,
+            "expected_close_date": self.expected_close_date.isoformat()
+            if self.expected_close_date
+            else None,
             "extracted_text": self.extracted_text,
             "confidence_score": self.confidence_score,
             "tags": self.tags or [],
-            "metadata": self.extra_data or {},  # Keep API field name as 'metadata' for backward compatibility
+            "metadata": self.extra_data
+            or {},  # Keep API field name as 'metadata' for backward compatibility
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "closed_at": self.closed_at.isoformat() if self.closed_at else None,

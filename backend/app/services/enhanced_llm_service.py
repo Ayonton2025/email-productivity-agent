@@ -17,7 +17,9 @@ class EnhancedLLMService:
         self.client = openai.OpenAI(api_key=api_key) if api_key else None
         self.model = getattr(settings, "LLM_MODEL", None) or "gpt-4o-mini"
 
-    async def advanced_email_analysis(self, email_data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
+    async def advanced_email_analysis(
+        self, email_data: Dict[str, Any], analysis_type: str
+    ) -> Dict[str, Any]:
         """Perform advanced email analysis using OpenAI"""
 
         system_prompts = {
@@ -72,13 +74,15 @@ class EnhancedLLMService:
             logger.error(f"OpenAI API error: {e}")
             return self._get_fallback_analysis(email_data)
 
-    async def batch_process_emails(self, emails: List[Dict[str, Any]], analysis_type: str) -> List[Dict[str, Any]]:
+    async def batch_process_emails(
+        self, emails: List[Dict[str, Any]], analysis_type: str
+    ) -> List[Dict[str, Any]]:
         """Process multiple emails efficiently"""
         tasks = [self.advanced_email_analysis(email, analysis_type) for email in emails]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         processed_emails = []
-        for email, result in zip(emails, results):
+        for email, result in zip(emails, results, strict=False):
             if isinstance(result, Exception):
                 # Fallback processing
                 processed_emails.append(self._get_fallback_analysis(email))
@@ -88,7 +92,9 @@ class EnhancedLLMService:
 
         return processed_emails
 
-    async def conversational_agent(self, messages: List[Dict[str, str]], email_context: List[Dict] = None) -> str:
+    async def conversational_agent(
+        self, messages: List[Dict[str, str]], email_context: List[Dict] = None
+    ) -> str:
         """Advanced conversational agent with email context"""
 
         system_message = {
@@ -119,7 +125,10 @@ class EnhancedLLMService:
             response = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: self.client.chat.completions.create(
-                    model=self.model, messages=conversation_messages, temperature=0.7, max_tokens=1000
+                    model=self.model,
+                    messages=conversation_messages,
+                    temperature=0.7,
+                    max_tokens=1000,
                 ),
             )
 
@@ -161,7 +170,9 @@ class EnhancedLLMService:
         """
 
         if not self.client:
-            logger.info("⚠️ [EnhancedLLMService] OpenAI client not initialized - using fallback reply")
+            logger.info(
+                "⚠️ [EnhancedLLMService] OpenAI client not initialized - using fallback reply"
+            )
             return self._get_fallback_reply(original_email, tone)
 
         try:
@@ -170,7 +181,10 @@ class EnhancedLLMService:
                 lambda: self.client.chat.completions.create(
                     model=self.model,
                     messages=[
-                        {"role": "system", "content": "You are an expert email communication assistant."},
+                        {
+                            "role": "system",
+                            "content": "You are an expert email communication assistant.",
+                        },
                         {"role": "user", "content": prompt},
                     ],
                     temperature=0.7,
@@ -223,7 +237,9 @@ class EnhancedLLMService:
 
         return context_str
 
-    def _enhance_analysis_result(self, result: Dict[str, Any], original_email: Dict[str, Any]) -> Dict[str, Any]:
+    def _enhance_analysis_result(
+        self, result: Dict[str, Any], original_email: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enhance AI analysis with additional metadata"""
         result["analysis_timestamp"] = datetime.utcnow().isoformat()
         result["model_used"] = self.model
@@ -231,7 +247,11 @@ class EnhancedLLMService:
 
         # Add confidence scores if not present
         if "confidence_scores" not in result:
-            result["confidence_scores"] = {"categorization": 0.85, "priority": 0.80, "sentiment": 0.75}
+            result["confidence_scores"] = {
+                "categorization": 0.85,
+                "priority": 0.80,
+                "sentiment": 0.75,
+            }
 
         return result
 

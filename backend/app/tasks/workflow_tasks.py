@@ -81,7 +81,9 @@ async def _send_due_reminders(self):
 
             # Get reminders that are due
             now = datetime.utcnow()
-            result = await session.execute(select(Reminder).where(and_(Reminder.due_at <= now, Reminder.sent == False)))
+            result = await session.execute(
+                select(Reminder).where(and_(Reminder.due_at <= now, Reminder.sent == False))
+            )
             reminders = result.scalars().all()
 
             sent = 0

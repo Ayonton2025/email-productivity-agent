@@ -1,5 +1,5 @@
-import { logger } from '../../utils/logger.js'
-import React, { useEffect, useMemo, useState } from 'react'
+import { logger } from '../../utils/logger.js';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   getAdminOverview,
   getAdminTransactions,
@@ -12,186 +12,209 @@ import {
   runLLMProviderHealthCheck,
   runLLMSingleProviderTest,
   resetPremiumDismissals,
-} from '../../services/adminService'
+} from '../../services/adminService';
 
 const Stat = ({ label, value }) => (
   <div className="rounded-lg border border-slate-200 bg-white p-4">
     <div className="text-xs text-slate-500">{label}</div>
     <div className="mt-1 text-2xl font-semibold text-slate-900">{value}</div>
   </div>
-)
+);
 
 const SuperAdminDashboard = ({ view = 'dashboard' }) => {
-  const [overview, setOverview] = useState(null)
-  const [transactions, setTransactions] = useState([])
-  const [currencyReport, setCurrencyReport] = useState([])
-  const [llmProviders, setLlmProviders] = useState([])
-  const [llmLoading, setLlmLoading] = useState(false)
-  const [llmCheckResult, setLlmCheckResult] = useState(null)
-  const [providerChecks, setProviderChecks] = useState({})
-  const [saveState, setSaveState] = useState({})
-  const [newKeys, setNewKeys] = useState({})
-  const [confirmDelete, setConfirmDelete] = useState({ provider: null, keyIndex: null, maskedKey: null })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
-  const [lastRefreshTime, setLastRefreshTime] = useState(null)
+  const [overview, setOverview] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [currencyReport, setCurrencyReport] = useState([]);
+  const [llmProviders, setLlmProviders] = useState([]);
+  const [llmLoading, setLlmLoading] = useState(false);
+  const [llmCheckResult, setLlmCheckResult] = useState(null);
+  const [providerChecks, setProviderChecks] = useState({});
+  const [saveState, setSaveState] = useState({});
+  const [newKeys, setNewKeys] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState({
+    provider: null,
+    keyIndex: null,
+    maskedKey: null,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError('');
       try {
-        const [o, t, r] = await Promise.all([getAdminOverview(), getAdminTransactions(200), getRevenueByCurrency()])
-        setOverview(o?.metrics || null)
-        setTransactions(t?.transactions || [])
-        setCurrencyReport(r?.report || [])
+        const [o, t, r] = await Promise.all([
+          getAdminOverview(),
+          getAdminTransactions(200),
+          getRevenueByCurrency(),
+        ]);
+        setOverview(o?.metrics || null);
+        setTransactions(t?.transactions || []);
+        setCurrencyReport(r?.report || []);
       } catch (e) {
-        setError(e?.response?.data?.detail || e.message || 'Failed to load admin dashboard')
+        setError(e?.response?.data?.detail || e.message || 'Failed to load admin dashboard');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    load()
-    loadProviders()
-  }, [])
+    };
+    load();
+    loadProviders();
+  }, []);
 
   const loadProviders = async () => {
     try {
-      setLlmLoading(true)
-      const res = await getLLMProviders()
-      setLlmProviders(res?.providers || [])
-      setLastRefreshTime(new Date())
+      setLlmLoading(true);
+      const res = await getLLMProviders();
+      setLlmProviders(res?.providers || []);
+      setLastRefreshTime(new Date());
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to load LLM providers')
+      setError(e?.response?.data?.detail || e.message || 'Failed to load LLM providers');
     } finally {
-      setLlmLoading(false)
+      setLlmLoading(false);
     }
-  }
+  };
 
   // Auto-refresh providers every 30 seconds to show updated health status
   useEffect(() => {
-    if (!autoRefreshEnabled || view !== 'llm') return
+    if (!autoRefreshEnabled || view !== 'llm') return;
 
     const refreshInterval = setInterval(() => {
-      loadProviders()
-    }, 30000) // Refresh every 30 seconds
+      loadProviders();
+    }, 30000); // Refresh every 30 seconds
 
-    return () => clearInterval(refreshInterval)
-  }, [autoRefreshEnabled, view])
+    return () => clearInterval(refreshInterval);
+  }, [autoRefreshEnabled, view]);
 
   const patchProvider = async (provider, patch) => {
-    setSaveState((prev) => ({ ...prev, [provider]: 'saving' }))
+    setSaveState((prev) => ({ ...prev, [provider]: 'saving' }));
     try {
-      await updateLLMProvider(provider, patch)
-      await loadProviders()
-      setSaveState((prev) => ({ ...prev, [provider]: 'saved' }))
+      await updateLLMProvider(provider, patch);
+      await loadProviders();
+      setSaveState((prev) => ({ ...prev, [provider]: 'saved' }));
     } catch (e) {
-      setSaveState((prev) => ({ ...prev, [provider]: e?.response?.data?.detail || e.message || 'Failed' }))
+      setSaveState((prev) => ({
+        ...prev,
+        [provider]: e?.response?.data?.detail || e.message || 'Failed',
+      }));
     }
-  }
+  };
 
   const rotateKey = async (provider) => {
-    const key = (newKeys[provider] || '').trim()
-    if (!key) return
-    setSaveState((prev) => ({ ...prev, [provider]: 'saving' }))
+    const key = (newKeys[provider] || '').trim();
+    if (!key) return;
+    setSaveState((prev) => ({ ...prev, [provider]: 'saving' }));
     try {
-      await rotateLLMProviderKey(provider, key)
-      setNewKeys((prev) => ({ ...prev, [provider]: '' }))
-      await loadProviders()
-      setSaveState((prev) => ({ ...prev, [provider]: 'saved' }))
+      await rotateLLMProviderKey(provider, key);
+      setNewKeys((prev) => ({ ...prev, [provider]: '' }));
+      await loadProviders();
+      setSaveState((prev) => ({ ...prev, [provider]: 'saved' }));
     } catch (e) {
-      setSaveState((prev) => ({ ...prev, [provider]: e?.response?.data?.detail || e.message || 'Failed' }))
+      setSaveState((prev) => ({
+        ...prev,
+        [provider]: e?.response?.data?.detail || e.message || 'Failed',
+      }));
     }
-  }
+  };
 
   const confirmDeleteKey = async (provider, keyIndex) => {
-    setSaveState((prev) => ({ ...prev, [provider]: 'deleting' }))
+    setSaveState((prev) => ({ ...prev, [provider]: 'deleting' }));
     try {
-      await deleteLLMProviderKey(provider, keyIndex)
-      setConfirmDelete({ provider: null, keyIndex: null, maskedKey: null })
-      await loadProviders()
-      setSaveState((prev) => ({ ...prev, [provider]: 'deleted' }))
-      setTimeout(() => setSaveState((prev) => ({ ...prev, [provider]: '' })), 2000)
+      await deleteLLMProviderKey(provider, keyIndex);
+      setConfirmDelete({ provider: null, keyIndex: null, maskedKey: null });
+      await loadProviders();
+      setSaveState((prev) => ({ ...prev, [provider]: 'deleted' }));
+      setTimeout(() => setSaveState((prev) => ({ ...prev, [provider]: '' })), 2000);
     } catch (e) {
-      setSaveState((prev) => ({ ...prev, [provider]: e?.response?.data?.detail || e.message || 'Failed to delete' }))
+      setSaveState((prev) => ({
+        ...prev,
+        [provider]: e?.response?.data?.detail || e.message || 'Failed to delete',
+      }));
     }
-  }
+  };
 
   const runHealthCheck = async () => {
-    setLlmLoading(true)
+    setLlmLoading(true);
     try {
-      const res = await runLLMHealthCheck()
+      const res = await runLLMHealthCheck();
       // res may include health and providers
-      setLlmCheckResult(res?.health || res || { message: 'No details returned' })
-      await loadProviders()
+      setLlmCheckResult(res?.health || res || { message: 'No details returned' });
+      await loadProviders();
     } catch (e) {
-      const msg = e?.response?.data || e.message || 'Failed to run provider health check'
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg))
-      setLlmCheckResult({ error: msg })
+      const msg = e?.response?.data || e.message || 'Failed to run provider health check';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      setLlmCheckResult({ error: msg });
     } finally {
-      setLlmLoading(false)
+      setLlmLoading(false);
     }
-  }
+  };
 
   const runSingleProviderHealthCheck = async (provider) => {
-    setProviderChecks((prev) => ({ ...prev, [provider]: { status: 'checking', type: 'health' } }))
+    setProviderChecks((prev) => ({ ...prev, [provider]: { status: 'checking', type: 'health' } }));
     try {
-      const res = await runLLMProviderHealthCheck(provider)
-      const providerResult = res?.provider_health || null
+      const res = await runLLMProviderHealthCheck(provider);
+      const providerResult = res?.provider_health || null;
       setProviderChecks((prev) => ({
         ...prev,
         [provider]: {
           status: 'done',
           type: 'health',
-          result: providerResult || { message: res?.health?.message || 'No provider result returned' },
+          result: providerResult || {
+            message: res?.health?.message || 'No provider result returned',
+          },
         },
-      }))
-      await loadProviders()
+      }));
+      await loadProviders();
     } catch (e) {
-      const msg = e?.response?.data?.detail || e.message || 'Failed to run provider health check'
+      const msg = e?.response?.data?.detail || e.message || 'Failed to run provider health check';
       setProviderChecks((prev) => ({
         ...prev,
         [provider]: { status: 'error', type: 'health', result: { error: msg } },
-      }))
+      }));
     }
-  }
+  };
 
   const runSingleProviderTest = async (provider) => {
-    setProviderChecks((prev) => ({ ...prev, [provider]: { status: 'checking', type: 'test' } }))
+    setProviderChecks((prev) => ({ ...prev, [provider]: { status: 'checking', type: 'test' } }));
     try {
-      const res = await runLLMSingleProviderTest(provider)
-      const providerResult = res?.provider_result || null
+      const res = await runLLMSingleProviderTest(provider);
+      const providerResult = res?.provider_result || null;
       setProviderChecks((prev) => ({
         ...prev,
         [provider]: {
           status: 'done',
           type: 'test',
-          result: providerResult || { message: res?.test_results?.message || 'No provider test result returned' },
+          result: providerResult || {
+            message: res?.test_results?.message || 'No provider test result returned',
+          },
         },
-      }))
-      await loadProviders()
+      }));
+      await loadProviders();
     } catch (e) {
-      const msg = e?.response?.data?.detail || e.message || 'Failed to run provider test'
+      const msg = e?.response?.data?.detail || e.message || 'Failed to run provider test';
       setProviderChecks((prev) => ({
         ...prev,
         [provider]: { status: 'error', type: 'test', result: { error: msg } },
-      }))
+      }));
     }
-  }
+  };
 
   const txSummary = useMemo(() => {
-    const byMethod = {}
+    const byMethod = {};
     for (const tx of transactions) {
-      const key = tx.payment_method || 'unknown'
-      byMethod[key] = (byMethod[key] || 0) + 1
+      const key = tx.payment_method || 'unknown';
+      byMethod[key] = (byMethod[key] || 0) + 1;
     }
-    return Object.entries(byMethod).sort((a, b) => b[1] - a[1])
-  }, [transactions])
+    return Object.entries(byMethod).sort((a, b) => b[1] - a[1]);
+  }, [transactions]);
 
-  if (loading && view === 'dashboard') return <div className="p-6 text-slate-600">Loading dashboard...</div>
-  if (loading && view === 'llm') return <div className="p-6 text-slate-600">Loading LLM settings...</div>
-  if (error) return <div className="p-6 text-red-600">{error}</div>
+  if (loading && view === 'dashboard')
+    return <div className="p-6 text-slate-600">Loading dashboard...</div>;
+  if (loading && view === 'llm')
+    return <div className="p-6 text-slate-600">Loading LLM settings...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
 
   // Dashboard View
   if (view === 'dashboard' || view === 'super-admin') {
@@ -199,7 +222,9 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
       <div className="p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-600 text-sm">System-wide operations, billing analytics, and payment monitoring.</p>
+          <p className="text-slate-600 text-sm">
+            System-wide operations, billing analytics, and payment monitoring.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -216,13 +241,18 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             <h2 className="text-lg font-semibold text-slate-900 mb-3">Revenue by Currency</h2>
             <div className="space-y-2">
               {currencyReport.map((row) => (
-                <div key={row.currency} className="flex justify-between text-sm border-b border-slate-100 pb-2">
+                <div
+                  key={row.currency}
+                  className="flex justify-between text-sm border-b border-slate-100 pb-2"
+                >
                   <span>{row.currency}</span>
                   <span>{row.payments} payments</span>
                   <span>${row.revenue_usd.toFixed(2)} USD</span>
                 </div>
               ))}
-              {currencyReport.length === 0 && <p className="text-sm text-slate-500">No completed payments yet.</p>}
+              {currencyReport.length === 0 && (
+                <p className="text-sm text-slate-500">No completed payments yet.</p>
+              )}
             </div>
           </div>
 
@@ -230,7 +260,10 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             <h2 className="text-lg font-semibold text-slate-900 mb-3">Gateway / Method Mix</h2>
             <div className="space-y-2">
               {txSummary.map(([method, count]) => (
-                <div key={method} className="flex justify-between text-sm border-b border-slate-100 pb-2">
+                <div
+                  key={method}
+                  className="flex justify-between text-sm border-b border-slate-100 pb-2"
+                >
                   <span>{method}</span>
                   <span>{count} tx</span>
                 </div>
@@ -299,11 +332,13 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             <button
               onClick={async () => {
                 try {
-                  await resetPremiumDismissals()
-                  alert('Global premium prompt dismissals reset. Local dismissals will clear shortly.')
+                  await resetPremiumDismissals();
+                  alert(
+                    'Global premium prompt dismissals reset. Local dismissals will clear shortly.'
+                  );
                 } catch (e) {
-                  logger.error(e)
-                  alert('Failed to reset dismissals')
+                  logger.error(e);
+                  alert('Failed to reset dismissals');
                 }
               }}
               className="rounded-md bg-rose-600 px-3 py-2 text-xs font-medium text-white hover:bg-rose-700"
@@ -313,7 +348,7 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // LLM Settings View
@@ -322,7 +357,9 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
       <div className="p-6 space-y-6 overflow-x-hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">LLM Provider Settings</h1>
-          <p className="text-slate-600 text-sm">Manage AI provider configurations, keys, and health checks.</p>
+          <p className="text-slate-600 text-sm">
+            Manage AI provider configurations, keys, and health checks.
+          </p>
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4 overflow-hidden">
@@ -330,8 +367,8 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             <div>
               <h2 className="text-lg font-semibold text-slate-900">LLM Providers</h2>
               <p className="text-xs text-slate-500">
-                Keys are encrypted in database and shown masked only. Green circle = Healthy, Red = Issue.
-                Auto-refreshes every 30 seconds.
+                Keys are encrypted in database and shown masked only. Green circle = Healthy, Red =
+                Issue. Auto-refreshes every 30 seconds.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -340,15 +377,19 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                   type="checkbox"
                   checked={autoRefreshEnabled}
                   onChange={(e) => {
-                    setAutoRefreshEnabled(e.target.checked)
-                    if (e.target.checked) loadProviders()
+                    setAutoRefreshEnabled(e.target.checked);
+                    if (e.target.checked) loadProviders();
                   }}
                   className="w-4 h-4"
                 />
-                <span>{autoRefreshEnabled ? '🔄 Auto-refresh enabled' : 'Auto-refresh disabled'}</span>
+                <span>
+                  {autoRefreshEnabled ? '🔄 Auto-refresh enabled' : 'Auto-refresh disabled'}
+                </span>
               </label>
               {lastRefreshTime && (
-                <div className="text-xs text-slate-500">Last: {lastRefreshTime.toLocaleTimeString()}</div>
+                <div className="text-xs text-slate-500">
+                  Last: {lastRefreshTime.toLocaleTimeString()}
+                </div>
               )}
             </div>
           </div>
@@ -371,15 +412,20 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             </div>
           )}
 
-          {llmProviders.length === 0 && <p className="text-sm text-slate-500">No provider configuration rows yet.</p>}
+          {llmProviders.length === 0 && (
+            <p className="text-sm text-slate-500">No provider configuration rows yet.</p>
+          )}
 
           <div className="space-y-3">
             {llmProviders.map((p) => (
-              <div key={p.provider} className="rounded-lg border border-slate-200 p-3 space-y-3 min-w-0">
+              <div
+                key={p.provider}
+                className="rounded-lg border border-slate-200 p-3 space-y-3 min-w-0"
+              >
                 {p.decryption_failures > 0 && (
                   <div className="text-sm text-red-700 bg-amber-50 border border-amber-100 p-2 rounded">
-                    <strong>Decryption issues:</strong> {p.decryption_failures} key(s) failed to decrypt. Update the
-                    server `ENCRYPTION_KEY` or re-add keys.
+                    <strong>Decryption issues:</strong> {p.decryption_failures} key(s) failed to
+                    decrypt. Update the server `ENCRYPTION_KEY` or re-add keys.
                   </div>
                 )}
                 <div className="flex flex-wrap items-center gap-3">
@@ -409,7 +455,11 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                           : 'bg-slate-200 text-slate-900'
                     }`}
                   >
-                    {p.is_healthy ? '✓ Healthy' : p.last_error ? '⚠ Issue detected' : '○ Not checked'}
+                    {p.is_healthy
+                      ? '✓ Healthy'
+                      : p.last_error
+                        ? '⚠ Issue detected'
+                        : '○ Not checked'}
                   </span>
                   {p.last_error && (
                     <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded break-all">
@@ -431,7 +481,9 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     value={p.model || ''}
                     onChange={(e) =>
                       setLlmProviders((prev) =>
-                        prev.map((x) => (x.provider === p.provider ? { ...x, model: e.target.value } : x))
+                        prev.map((x) =>
+                          x.provider === p.provider ? { ...x, model: e.target.value } : x
+                        )
                       )
                     }
                     onBlur={(e) => patchProvider(p.provider, { model: e.target.value })}
@@ -442,7 +494,9 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     value={p.endpoint || ''}
                     onChange={(e) =>
                       setLlmProviders((prev) =>
-                        prev.map((x) => (x.provider === p.provider ? { ...x, endpoint: e.target.value } : x))
+                        prev.map((x) =>
+                          x.provider === p.provider ? { ...x, endpoint: e.target.value } : x
+                        )
                       )
                     }
                     onBlur={(e) => patchProvider(p.provider, { endpoint: e.target.value })}
@@ -455,15 +509,21 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     onChange={(e) =>
                       setLlmProviders((prev) =>
                         prev.map((x) =>
-                          x.provider === p.provider ? { ...x, priority: Number(e.target.value || 100) } : x
+                          x.provider === p.provider
+                            ? { ...x, priority: Number(e.target.value || 100) }
+                            : x
                         )
                       )
                     }
-                    onBlur={(e) => patchProvider(p.provider, { priority: Number(e.target.value || 100) })}
+                    onBlur={(e) =>
+                      patchProvider(p.provider, { priority: Number(e.target.value || 100) })
+                    }
                     placeholder="Priority"
                     className="w-full min-w-0 rounded border border-slate-300 px-2 py-1 text-xs text-slate-900"
                   />
-                  <div className="text-xs text-slate-700 flex items-center break-all min-w-0">Keys: {p.key_count}</div>
+                  <div className="text-xs text-slate-700 flex items-center break-all min-w-0">
+                    Keys: {p.key_count}
+                  </div>
                 </div>
 
                 {p.key_count > 0 && (
@@ -471,17 +531,29 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     <table className="w-full text-xs">
                       <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
-                          <th className="text-left px-3 py-2 font-semibold text-slate-700">Masked Key</th>
-                          <th className="text-right px-3 py-2 font-semibold text-slate-700">Action</th>
+                          <th className="text-left px-3 py-2 font-semibold text-slate-700">
+                            Masked Key
+                          </th>
+                          <th className="text-right px-3 py-2 font-semibold text-slate-700">
+                            Action
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {(p.masked_keys || []).map((maskedKey, idx) => (
                           <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                            <td className="px-3 py-2 text-slate-600 font-mono break-all">{maskedKey}</td>
+                            <td className="px-3 py-2 text-slate-600 font-mono break-all">
+                              {maskedKey}
+                            </td>
                             <td className="px-3 py-2 text-right">
                               <button
-                                onClick={() => setConfirmDelete({ provider: p.provider, keyIndex: idx, maskedKey })}
+                                onClick={() =>
+                                  setConfirmDelete({
+                                    provider: p.provider,
+                                    keyIndex: idx,
+                                    maskedKey,
+                                  })
+                                }
                                 className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
                               >
                                 Delete
@@ -498,7 +570,9 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                   <input
                     type="password"
                     value={newKeys[p.provider] || ''}
-                    onChange={(e) => setNewKeys((prev) => ({ ...prev, [p.provider]: e.target.value }))}
+                    onChange={(e) =>
+                      setNewKeys((prev) => ({ ...prev, [p.provider]: e.target.value }))
+                    }
                     placeholder="Paste new API key (hidden)"
                     className="flex-1 min-w-[220px] max-w-full rounded border border-slate-300 px-2 py-1 text-xs text-slate-900"
                   />
@@ -513,7 +587,8 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     disabled={providerChecks[p.provider]?.status === 'checking'}
                     className="rounded bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
                   >
-                    {providerChecks[p.provider]?.status === 'checking' && providerChecks[p.provider]?.type === 'health'
+                    {providerChecks[p.provider]?.status === 'checking' &&
+                    providerChecks[p.provider]?.type === 'health'
                       ? 'Checking...'
                       : 'Check'}
                   </button>
@@ -522,7 +597,8 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
                     disabled={providerChecks[p.provider]?.status === 'checking'}
                     className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    {providerChecks[p.provider]?.status === 'checking' && providerChecks[p.provider]?.type === 'test'
+                    {providerChecks[p.provider]?.status === 'checking' &&
+                    providerChecks[p.provider]?.type === 'test'
                       ? 'Testing...'
                       : 'Test'}
                   </button>
@@ -570,13 +646,19 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
             <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Delete API Key</h3>
-                <p className="text-sm text-slate-600 mt-2">Are you sure you want to delete this key?</p>
-                <p className="text-xs font-mono text-slate-500 mt-2 break-all">{confirmDelete.maskedKey}</p>
+                <p className="text-sm text-slate-600 mt-2">
+                  Are you sure you want to delete this key?
+                </p>
+                <p className="text-xs font-mono text-slate-500 mt-2 break-all">
+                  {confirmDelete.maskedKey}
+                </p>
               </div>
 
               <div className="flex gap-2 justify-end">
                 <button
-                  onClick={() => setConfirmDelete({ provider: null, keyIndex: null, maskedKey: null })}
+                  onClick={() =>
+                    setConfirmDelete({ provider: null, keyIndex: null, maskedKey: null })
+                  }
                   className="rounded bg-slate-300 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-400"
                 >
                   Cancel
@@ -593,8 +675,8 @@ const SuperAdminDashboard = ({ view = 'dashboard' }) => {
           </div>
         )}
       </div>
-    )
+    );
   }
-}
+};
 
-export default SuperAdminDashboard
+export default SuperAdminDashboard;

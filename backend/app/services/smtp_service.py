@@ -107,7 +107,9 @@ class SMTPService:
                 for attempt in range(1, max_attempts + 1):
                     try:
                         async with aiosmtplib.SMTP(
-                            hostname=account.smtp_host, port=account.smtp_port, use_tls=account.use_tls
+                            hostname=account.smtp_host,
+                            port=account.smtp_port,
+                            use_tls=account.use_tls,
                         ) as smtp:
                             await smtp.login(account.email, password)
                             await smtp.send_message(msg)

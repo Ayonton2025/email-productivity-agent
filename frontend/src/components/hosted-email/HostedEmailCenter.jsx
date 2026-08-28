@@ -1,95 +1,96 @@
-import React, { useEffect, useState } from 'react'
-import { AlertCircle, CheckCircle2, MailPlus, RefreshCw, Shield, UserPlus } from 'lucide-react'
-import { hostedEmailApi } from '../../services/api'
+import React, { useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle2, MailPlus, RefreshCw, Shield, UserPlus } from 'lucide-react';
+import { hostedEmailApi } from '../../services/api';
 
 const HostedEmailCenter = () => {
-  const [availabilityLocalPart, setAvailabilityLocalPart] = useState('')
-  const [availability, setAvailability] = useState(null)
-  const [checking, setChecking] = useState(false)
-  const [provisioning, setProvisioning] = useState(false)
-  const [limitsLoading, setLimitsLoading] = useState(true)
-  const [limits, setLimits] = useState(null)
-  const [provisionForm, setProvisionForm] = useState({ local_part: '', display_name: '' })
-  const [lightSignup, setLightSignup] = useState({ local_part: '', full_name: '', password: '' })
-  const [signupResult, setSignupResult] = useState(null)
-  const [signupLoading, setSignupLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [availabilityLocalPart, setAvailabilityLocalPart] = useState('');
+  const [availability, setAvailability] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [provisioning, setProvisioning] = useState(false);
+  const [limitsLoading, setLimitsLoading] = useState(true);
+  const [limits, setLimits] = useState(null);
+  const [provisionForm, setProvisionForm] = useState({ local_part: '', display_name: '' });
+  const [lightSignup, setLightSignup] = useState({ local_part: '', full_name: '', password: '' });
+  const [signupResult, setSignupResult] = useState(null);
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const loadLimits = async () => {
-    setLimitsLoading(true)
+    setLimitsLoading(true);
     try {
-      const res = await hostedEmailApi.getLimits()
-      setLimits(res.data || null)
+      const res = await hostedEmailApi.getLimits();
+      setLimits(res.data || null);
     } catch (_) {
-      setLimits(null)
+      setLimits(null);
     } finally {
-      setLimitsLoading(false)
+      setLimitsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadLimits()
-  }, [])
+    loadLimits();
+  }, []);
 
   const checkAvailability = async () => {
-    setChecking(true)
-    setError('')
-    setSuccess('')
-    setAvailability(null)
+    setChecking(true);
+    setError('');
+    setSuccess('');
+    setAvailability(null);
     try {
-      const res = await hostedEmailApi.checkAvailability(availabilityLocalPart)
-      setAvailability(res.data || null)
+      const res = await hostedEmailApi.checkAvailability(availabilityLocalPart);
+      setAvailability(res.data || null);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to check availability')
+      setError(e?.response?.data?.detail || 'Failed to check availability');
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const provision = async () => {
-    setProvisioning(true)
-    setError('')
-    setSuccess('')
+    setProvisioning(true);
+    setError('');
+    setSuccess('');
     try {
-      const res = await hostedEmailApi.provision(provisionForm)
-      setSuccess(`Hosted mailbox created: ${res.data?.account?.email}`)
-      setProvisionForm({ local_part: '', display_name: '' })
-      await loadLimits()
+      const res = await hostedEmailApi.provision(provisionForm);
+      setSuccess(`Hosted mailbox created: ${res.data?.account?.email}`);
+      setProvisionForm({ local_part: '', display_name: '' });
+      await loadLimits();
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to provision hosted mailbox')
+      setError(e?.response?.data?.detail || 'Failed to provision hosted mailbox');
     } finally {
-      setProvisioning(false)
+      setProvisioning(false);
     }
-  }
+  };
 
   const submitLightSignup = async () => {
-    setSignupLoading(true)
-    setError('')
-    setSuccess('')
-    setSignupResult(null)
+    setSignupLoading(true);
+    setError('');
+    setSuccess('');
+    setSignupResult(null);
     try {
       const payload = {
         local_part: lightSignup.local_part,
         full_name: lightSignup.full_name || null,
         password: lightSignup.password || null,
-      }
-      const res = await hostedEmailApi.signup(payload)
-      setSignupResult(res.data || null)
-      setSuccess(`Light signup complete for ${res.data?.user?.email}`)
+      };
+      const res = await hostedEmailApi.signup(payload);
+      setSignupResult(res.data || null);
+      setSuccess(`Light signup complete for ${res.data?.user?.email}`);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Hosted email signup failed')
+      setError(e?.response?.data?.detail || 'Hosted email signup failed');
     } finally {
-      setSignupLoading(false)
+      setSignupLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Hosted Email (Bylix Address)</h1>
         <p className="text-sm text-gray-600">
-          Provision managed mailboxes (e.g. user@bylix.email), monitor send limits, and use lightweight signup flow.
+          Provision managed mailboxes (e.g. user@bylix.email), monitor send limits, and use
+          lightweight signup flow.
         </p>
       </div>
 
@@ -133,7 +134,11 @@ const HostedEmailCenter = () => {
             </div>
             <div>
               Available:{' '}
-              <span className={availability.available ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
+              <span
+                className={
+                  availability.available ? 'text-green-700 font-medium' : 'text-red-700 font-medium'
+                }
+              >
                 {String(availability.available)}
               </span>
             </div>
@@ -142,7 +147,9 @@ const HostedEmailCenter = () => {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Provision Hosted Mailbox (Authenticated)</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          Provision Hosted Mailbox (Authenticated)
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input
             type="text"
@@ -173,9 +180,13 @@ const HostedEmailCenter = () => {
       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <UserPlus className="h-5 w-5 text-indigo-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Light Signup Flow (No forced long registration)</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Light Signup Flow (No forced long registration)
+          </h2>
         </div>
-        <p className="text-sm text-gray-600">Creates DB user + auth token + hosted mailbox with a single action.</p>
+        <p className="text-sm text-gray-600">
+          Creates DB user + auth token + hosted mailbox with a single action.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="text"
@@ -216,11 +227,13 @@ const HostedEmailCenter = () => {
               <span className="font-medium">Mailbox:</span> {signupResult?.account?.email}
             </div>
             <div>
-              <span className="font-medium">Token received:</span> {signupResult?.access_token ? 'yes' : 'no'}
+              <span className="font-medium">Token received:</span>{' '}
+              {signupResult?.access_token ? 'yes' : 'no'}
             </div>
             {signupResult?.temporary_password && (
               <div className="text-amber-700">
-                <span className="font-medium">Temporary app password:</span> {signupResult.temporary_password}
+                <span className="font-medium">Temporary app password:</span>{' '}
+                {signupResult.temporary_password}
               </div>
             )}
           </div>
@@ -251,14 +264,14 @@ const HostedEmailCenter = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const LimitCard = ({ label, value }) => (
   <div className="border border-gray-100 rounded-lg p-3 bg-gray-50">
     <div className="text-gray-500">{label}</div>
     <div className="text-lg font-semibold text-gray-900">{value}</div>
   </div>
-)
+);
 
-export default HostedEmailCenter
+export default HostedEmailCenter;

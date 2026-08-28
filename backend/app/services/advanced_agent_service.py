@@ -19,7 +19,9 @@ class AdvancedAgentService:
     async def process_email_intelligently(self, email_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process email with advanced AI analysis"""
         # Perform comprehensive analysis
-        analysis = await self.llm_service.advanced_email_analysis(email_data, "comprehensive_analysis")
+        analysis = await self.llm_service.advanced_email_analysis(
+            email_data, "comprehensive_analysis"
+        )
 
         # Store or update email in database
         email = await self._store_analyzed_email(email_data, analysis)
@@ -45,7 +47,9 @@ class AdvancedAgentService:
             "generated_at": datetime.utcnow().isoformat(),
         }
 
-    async def generate_contextual_reply(self, email_id: str, tone: str = "professional") -> Dict[str, Any]:
+    async def generate_contextual_reply(
+        self, email_id: str, tone: str = "professional"
+    ) -> Dict[str, Any]:
         """Generate reply with full context awareness"""
         email = await self._get_email_by_id(email_id)
         if not email:
@@ -136,7 +140,9 @@ class AdvancedAgentService:
         )
         return result.scalars().all()
 
-    async def _store_analyzed_email(self, email_data: Dict[str, Any], analysis: Dict[str, Any]) -> Optional[Email]:
+    async def _store_analyzed_email(
+        self, email_data: Dict[str, Any], analysis: Dict[str, Any]
+    ) -> Optional[Email]:
         """Store or update email with analysis results"""
         try:
             # Check if email already exists
@@ -148,7 +154,9 @@ class AdvancedAgentService:
                 existing_email.category = analysis.get("category", existing_email.category)
                 existing_email.priority = analysis.get("priority", existing_email.priority)
                 existing_email.summary = analysis.get("summary", existing_email.summary)
-                existing_email.action_items = analysis.get("action_items", existing_email.action_items)
+                existing_email.action_items = analysis.get(
+                    "action_items", existing_email.action_items
+                )
                 existing_email.email_metadata = {**existing_email.email_metadata, **analysis}
             else:
                 # Create new email
@@ -157,7 +165,9 @@ class AdvancedAgentService:
                     sender=email_data.get("sender"),
                     subject=email_data.get("subject"),
                     body=email_data.get("body"),
-                    timestamp=datetime.fromisoformat(email_data.get("timestamp").replace("Z", "+00:00")),
+                    timestamp=datetime.fromisoformat(
+                        email_data.get("timestamp").replace("Z", "+00:00")
+                    ),
                     category=analysis.get("category"),
                     priority=analysis.get("priority"),
                     summary=analysis.get("summary"),
@@ -187,7 +197,9 @@ class AdvancedAgentService:
             recommendations.append("Consider setting up email filters for frequent senders")
 
         if categories.get("Newsletter", 0) > total_emails * 0.3:
-            recommendations.append("You have many newsletters. Consider unsubscribing from less relevant ones")
+            recommendations.append(
+                "You have many newsletters. Consider unsubscribing from less relevant ones"
+            )
 
         if categories.get("Spam", 0) > 10:
             recommendations.append("Your spam filter might need adjustment")

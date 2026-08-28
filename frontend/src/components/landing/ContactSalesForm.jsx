@@ -1,8 +1,8 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import { X, Send, AlertCircle, CheckCircle, Loader } from 'lucide-react'
-import { submitContactForm, getContactEmail } from '../../services/contactService'
-import './ContactSalesForm.css'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import { X, Send, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { submitContactForm, getContactEmail } from '../../services/contactService';
+import './ContactSalesForm.css';
 
 const ContactSalesForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -10,74 +10,74 @@ const ContactSalesForm = ({ isOpen, onClose }) => {
     email: '',
     company: '',
     message: '',
-  })
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
-  const contactEmail = getContactEmail()
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const contactEmail = getContactEmail();
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-    setError('')
-  }
+    }));
+    setError('');
+  };
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      setError('Name is required')
-      return false
+      setError('Name is required');
+      return false;
     }
     if (!formData.email.trim()) {
-      setError('Email is required')
-      return false
+      setError('Email is required');
+      return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email address')
-      return false
+      setError('Please enter a valid email address');
+      return false;
     }
     if (!formData.message.trim()) {
-      setError('Message is required')
-      return false
+      setError('Message is required');
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
       await submitContactForm({
         ...formData,
         type: 'sales_inquiry',
-      })
+      });
 
-      setSuccess(true)
-      setFormData({ name: '', email: '', company: '', message: '' })
+      setSuccess(true);
+      setFormData({ name: '', email: '', company: '', message: '' });
 
       // Auto-close after 3 seconds
       setTimeout(() => {
-        onClose()
-        setSuccess(false)
-      }, 3000)
+        onClose();
+        setSuccess(false);
+      }, 3000);
     } catch (err) {
-      setError('Failed to send message. Please try emailing us directly at ' + contactEmail)
-      logger.error('Contact form error:', err)
+      setError('Failed to send message. Please try emailing us directly at ' + contactEmail);
+      logger.error('Contact form error:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="contact-form-overlay">
@@ -93,7 +93,10 @@ const ContactSalesForm = ({ isOpen, onClose }) => {
           <div className="contact-success">
             <CheckCircle size={48} className="success-icon" />
             <h3>Message Sent!</h3>
-            <p>Thank you for reaching out. Our sales team will get back to you within 24 hours at {formData.email}</p>
+            <p>
+              Thank you for reaching out. Our sales team will get back to you within 24 hours at{' '}
+              {formData.email}
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="contact-form">
@@ -177,7 +180,7 @@ const ContactSalesForm = ({ isOpen, onClose }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ContactSalesForm
+export default ContactSalesForm;

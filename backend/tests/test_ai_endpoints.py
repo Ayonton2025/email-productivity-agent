@@ -4,7 +4,11 @@ from app.api import ai_endpoints
 
 
 def payload():
-    return {"sender": "sender@example.test", "subject": "Quarterly review", "body": "Please review by Friday."}
+    return {
+        "sender": "sender@example.test",
+        "subject": "Quarterly review",
+        "body": "Please review by Friday.",
+    }
 
 
 def test_classify_success_schema(client, monkeypatch):
@@ -14,7 +18,11 @@ def test_classify_success_schema(client, monkeypatch):
     monkeypatch.setattr(ai_endpoints.llm_service, "classify_email", classify_email)
     response = client.post("/api/v1/ai/classify", json=payload())
     assert response.status_code == 200
-    assert response.json() == {"category": "TASK", "confidence": 0.94, "reasoning": "Contains a requested action"}
+    assert response.json() == {
+        "category": "TASK",
+        "confidence": 0.94,
+        "reasoning": "Contains a requested action",
+    }
 
 
 def test_classify_passes_authenticated_tenant(client, monkeypatch):
@@ -57,4 +65,7 @@ def test_classify_llm_unavailable_returns_500(client, monkeypatch):
 
 
 def test_classify_requires_authentication(unauthenticated_client):
-    assert unauthenticated_client.post("/api/v1/ai/classify", json=payload()).status_code in {401, 403}
+    assert unauthenticated_client.post("/api/v1/ai/classify", json=payload()).status_code in {
+        401,
+        403,
+    }

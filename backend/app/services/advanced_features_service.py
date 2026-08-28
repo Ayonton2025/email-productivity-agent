@@ -90,7 +90,7 @@ class AdvancedFeaturesService:
     def cosine_like(a: List[float], b: List[float]) -> float:
         if not a or not b or len(a) != len(b):
             return 0.0
-        num = sum(x * y for x, y in zip(a, b))
+        num = sum(x * y for x, y in zip(a, b, strict=False))
         den = (sum(x * x for x in a) ** 0.5) * (sum(y * y for y in b) ** 0.5)
         if den == 0:
             return 0.0

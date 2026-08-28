@@ -11,7 +11,6 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import logger
 from app.models.document_models import DocumentAnalysis, EmailAttachment
 from app.services.llm_orchestration_service import LLMOrchestrationService
 
@@ -381,7 +380,9 @@ class DocumentTextExtractor:
             return "", None, None
 
     @staticmethod
-    async def extract_text(file_content: bytes, file_ext: str) -> tuple[str, Optional[int], Optional[str]]:
+    async def extract_text(
+        file_content: bytes, file_ext: str
+    ) -> tuple[str, Optional[int], Optional[str]]:
         """
         Extract text from document based on file type
 
@@ -533,7 +534,9 @@ class DocumentAnalysisBackgroundTask:
             analyses = []
             for attachment in attachments:
                 try:
-                    analysis = await self.process_attachment_analysis(session, attachment.id, user_id, user_plan)
+                    analysis = await self.process_attachment_analysis(
+                        session, attachment.id, user_id, user_plan
+                    )
                     if analysis:
                         analyses.append(analysis)
                 except Exception as e:

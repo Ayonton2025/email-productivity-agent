@@ -63,7 +63,9 @@ class GmailIngestionService:
         credentials = Credentials(token=access_token)
         return build("gmail", "v1", credentials=credentials)
 
-    async def fetch_last_n_emails(self, service, n: int = 50, query: str = "") -> List[Dict[str, Any]]:
+    async def fetch_last_n_emails(
+        self, service, n: int = 50, query: str = ""
+    ) -> List[Dict[str, Any]]:
         """
         Fetch the last N emails from Gmail.
 
@@ -101,7 +103,12 @@ class GmailIngestionService:
             full_emails = []
             for msg in messages:
                 try:
-                    full = service.users().messages().get(userId="me", id=msg["id"], format="full").execute()
+                    full = (
+                        service.users()
+                        .messages()
+                        .get(userId="me", id=msg["id"], format="full")
+                        .execute()
+                    )
                     full_emails.append(full)
                 except Exception as e:
                     logger.error(f"❌ Failed to fetch message {msg['id']}: {e}")
@@ -134,7 +141,7 @@ class GmailIngestionService:
             # Extract basic fields
             sender = headers_dict.get("From", "Unknown")
             subject = headers_dict.get("Subject", "(No Subject)")
-            message_id = headers_dict.get("Message-ID", "")
+            _message_id = headers_dict.get("Message-ID", "")
 
             # Parse recipients
             to = headers_dict.get("To", "").split(",")
@@ -207,12 +214,16 @@ class GmailIngestionService:
                 if mime_type == "text/plain":
                     data = part.get("body", {}).get("data", "")
                     if data:
-                        body_text = base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="ignore")
+                        body_text = base64.urlsafe_b64decode(data + "==").decode(
+                            "utf-8", errors="ignore"
+                        )
 
                 elif mime_type == "text/html":
                     data = part.get("body", {}).get("data", "")
                     if data:
-                        body_html = base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="ignore")
+                        body_html = base64.urlsafe_b64decode(data + "==").decode(
+                            "utf-8", errors="ignore"
+                        )
 
                 # Recursively check nested parts
                 if "parts" in part:
@@ -248,7 +259,12 @@ class GmailIngestionService:
         # Remove HTML tags
         html = re.sub(r"<[^>]+>", "\n", html)
         # Decode HTML entities
-        html = html.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        html = (
+            html.replace("&nbsp;", " ")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&amp;", "&")
+        )
         # Clean up whitespace
         lines = [line.strip() for line in html.split("\n") if line.strip()]
         return "\n".join(lines)
@@ -335,10 +351,14 @@ class GmailIngestionService:
                 }
 
                 # Sanitize with bleach
-                sanitized = bleach_clean(html, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+                sanitized = bleach_clean(
+                    html, tags=allowed_tags, attributes=allowed_attributes, strip=True
+                )
 
                 # Ensure links open in new tab
-                sanitized = re.sub(r"<a\s+(?!target=)", '<a target="_blank" rel="noopener noreferrer" ', sanitized)
+                sanitized = re.sub(
+                    r"<a\s+(?!target=)", '<a target="_blank" rel="noopener noreferrer" ', sanitized
+                )
 
                 return sanitized
             else:
@@ -347,11 +367,17 @@ class GmailIngestionService:
 
                 # Remove script tags
                 html = re.sub(
-                    r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", "", html, flags=re.DOTALL | re.IGNORECASE
+                    r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>",
+                    "",
+                    html,
+                    flags=re.DOTALL | re.IGNORECASE,
                 )
                 # Remove style tags (but keep content style attributes)
                 html = re.sub(
-                    r"<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>", "", html, flags=re.DOTALL | re.IGNORECASE
+                    r"<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>",
+                    "",
+                    html,
+                    flags=re.DOTALL | re.IGNORECASE,
                 )
                 # Remove event handlers
                 html = re.sub(r'\s*on\w+=\s*["\']?[^"\']*["\']?', "", html, flags=re.IGNORECASE)
@@ -409,7 +435,10 @@ class GmailIngestionService:
 
                     for pattern in patterns:
                         html = re.sub(
-                            "src=([\"'])" + re.escape(pattern), f"src=\\1{data_uri}", html, flags=re.IGNORECASE
+                            "src=([\"'])" + re.escape(pattern),
+                            f"src=\\1{data_uri}",
+                            html,
+                            flags=re.IGNORECASE,
                         )
                 except Exception as e:
                     logger.warning(f"⚠️ Failed to resolve CID {cid}: {e}")
@@ -446,7 +475,9 @@ class GmailIngestionService:
 
             for idx, parsed_email in enumerate(parsed_emails):
                 # Check if email already exists
-                result = await self.db.execute(select(Email).where(Email.message_id == parsed_email["message_id"]))
+                result = await self.db.execute(
+                    select(Email).where(Email.message_id == parsed_email["message_id"])
+                )
 
                 if result.scalar_one_or_none():
                     logger.debug(f"📧 Email {parsed_email['message_id']} already exists, skipping")
@@ -457,7 +488,8 @@ class GmailIngestionService:
                     user_id=user_id,
                     account_id=account_id,
                     message_id=parsed_email["message_id"],
-                    uid=int(parsed_email["external_id"][:20].replace("-", "")[:19]) or 0,  # Use timestamp portion
+                    uid=int(parsed_email["external_id"][:20].replace("-", "")[:19])
+                    or 0,  # Use timestamp portion
                     sender=parsed_email["sender"],
                     recipients=parsed_email.get("recipients", []),
                     cc=parsed_email.get("cc", []),
@@ -485,16 +517,25 @@ class GmailIngestionService:
                     if attachments_metadata:
                         try:
                             await email_attachment_integration.process_gmail_attachments(
-                                gmail_service, gmail_message_id, email.id, user_id, attachments_metadata, self.db
+                                gmail_service,
+                                gmail_message_id,
+                                email.id,
+                                user_id,
+                                attachments_metadata,
+                                self.db,
                             )
-                            logger.info(f"✅ Processed attachments for email: {parsed_email['subject']}")
+                            logger.info(
+                                f"✅ Processed attachments for email: {parsed_email['subject']}"
+                            )
 
                             # Trigger document analysis for attachments
                             if HAS_DOCUMENT_ANALYSIS:
                                 try:
                                     # Get user's plan for tiered analysis
                                     user_plan = "free"  # Default plan
-                                    user_result = await self.db.execute(select(User).where(User.id == user_id))
+                                    user_result = await self.db.execute(
+                                        select(User).where(User.id == user_id)
+                                    )
                                     user = user_result.scalars().first()
                                     if user:
                                         if getattr(user, "subscription_status", "free") == "active":
@@ -511,12 +552,16 @@ class GmailIngestionService:
                                     await task_handler.analyze_email_attachments(
                                         email_id=email.id, user_id=user_id, user_plan=user_plan
                                     )
-                                    logger.info(f"📊 Queued document analysis for email: {email.id}")
+                                    logger.info(
+                                        f"📊 Queued document analysis for email: {email.id}"
+                                    )
                                 except Exception as e:
                                     logger.warning(f"⚠️ Could not queue attachment analysis: {e}")
                                     # Don't fail email sync if analysis queueing fails
                         except Exception as e:
-                            logger.error(f"⚠️ Failed to process attachments for {parsed_email['subject']}: {e}")
+                            logger.error(
+                                f"⚠️ Failed to process attachments for {parsed_email['subject']}: {e}"
+                            )
                             # Don't fail the whole email sync if attachments fail
 
                 stored_ids.append(email.id)
@@ -568,9 +613,7 @@ class GmailIngestionService:
                         continue
 
                     # Prepare content for AI
-                    email_content = (
-                        f"From: {email.sender}\nSubject: {email.subject}\nBody: {email.body_text or email.body_html}"
-                    )
+                    email_content = f"From: {email.sender}\nSubject: {email.subject}\nBody: {email.body_text or email.body_html}"
 
                     # Categorize
                     try:
@@ -639,7 +682,9 @@ class GmailIngestionService:
             )
 
             account.history_id = response.get("historyId")
-            account.watch_expiration = datetime.utcfromtimestamp(int(response.get("expiration", 0)) / 1000)
+            account.watch_expiration = datetime.utcfromtimestamp(
+                int(response.get("expiration", 0)) / 1000
+            )
 
             await self.db.commit()
             logger.info(f"✅ Gmail watch enabled. History ID: {account.history_id}")

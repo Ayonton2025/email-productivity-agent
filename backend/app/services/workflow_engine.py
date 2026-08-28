@@ -40,7 +40,9 @@ class WorkflowEngine:
         Returns list of execution records.
         """
         # Find active workflows that match this trigger
-        workflows = await self.find_matching_workflows(user_id=email.user_id, trigger_type=trigger_type, email=email)
+        workflows = await self.find_matching_workflows(
+            user_id=email.user_id, trigger_type=trigger_type, email=email
+        )
 
         executions = []
         for workflow in workflows:
@@ -50,11 +52,17 @@ class WorkflowEngine:
 
         return executions
 
-    async def find_matching_workflows(self, user_id: str, trigger_type: str, email: Email) -> List[Workflow]:
+    async def find_matching_workflows(
+        self, user_id: str, trigger_type: str, email: Email
+    ) -> List[Workflow]:
         """Find workflows that match the trigger conditions"""
         result = await self.db.execute(
             select(Workflow).where(
-                and_(Workflow.user_id == user_id, Workflow.is_active == True, Workflow.trigger_type == trigger_type)
+                and_(
+                    Workflow.user_id == user_id,
+                    Workflow.is_active == True,
+                    Workflow.trigger_type == trigger_type,
+                )
             )
         )
         all_workflows = list(result.scalars().all())
@@ -124,7 +132,9 @@ Respond with only "yes" or "no"."""
 
         # Get workflow steps in order
         steps_result = await self.db.execute(
-            select(WorkflowStep).where(WorkflowStep.workflow_id == workflow.id).order_by(WorkflowStep.step_order.asc())
+            select(WorkflowStep)
+            .where(WorkflowStep.workflow_id == workflow.id)
+            .order_by(WorkflowStep.step_order.asc())
         )
         steps = list(steps_result.scalars().all())
 
@@ -246,15 +256,15 @@ Respond with only "yes" or "no"."""
         if action_type == "send_email":
             # Send email using email service
             recipient = config.get("recipient") or email_data.get("sender")
-            subject = config.get("subject", "Auto-reply")
-            body = config.get("body", "")
+            _subject = config.get("subject", "Auto-reply")
+            _body = config.get("body", "")
 
             # Could integrate with EmailService.send_email here
             return {"success": True, "action": "send_email", "recipient": recipient}
 
         elif action_type == "create_draft":
             # Create draft
-            draft_data = {
+            _draft_data = {
                 "subject": config.get("subject", "Draft"),
                 "body": config.get("body", ""),
                 "recipient": config.get("recipient") or email_data.get("sender"),
@@ -281,7 +291,9 @@ Respond with only "yes" or "no"."""
         else:
             return {"success": False, "error": f"Unknown action type: {action_type}"}
 
-    async def execute_condition(self, step: WorkflowStep, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_condition(
+        self, step: WorkflowStep, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a condition step"""
         condition_type = step.condition_type
         config = step.condition_config or {}
@@ -292,7 +304,9 @@ Respond with only "yes" or "no"."""
             condition_prompt = config.get("prompt", "")
             email_content = f"From: {email_data.get('sender')}\nSubject: {email_data.get('subject')}\nBody: {email_data.get('body', '')[:2000]}"
 
-            full_prompt = f"{condition_prompt}\n\nEmail:\n{email_content}\n\nRespond with only 'yes' or 'no'."
+            full_prompt = (
+                f"{condition_prompt}\n\nEmail:\n{email_content}\n\nRespond with only 'yes' or 'no'."
+            )
 
             try:
                 response = await self.llm_service.process_prompt(full_prompt, "")
@@ -321,8 +335,14 @@ Respond with only "yes" or "no"."""
         else:
             return {"success": False, "error": f"Unknown condition type: {condition_type}"}
 
-    async def execute_integration(self, step: WorkflowStep, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_integration(
+        self, step: WorkflowStep, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute an integration step (CRM, Slack, etc.)"""
         # Placeholder for integration execution
         # Would integrate with integration_hub services
-        return {"success": True, "action": "integration", "note": "Integration execution not yet implemented"}
+        return {
+            "success": True,
+            "action": "integration",
+            "note": "Integration execution not yet implemented",
+        }

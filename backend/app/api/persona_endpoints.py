@@ -33,7 +33,9 @@ async def list_personas(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(PersonaProfile).where(PersonaProfile.user_id == current_user.id))
+    result = await db.execute(
+        select(PersonaProfile).where(PersonaProfile.user_id == current_user.id)
+    )
     return [x.to_dict() for x in result.scalars().all()]
 
 
@@ -44,7 +46,9 @@ async def create_persona(
     db: AsyncSession = Depends(get_db),
 ):
     if body.is_default:
-        reset = await db.execute(select(PersonaProfile).where(PersonaProfile.user_id == current_user.id))
+        reset = await db.execute(
+            select(PersonaProfile).where(PersonaProfile.user_id == current_user.id)
+        )
         for p in reset.scalars().all():
             p.is_default = False
     rec = PersonaProfile(
@@ -69,7 +73,9 @@ async def delete_persona(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PersonaProfile).where(and_(PersonaProfile.id == persona_id, PersonaProfile.user_id == current_user.id))
+        select(PersonaProfile).where(
+            and_(PersonaProfile.id == persona_id, PersonaProfile.user_id == current_user.id)
+        )
     )
     rec = result.scalar_one_or_none()
     if not rec:

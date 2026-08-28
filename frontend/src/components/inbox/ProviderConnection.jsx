@@ -1,11 +1,11 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import { Mail, ExternalLink, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import { Mail, ExternalLink, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 const ProviderConnection = () => {
-  const [activeTab, setActiveTab] = useState('gmail')
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState({})
+  const [activeTab, setActiveTab] = useState('gmail');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState({});
 
   const providers = [
     {
@@ -29,10 +29,10 @@ const ProviderConnection = () => {
       icon: '📮',
       status: connectionStatus.yahoo || 'disconnected',
     },
-  ]
+  ];
 
   const handleConnect = async (provider) => {
-    setIsConnecting(true)
+    setIsConnecting(true);
     try {
       // Implementation for OAuth flow
       const response = await fetch(`/api/v1/providers/${provider}/authenticate`, {
@@ -41,32 +41,32 @@ const ProviderConnection = () => {
         body: JSON.stringify({
           /* credentials */
         }),
-      })
+      });
 
       if (response.ok) {
-        setConnectionStatus((prev) => ({ ...prev, [provider]: 'connected' }))
+        setConnectionStatus((prev) => ({ ...prev, [provider]: 'connected' }));
       }
     } catch (error) {
-      logger.error('Connection failed:', error)
+      logger.error('Connection failed:', error);
     } finally {
-      setIsConnecting(false)
+      setIsConnecting(false);
     }
-  }
+  };
 
   const handleSync = async (provider) => {
     try {
       const response = await fetch(`/api/v1/providers/${provider}/sync`, {
         method: 'POST',
-      })
+      });
 
       if (response.ok) {
         // Refresh email list
-        window.location.reload()
+        window.location.reload();
       }
     } catch (error) {
-      logger.error('Sync failed:', error)
+      logger.error('Sync failed:', error);
     }
-  }
+  };
 
   return (
     <div className="provider-connection">
@@ -85,7 +85,11 @@ const ProviderConnection = () => {
                 <p>{provider.description}</p>
               </div>
               <div className={`status-badge status-${provider.status}`}>
-                {provider.status === 'connected' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                {provider.status === 'connected' ? (
+                  <CheckCircle size={16} />
+                ) : (
+                  <XCircle size={16} />
+                )}
                 {provider.status}
               </div>
             </div>
@@ -97,7 +101,11 @@ const ProviderConnection = () => {
                   Sync Emails
                 </button>
               ) : (
-                <button onClick={() => handleConnect(provider.id)} disabled={isConnecting} className="btn btn-primary">
+                <button
+                  onClick={() => handleConnect(provider.id)}
+                  disabled={isConnecting}
+                  className="btn btn-primary"
+                >
                   {isConnecting ? 'Connecting...' : 'Connect'}
                 </button>
               )}
@@ -116,7 +124,7 @@ const ProviderConnection = () => {
         </ul>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProviderConnection
+export default ProviderConnection;

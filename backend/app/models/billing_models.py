@@ -11,7 +11,18 @@ Hybrid monetization:
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DECIMAL, JSON, Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    DECIMAL,
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 
 from app.models.database import Base
 
@@ -33,7 +44,9 @@ class Subscription(Base):
     tenant_id = Column(String, nullable=False, index=True)
 
     # ---- Subscription Tier ----
-    plan_id = Column(String, nullable=False, index=True)  # personal, plus, professional, team, enterprise
+    plan_id = Column(
+        String, nullable=False, index=True
+    )  # personal, plus, professional, team, enterprise
     plan_name = Column(String, nullable=False)
 
     # ---- Pricing ----

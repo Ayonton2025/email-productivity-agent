@@ -57,7 +57,10 @@ def clean_email_body(body: str) -> str:
     for line in lines:
         line = line.strip()
         # Skip common signature markers
-        if any(marker in line.lower() for marker in ["sent from", "regards,", "best,", "thanks,", "cheers,"]):
+        if any(
+            marker in line.lower()
+            for marker in ["sent from", "regards,", "best,", "thanks,", "cheers,"]
+        ):
             break
         # Skip forward headers
         if line.startswith("---") or line.startswith("___") or line.startswith("From:"):

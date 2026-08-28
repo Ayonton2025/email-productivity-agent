@@ -1,35 +1,35 @@
-import React, { useEffect, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import AuthProvider from '../providers/AuthProvider'
-import ThemeProvider from '../providers/ThemeProvider'
-import { AppContent, AppContentWrapper } from '../components/layout/AppShell'
-import SuperAdminDashboard from '../components/admin/SuperAdminDashboard'
-import BillingUpgrade from '../components/billing/BillingUpgrade'
-import CompanyDetail from '../components/details/CompanyDetail'
-import ContactDetail from '../components/details/ContactDetail'
-import OpportunityDetail from '../components/details/OpportunityDetail'
-import RiskDetail from '../components/details/RiskDetail'
-import ForgotPassword from '../components/auth/ForgotPassword'
-import Login from '../components/auth/Login'
-import OAuthCallback from '../components/auth/OAuthCallback'
-import Register from '../components/auth/Register'
-import ResetPassword from '../components/auth/ResetPassword'
-import VerifyEmail from '../components/auth/VerifyEmail'
-import Home from '../components/Home'
-import LandingPage from '../components/landing/LandingPage'
-import { ProtectedRoute, PublicRoute, SuperAdminRoute } from './protectedRoutes'
+import AuthProvider from '../providers/AuthProvider';
+import ThemeProvider from '../providers/ThemeProvider';
+import { AppContent, AppContentWrapper } from '../components/layout/AppShell';
+import SuperAdminDashboard from '../components/admin/SuperAdminDashboard';
+import BillingUpgrade from '../components/billing/BillingUpgrade';
+import CompanyDetail from '../components/details/CompanyDetail';
+import ContactDetail from '../components/details/ContactDetail';
+import OpportunityDetail from '../components/details/OpportunityDetail';
+import RiskDetail from '../components/details/RiskDetail';
+import ForgotPassword from '../components/auth/ForgotPassword';
+import Login from '../components/auth/Login';
+import OAuthCallback from '../components/auth/OAuthCallback';
+import Register from '../components/auth/Register';
+import ResetPassword from '../components/auth/ResetPassword';
+import VerifyEmail from '../components/auth/VerifyEmail';
+import Home from '../components/Home';
+import LandingPage from '../components/landing/LandingPage';
+import { ProtectedRoute, PublicRoute, SuperAdminRoute } from './protectedRoutes';
 
 function AppRouter() {
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
 
   // Simulate loading
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
-    return () => clearTimeout(timer)
-  }, [])
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Loading screen
   if (isLoading) {
@@ -47,7 +47,7 @@ function AppRouter() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -183,7 +183,7 @@ function AppRouter() {
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
-  )
+  );
 }
 
-export default AppRouter
+export default AppRouter;

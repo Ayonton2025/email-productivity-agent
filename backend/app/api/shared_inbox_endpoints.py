@@ -116,7 +116,9 @@ def _ensure_shared_inbox_feature(subscription: Optional[Subscription]) -> None:
         )
 
 
-async def _require_member(inbox_id: str, user_id: str, db: AsyncSession) -> tuple[SharedInbox, SharedInboxMember]:
+async def _require_member(
+    inbox_id: str, user_id: str, db: AsyncSession
+) -> tuple[SharedInbox, SharedInboxMember]:
     inbox_result = await db.execute(select(SharedInbox).where(SharedInbox.id == inbox_id))
     inbox = inbox_result.scalar_one_or_none()
     if not inbox or not inbox.is_active:
@@ -137,7 +139,9 @@ def _require_role(member: SharedInboxMember, action: str) -> None:
     role = member.role if member.role in VALID_MEMBER_ROLES else ROLE_MEMBER
     allowed_roles = ROLE_PERMISSIONS.get(action, {ROLE_OWNER})
     if role not in allowed_roles:
-        raise HTTPException(status_code=403, detail=f"Role '{role}' cannot perform action '{action}'")
+        raise HTTPException(
+            status_code=403, detail=f"Role '{role}' cannot perform action '{action}'"
+        )
 
 
 @router.get("/")
@@ -158,7 +162,9 @@ async def list_shared_inboxes(
 
     data = []
     for member, inbox in membership_rows.all():
-        count_result = await db.execute(select(SharedInboxEmail).where(SharedInboxEmail.inbox_id == inbox.id))
+        count_result = await db.execute(
+            select(SharedInboxEmail).where(SharedInboxEmail.inbox_id == inbox.id)
+        )
         count = len(list(count_result.scalars().all()))
         inbox_data = inbox.to_dict()
         inbox_data["member_role"] = member.role
@@ -286,7 +292,9 @@ async def add_shared_inbox_member(
 
     existing = await db.execute(
         select(SharedInboxMember).where(
-            and_(SharedInboxMember.inbox_id == inbox_id, SharedInboxMember.user_id == target_user.id)
+            and_(
+                SharedInboxMember.inbox_id == inbox_id, SharedInboxMember.user_id == target_user.id
+            )
         )
     )
     if existing.scalar_one_or_none():
@@ -320,7 +328,9 @@ async def add_email_to_shared_inbox(
     _, member = await _require_member(inbox_id=inbox_id, user_id=current_user.id, db=db)
     _require_role(member, ACTION_ADD_EMAIL)
 
-    email_result = await db.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id)))
+    email_result = await db.execute(
+        select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))
+    )
     email = email_result.scalar_one_or_none()
     if not email:
         raise HTTPException(status_code=404, detail="Email not found in your mailbox")
@@ -412,7 +422,9 @@ async def update_shared_inbox_email(
     if request.status is not None:
         allowed = {"open", "in_progress", "resolved"}
         if request.status not in allowed:
-            raise HTTPException(status_code=400, detail=f"Invalid status; expected one of {sorted(allowed)}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid status; expected one of {sorted(allowed)}"
+            )
         item.status = request.status
 
     if request.notes is not None:
@@ -423,18 +435,25 @@ async def update_shared_inbox_email(
         if request.assigned_to_user_email == "":
             item.assigned_to_user_id = None
         else:
-            user_result = await db.execute(select(User).where(User.email == request.assigned_to_user_email))
+            user_result = await db.execute(
+                select(User).where(User.email == request.assigned_to_user_email)
+            )
             target_user = user_result.scalar_one_or_none()
             if not target_user:
                 raise HTTPException(status_code=404, detail="Assigned user not found")
 
             member_result = await db.execute(
                 select(SharedInboxMember).where(
-                    and_(SharedInboxMember.inbox_id == inbox_id, SharedInboxMember.user_id == target_user.id)
+                    and_(
+                        SharedInboxMember.inbox_id == inbox_id,
+                        SharedInboxMember.user_id == target_user.id,
+                    )
                 )
             )
             if not member_result.scalar_one_or_none():
-                raise HTTPException(status_code=400, detail="Assigned user must be a member of the shared inbox")
+                raise HTTPException(
+                    status_code=400, detail="Assigned user must be a member of the shared inbox"
+                )
             item.assigned_to_user_id = target_user.id
 
     await db.commit()

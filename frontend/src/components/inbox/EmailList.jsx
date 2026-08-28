@@ -1,17 +1,27 @@
-import React, { useState } from 'react'
-import { Mail, Star, Archive, Clock, AlertCircle, Calendar, ChevronLeft, ChevronRight, Paperclip } from 'lucide-react'
+import React, { useState } from 'react';
+import {
+  Mail,
+  Star,
+  Archive,
+  Clock,
+  AlertCircle,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Paperclip,
+} from 'lucide-react';
 
 const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
-  const [currentPage, setCurrentPage] = useState(0)
-  const emailsPerPage = 10
-  const totalPages = Math.ceil(emails.length / emailsPerPage)
+  const [currentPage, setCurrentPage] = useState(0);
+  const emailsPerPage = 10;
+  const totalPages = Math.ceil(emails.length / emailsPerPage);
 
   // Hooks must run in the same order even while the loading or empty state is shown.
   React.useEffect(() => {
     if (currentPage >= totalPages && totalPages > 0) {
-      setCurrentPage(totalPages - 1)
+      setCurrentPage(totalPages - 1);
     }
-  }, [currentPage, totalPages])
+  }, [currentPage, totalPages]);
 
   if (loading) {
     return (
@@ -21,7 +31,7 @@ const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
           <p className="mt-2 text-gray-600">Loading emails...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (emails.length === 0) {
@@ -33,13 +43,13 @@ const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
           <p className="mt-1 text-sm text-gray-500">Get started by loading some mock emails.</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Calculate pagination
-  const startIndex = currentPage * emailsPerPage
-  const endIndex = startIndex + emailsPerPage
-  const currentEmails = emails.slice(startIndex, endIndex)
+  const startIndex = currentPage * emailsPerPage;
+  const endIndex = startIndex + emailsPerPage;
+  const currentEmails = emails.slice(startIndex, endIndex);
 
   return (
     <div className="flex-1 overflow-hidden border border-gray-200 rounded-lg bg-white flex flex-col">
@@ -58,7 +68,9 @@ const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-gray-900 truncate">{email.sender}</p>
                     <div className="flex items-center space-x-2 ml-2">
-                      {!email.is_read && <span className="inline-block h-2 w-2 rounded-full bg-blue-600"></span>}
+                      {!email.is_read && (
+                        <span className="inline-block h-2 w-2 rounded-full bg-blue-600"></span>
+                      )}
                       {email.attachments && email.attachments.length > 0 && (
                         <div className="flex items-center bg-blue-50 px-2 py-0.5 rounded text-xs text-blue-700 font-medium">
                           <Paperclip className="h-3 w-3 mr-1" />
@@ -111,7 +123,8 @@ const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
       {totalPages > 1 && (
         <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(endIndex, emails.length)} of {emails.length} emails
+            Showing {startIndex + 1} to {Math.min(endIndex, emails.length)} of {emails.length}{' '}
+            emails
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -151,7 +164,7 @@ const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default EmailList
+export default EmailList;

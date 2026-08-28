@@ -18,14 +18,18 @@ def test_registration_rejects_invalid_email(email):
         RegisterRequest(email=email, full_name="Secure User", password="StrongPass1!")
 
 
-@pytest.mark.parametrize("password", ["short", "alllowercase1!", "ALLUPPERCASE1!", "NoNumberHere!", "NoSpecial123"])
+@pytest.mark.parametrize(
+    "password", ["short", "alllowercase1!", "ALLUPPERCASE1!", "NoNumberHere!", "NoSpecial123"]
+)
 def test_registration_rejects_weak_passwords(password):
     with pytest.raises(ValidationError):
         RegisterRequest(email="secure@example.com", full_name="Secure User", password=password)
 
 
 def test_registration_accepts_strong_password():
-    request = RegisterRequest(email="secure@example.com", full_name="Secure User", password="StrongPassword1!")
+    request = RegisterRequest(
+        email="secure@example.com", full_name="Secure User", password="StrongPassword1!"
+    )
     assert request.password == "StrongPassword1!"
 
 

@@ -1,93 +1,108 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, RefreshCw, Mail, Clock, AlertCircle, CheckCircle, MessageSquare, Paperclip } from 'lucide-react'
-import { EmailContext } from '../../context/EmailContext'
-import { emailApi } from '../../services/api'
-import { CreditWarningBanner, PremiumPrompt, SubscribeButton } from '../premium/PremiumPrompt'
-import { useSubscription } from '../../hooks/useSubscription'
-import { useAuth } from '../../context/AuthContext'
-import EmailDetailPage from './EmailDetailPage'
-import { formatEmailDateLocal, getUserTimeZone } from '../../utils/timezone'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Search,
+  RefreshCw,
+  Mail,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  MessageSquare,
+  Paperclip,
+} from 'lucide-react';
+import { EmailContext } from '../../context/EmailContext';
+import { emailApi } from '../../services/api';
+import { CreditWarningBanner, PremiumPrompt, SubscribeButton } from '../premium/PremiumPrompt';
+import { useSubscription } from '../../hooks/useSubscription';
+import { useAuth } from '../../context/AuthContext';
+import EmailDetailPage from './EmailDetailPage';
+import { formatEmailDateLocal, getUserTimeZone } from '../../utils/timezone';
 
 const Inbox = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-  const { emails, setEmails } = useContext(EmailContext)
-  const { checkCreditLimit, creditWarning, showPremiumPrompt, promptType, closePremiumPrompt, planLimits } =
-    useSubscription()
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+  const { emails, setEmails } = useContext(EmailContext);
+  const {
+    checkCreditLimit,
+    creditWarning,
+    showPremiumPrompt,
+    promptType,
+    closePremiumPrompt,
+    planLimits,
+  } = useSubscription();
 
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [sortBy, setSortBy] = useState('newest')
-  const [viewMode, setViewMode] = useState('list')
-  const [view, setView] = useState('list')
-  const [selectedEmail, setSelectedEmail] = useState(null)
-  const [emailAccounts, setEmailAccounts] = useState([])
-  const [selectedAccountId, setSelectedAccountId] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [creditsUsed, setCreditsUsed] = useState(0)
-  const userTimeZone = getUserTimeZone()
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [viewMode, setViewMode] = useState('list');
+  const [view, setView] = useState('list');
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [emailAccounts, setEmailAccounts] = useState([]);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [creditsUsed, setCreditsUsed] = useState(0);
+  const userTimeZone = getUserTimeZone();
 
   // Reset view to list whenever component is mounted/remounted
   useEffect(() => {
-    setView('list')
-    setSelectedEmail(null)
-  }, [])
+    setView('list');
+    setSelectedEmail(null);
+  }, []);
 
   useEffect(() => {
-    loadEmailAccounts()
+    loadEmailAccounts();
     // Simulate credit usage: 1 credit per email loaded
-    const simulatedCredits = Math.min(emails.length, 80)
-    setCreditsUsed(simulatedCredits)
-    checkCreditLimit(simulatedCredits)
-  }, [emails.length])
+    const simulatedCredits = Math.min(emails.length, 80);
+    setCreditsUsed(simulatedCredits);
+    checkCreditLimit(simulatedCredits);
+  }, [emails.length]);
 
   useEffect(() => {
-    if (!selectedAccountId) return undefined
+    if (!selectedAccountId) return undefined;
     const intervalId = setInterval(() => {
-      loadInbox(selectedAccountId)
-    }, 60000)
-    return () => clearInterval(intervalId)
-  }, [selectedAccountId])
+      loadInbox(selectedAccountId);
+    }, 60000);
+    return () => clearInterval(intervalId);
+  }, [selectedAccountId]);
 
   const loadEmailAccounts = async () => {
     try {
-      const listRes = await emailApi.getAccountsList()
-      const accounts = Array.isArray(listRes.data) ? listRes.data : listRes.data?.accounts || []
-      setEmailAccounts(accounts)
+      const listRes = await emailApi.getAccountsList();
+      const accounts = Array.isArray(listRes.data) ? listRes.data : listRes.data?.accounts || [];
+      setEmailAccounts(accounts);
       if (accounts.length > 0) {
-        const first = accounts[0]
-        setSelectedAccountId(first.id)
-        loadInbox(first.id)
+        const first = accounts[0];
+        setSelectedAccountId(first.id);
+        loadInbox(first.id);
       }
     } catch (err) {
-      logger.error('Failed to load email accounts:', err)
+      logger.error('Failed to load email accounts:', err);
     }
-  }
+  };
 
   const loadInbox = async (accountId) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await emailApi.getInbox(accountId)
-      const list = res.data?.emails || []
-      setEmails(list)
+      const res = await emailApi.getInbox(accountId);
+      const list = res.data?.emails || [];
+      setEmails(list);
     } catch (err) {
-      logger.error('Failed to load inbox:', err)
+      logger.error('Failed to load inbox:', err);
       const timedOut =
         err?.code === 'ECONNABORTED' ||
         String(err?.message || '')
           .toLowerCase()
-          .includes('timeout')
+          .includes('timeout');
       // Keep currently rendered emails on transient timeout to avoid empty-state flicker.
       if (!timedOut) {
-        setEmails([])
+        setEmails([]);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const categories = React.useMemo(() => {
     const set = new Set([
@@ -100,101 +115,112 @@ const Inbox = () => {
       'Newsletter',
       'Spam',
       'Uncategorized',
-    ])
+    ]);
     for (const e of emails) {
-      const c = e.ai_category || e.category
-      if (c) set.add(c)
+      const c = e.ai_category || e.category;
+      if (c) set.add(c);
     }
-    return ['all', ...Array.from(set)]
-  }, [emails])
+    return ['all', ...Array.from(set)];
+  }, [emails]);
 
   const filteredEmails = emails.filter((email) => {
-    const subject = (email.subject || '').toLowerCase()
-    const sender = (email.sender || '').toLowerCase()
-    const body = (email.body_text || email.body || '').toLowerCase()
-    const term = searchTerm.toLowerCase()
-    const matchesSearch = !term || subject.includes(term) || sender.includes(term) || body.includes(term)
-    const cat = email.ai_category || email.category || 'Uncategorized'
-    const matchesCategory = filterCategory === 'all' || cat === filterCategory
-    return matchesSearch && matchesCategory
-  })
+    const subject = (email.subject || '').toLowerCase();
+    const sender = (email.sender || '').toLowerCase();
+    const body = (email.body_text || email.body || '').toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      !term || subject.includes(term) || sender.includes(term) || body.includes(term);
+    const cat = email.ai_category || email.category || 'Uncategorized';
+    const matchesCategory = filterCategory === 'all' || cat === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const sortedEmails = [...filteredEmails].sort((a, b) => {
     if (sortBy === 'newest') {
       const pw = (p) => {
-        const v = (p || '').toLowerCase()
-        if (v === 'high') return 3
-        if (v === 'medium') return 2
-        if (v === 'low') return 1
-        return 0
-      }
-      const d = pw(b.priority) - pw(a.priority)
-      if (d !== 0) return d
-      return new Date(b.received_at || b.timestamp) - new Date(a.received_at || a.timestamp)
+        const v = (p || '').toLowerCase();
+        if (v === 'high') return 3;
+        if (v === 'medium') return 2;
+        if (v === 'low') return 1;
+        return 0;
+      };
+      const d = pw(b.priority) - pw(a.priority);
+      if (d !== 0) return d;
+      return new Date(b.received_at || b.timestamp) - new Date(a.received_at || a.timestamp);
     }
     if (sortBy === 'oldest') {
-      return new Date(a.received_at || a.timestamp) - new Date(b.received_at || b.timestamp)
+      return new Date(a.received_at || a.timestamp) - new Date(b.received_at || b.timestamp);
     }
-    if (sortBy === 'sender') return (a.sender || '').localeCompare(b.sender || '')
-    return 0
-  })
+    if (sortBy === 'sender') return (a.sender || '').localeCompare(b.sender || '');
+    return 0;
+  });
 
   const groupedByCategory = React.useMemo(() => {
-    const map = new Map()
+    const map = new Map();
     for (const e of sortedEmails) {
-      const cat = e.ai_category || e.category || 'Uncategorized'
-      if (!map.has(cat)) map.set(cat, [])
-      map.get(cat).push(e)
+      const cat = e.ai_category || e.category || 'Uncategorized';
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat).push(e);
     }
-    const order = ['Important', 'To-Do', 'Work', 'Personal', 'Finance', 'Travel', 'Newsletter', 'Spam', 'Uncategorized']
-    const rest = [...map.keys()].filter((c) => !order.includes(c))
-    const keys = [...order.filter((c) => map.has(c)), ...rest]
-    return keys.map((k) => ({ category: k, emails: map.get(k) }))
-  }, [sortedEmails])
+    const order = [
+      'Important',
+      'To-Do',
+      'Work',
+      'Personal',
+      'Finance',
+      'Travel',
+      'Newsletter',
+      'Spam',
+      'Uncategorized',
+    ];
+    const rest = [...map.keys()].filter((c) => !order.includes(c));
+    const keys = [...order.filter((c) => map.has(c)), ...rest];
+    return keys.map((k) => ({ category: k, emails: map.get(k) }));
+  }, [sortedEmails]);
 
   const categoryStats = React.useMemo(() => {
-    const s = { all: emails.length }
+    const s = { all: emails.length };
     for (const e of emails) {
-      const c = e.ai_category || e.category || 'Uncategorized'
-      s[c] = (s[c] || 0) + 1
+      const c = e.ai_category || e.category || 'Uncategorized';
+      s[c] = (s[c] || 0) + 1;
     }
-    return s
-  }, [emails])
+    return s;
+  }, [emails]);
 
-  const formatDate = (d) => formatEmailDateLocal(d)
+  const formatDate = (d) => formatEmailDateLocal(d);
 
   const getPriorityIcon = (p) => {
-    const v = (p || '').toLowerCase()
-    if (v === 'high') return <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
-    if (v === 'medium') return <Clock className="h-4 w-4 text-amber-600 flex-shrink-0" />
-    if (v === 'low') return <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-    return <Mail className="h-4 w-4 text-slate-400 flex-shrink-0" />
-  }
+    const v = (p || '').toLowerCase();
+    if (v === 'high') return <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />;
+    if (v === 'medium') return <Clock className="h-4 w-4 text-amber-600 flex-shrink-0" />;
+    if (v === 'low') return <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />;
+    return <Mail className="h-4 w-4 text-slate-400 flex-shrink-0" />;
+  };
 
   const badgeClass = (cat) => {
-    if (cat === 'Important') return 'badge-important'
-    if (cat === 'To-Do') return 'badge-todo'
-    if (cat === 'Newsletter') return 'badge-newsletter'
-    return 'badge-default'
-  }
+    if (cat === 'Important') return 'badge-important';
+    if (cat === 'To-Do') return 'badge-todo';
+    if (cat === 'Newsletter') return 'badge-newsletter';
+    return 'badge-default';
+  };
 
   const openEmail = (email) => {
-    setSelectedEmail(email)
-    setView('detail')
-  }
+    setSelectedEmail(email);
+    setView('detail');
+  };
 
   const backToList = () => {
-    setView('list')
-    setSelectedEmail(null)
-  }
+    setView('list');
+    setSelectedEmail(null);
+  };
 
   if (view === 'detail' && selectedEmail) {
-    const accountId = selectedEmail.account_id || selectedAccountId
+    const accountId = selectedEmail.account_id || selectedAccountId;
     return (
       <div className="h-full flex flex-col min-h-0">
         <EmailDetailPage email={selectedEmail} accountId={accountId} onBack={backToList} />
       </div>
-    )
+    );
   }
 
   return (
@@ -227,9 +253,9 @@ const Inbox = () => {
             <select
               value={selectedAccountId || ''}
               onChange={(e) => {
-                const id = e.target.value
-                setSelectedAccountId(id)
-                loadInbox(id)
+                const id = e.target.value;
+                setSelectedAccountId(id);
+                loadInbox(id);
               }}
               className="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
@@ -324,13 +350,16 @@ const Inbox = () => {
           <p className="text-sm font-medium text-indigo-900 mb-1">What this means</p>
           <p className="text-sm text-indigo-700">
             Emails are grouped by type.{' '}
-            {groupedByCategory.map(({ category, emails: es }) => `${es.length} ${category}`).join(' · ')}
+            {groupedByCategory
+              .map(({ category, emails: es }) => `${es.length} ${category}`)
+              .join(' · ')}
           </p>
         </div>
       )}
 
       <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        Each row shows sender, subject preview, and message time in your local timezone ({userTimeZone}).
+        Each row shows sender, subject preview, and message time in your local timezone (
+        {userTimeZone}).
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -367,8 +396,8 @@ const Inbox = () => {
                     </span>
                   </div>
                   {groupEmails.map((email) => {
-                    const cat = email.ai_category || email.category || 'Uncategorized'
-                    const preview = (email.body_text || email.body || '').trim().slice(0, 80)
+                    const cat = email.ai_category || email.category || 'Uncategorized';
+                    const preview = (email.body_text || email.body || '').trim().slice(0, 80);
                     return (
                       <div
                         key={email.id}
@@ -387,20 +416,23 @@ const Inbox = () => {
                           <div className="sender">{email.sender}</div>
                           <div className="preview">{preview || '—'}</div>
                         </div>
-                        {((email.attachment_count || 0) > 0 || (email.attachments && email.attachments.length > 0)) && (
+                        {((email.attachment_count || 0) > 0 ||
+                          (email.attachments && email.attachments.length > 0)) && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
                             <Paperclip className="h-3 w-3" />
                             {email.attachment_count || email.attachments.length}
                           </span>
                         )}
-                        <div className="meta">{formatDate(email.received_at || email.timestamp)}</div>
+                        <div className="meta">
+                          {formatDate(email.received_at || email.timestamp)}
+                        </div>
                         <span
                           className={`inbox-badge inline-flex px-2 py-0.5 rounded text-xs font-medium ${badgeClass(cat)}`}
                         >
                           Category: {cat}
                         </span>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               ))}
@@ -408,8 +440,8 @@ const Inbox = () => {
           ) : (
             <div className="divide-y divide-slate-100">
               {sortedEmails.map((email) => {
-                const cat = email.ai_category || email.category || 'Uncategorized'
-                const preview = (email.body_text || email.body || '').trim().slice(0, 80)
+                const cat = email.ai_category || email.category || 'Uncategorized';
+                const preview = (email.body_text || email.body || '').trim().slice(0, 80);
                 return (
                   <div
                     key={email.id}
@@ -428,7 +460,8 @@ const Inbox = () => {
                       <div className="sender">{email.sender}</div>
                       <div className="preview">{preview || '—'}</div>
                     </div>
-                    {((email.attachment_count || 0) > 0 || (email.attachments && email.attachments.length > 0)) && (
+                    {((email.attachment_count || 0) > 0 ||
+                      (email.attachments && email.attachments.length > 0)) && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
                         <Paperclip className="h-3 w-3" />
                         {email.attachment_count || email.attachments.length}
@@ -441,14 +474,14 @@ const Inbox = () => {
                       Category: {cat}
                     </span>
                   </div>
-                )
+                );
               })}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Inbox
+export default Inbox;

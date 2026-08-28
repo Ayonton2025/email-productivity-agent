@@ -1,55 +1,56 @@
-import React, { useState, useEffect } from 'react'
-import { X, Mail, Key, FileText, AlertCircle, CheckCircle, LogIn } from 'lucide-react'
-import { useEmailAccounts } from '../../context/EmailAccountsContext'
-import { useAuth } from '../../context/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Key, FileText, AlertCircle, CheckCircle, LogIn } from 'lucide-react';
+import { useEmailAccounts } from '../../context/EmailAccountsContext';
+import { useAuth } from '../../context/AuthContext';
 
 const ConnectGmailModal = ({ isOpen, onClose }) => {
-  const { connectAccount } = useEmailAccounts()
-  const { isAuthenticated, user } = useAuth()
-  const [connectionMode, setConnectionMode] = useState('oauth') // 'oauth' or 'manual'
+  const { connectAccount } = useEmailAccounts();
+  const { isAuthenticated, user } = useAuth();
+  const [connectionMode, setConnectionMode] = useState('oauth'); // 'oauth' or 'manual'
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     app_password: '',
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Auto-initiate OAuth flow if user is authenticated
   useEffect(() => {
     if (isOpen && isAuthenticated && user?.email) {
-      handleOAuthConnect()
+      handleOAuthConnect();
     }
-  }, [isOpen, isAuthenticated, user?.email])
+  }, [isOpen, isAuthenticated, user?.email]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-    setSuccess('')
-  }
+    });
+    setError('');
+    setSuccess('');
+  };
 
   const handleOAuthConnect = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
       // Use relative URL in development to leverage Vite proxy
       // Only use full URL in production
-      let apiBaseUrl = '/api/v1'
+      let apiBaseUrl = '/api/v1';
       if (import.meta.env.MODE === 'production' && import.meta.env.VITE_API_URL) {
-        let url = import.meta.env.VITE_API_URL
+        let url = import.meta.env.VITE_API_URL;
         if (!url.endsWith('/api/v1')) {
-          url = url.replace(/\/+$/, '') + '/api/v1'
+          url = url.replace(/\/+$/, '') + '/api/v1';
         }
-        apiBaseUrl = url
+        apiBaseUrl = url;
       }
 
-      const token = localStorage.getItem('auth_token')
-      const redirectUri = import.meta.env.VITE_OAUTH_REDIRECT_URI || `${window.location.origin}/oauth/callback`
+      const token = localStorage.getItem('auth_token');
+      const redirectUri =
+        import.meta.env.VITE_OAUTH_REDIRECT_URI || `${window.location.origin}/oauth/callback`;
 
       // Get OAuth URL from backend (authenticated; links to the logged-in user)
       const response = await fetch(
@@ -57,26 +58,26 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
-      )
-      const data = await response.json()
+      );
+      const data = await response.json();
 
       if (data.auth_url) {
         // Redirect to Google OAuth
-        window.location.href = data.auth_url
+        window.location.href = data.auth_url;
       } else {
-        setError(data?.detail || 'Failed to get OAuth URL from backend')
+        setError(data?.detail || 'Failed to get OAuth URL from backend');
       }
     } catch (err) {
-      setError(`OAuth connection failed: ${err.message}`)
+      setError(`OAuth connection failed: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleManualConnect = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
     try {
       const result = await connectAccount({
@@ -84,27 +85,27 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
         email: formData.email,
         password: formData.app_password || formData.password,
         connection_type: 'smtp', // Use SMTP/IMAP instead of OAuth
-      })
+      });
 
       if (result.success) {
-        setSuccess('Gmail account connected successfully!')
+        setSuccess('Gmail account connected successfully!');
         setTimeout(() => {
-          onClose()
-          setFormData({ email: '', password: '', app_password: '' })
-          setSuccess('')
-          setConnectionMode('oauth')
-        }, 2000)
+          onClose();
+          setFormData({ email: '', password: '', app_password: '' });
+          setSuccess('');
+          setConnectionMode('oauth');
+        }, 2000);
       } else {
-        setError(result.error)
+        setError(result.error);
       }
     } catch (err) {
-      setError(`Connection failed: ${err.message}`)
+      setError(`Connection failed: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -120,7 +121,10 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
               <p className="text-sm text-gray-600">Add your Gmail to Bylix Email</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -175,9 +179,13 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
                   <LogIn className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-blue-900">
-                      {isAuthenticated ? `Connect as ${user?.email}` : 'Sign in with your Google account'}
+                      {isAuthenticated
+                        ? `Connect as ${user?.email}`
+                        : 'Sign in with your Google account'}
                     </p>
-                    <p className="text-xs text-blue-700 mt-1">We'll securely access your Gmail using OAuth 2.0</p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      We'll securely access your Gmail using OAuth 2.0
+                    </p>
                   </div>
                 </div>
               </div>
@@ -206,7 +214,9 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
           {connectionMode === 'manual' && (
             <form onSubmit={handleManualConnect} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gmail Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gmail Address
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -229,7 +239,9 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   placeholder="Enter your Gmail app password"
                 />
-                <p className="mt-1 text-xs text-gray-500">Generate an App Password in your Google Account settings</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Generate an App Password in your Google Account settings
+                </p>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -238,8 +250,8 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
                   <span className="text-sm font-medium text-yellow-800">Note</span>
                 </div>
                 <p className="text-xs text-yellow-700">
-                  We recommend using OAuth (above) for better security. Only use App Passwords if OAuth is not
-                  available.
+                  We recommend using OAuth (above) for better security. Only use App Passwords if
+                  OAuth is not available.
                 </p>
               </div>
 
@@ -264,7 +276,7 @@ const ConnectGmailModal = ({ isOpen, onClose }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ConnectGmailModal
+export default ConnectGmailModal;

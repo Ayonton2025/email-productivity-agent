@@ -1,16 +1,36 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import { X, Sparkles } from 'lucide-react'
-import { agentsApi, aiApi } from '../../services/api'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import { X, Sparkles } from 'lucide-react';
+import { agentsApi, aiApi } from '../../services/api';
 
 const AGENT_TYPES = [
-  { value: 'sales', label: 'Sales Agent', description: 'Handles sales inquiries and lead qualification' },
+  {
+    value: 'sales',
+    label: 'Sales Agent',
+    description: 'Handles sales inquiries and lead qualification',
+  },
   { value: 'support', label: 'Support Agent', description: 'Manages customer support requests' },
-  { value: 'recruitment', label: 'Recruitment Agent', description: 'Processes job applications and recruitment' },
-  { value: 'executive_assistant', label: 'Executive Assistant', description: 'Manages executive communications' },
-  { value: 'legal_filter', label: 'Legal Filter', description: 'Filters and categorizes legal communications' },
-  { value: 'student', label: 'Student Assistant', description: 'Helps with academic communications' },
-]
+  {
+    value: 'recruitment',
+    label: 'Recruitment Agent',
+    description: 'Processes job applications and recruitment',
+  },
+  {
+    value: 'executive_assistant',
+    label: 'Executive Assistant',
+    description: 'Manages executive communications',
+  },
+  {
+    value: 'legal_filter',
+    label: 'Legal Filter',
+    description: 'Filters and categorizes legal communications',
+  },
+  {
+    value: 'student',
+    label: 'Student Assistant',
+    description: 'Helps with academic communications',
+  },
+];
 
 const DEFAULT_SYSTEM_PROMPTS = {
   sales:
@@ -25,7 +45,7 @@ const DEFAULT_SYSTEM_PROMPTS = {
     'You are a legal filter agent. Your role is to identify legal communications, flag important documents, and categorize by urgency. Be precise, careful, and thorough.',
   student:
     'You are a student assistant. Your role is to help manage academic communications, deadlines, and course-related emails. Be organized, helpful, and timely.',
-}
+};
 
 const AgentConfig = ({ agent, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -43,136 +63,138 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
     memory_enabled: agent?.memory_enabled ?? true,
     context_window: agent?.context_window || 10,
     tags: agent?.tags || [],
-  })
+  });
 
-  const [saving, setSaving] = useState(false)
-  const [newCategory, setNewCategory] = useState('')
-  const [newSender, setNewSender] = useState('')
-  const [newKeyword, setNewKeyword] = useState('')
-  const [aiGoal, setAiGoal] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState('')
-  const [aiMeta, setAiMeta] = useState({ provider: null, model: null })
+  const [saving, setSaving] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [newSender, setNewSender] = useState('');
+  const [newKeyword, setNewKeyword] = useState('');
+  const [aiGoal, setAiGoal] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiMeta, setAiMeta] = useState({ provider: null, model: null });
 
   const aiQuickPrompts = [
     'Create a billing support agent with strict approval rules',
     'Create a sales agent focused on demo follow-ups and warm leads',
-  ]
+  ];
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (field === 'agent_type' && !agent) {
-      setFormData((prev) => ({ ...prev, system_prompt: DEFAULT_SYSTEM_PROMPTS[value] || '' }))
+      setFormData((prev) => ({ ...prev, system_prompt: DEFAULT_SYSTEM_PROMPTS[value] || '' }));
     }
-  }
+  };
 
   const addCategory = () => {
     if (newCategory && !formData.subscribe_to_categories.includes(newCategory)) {
       setFormData((prev) => ({
         ...prev,
         subscribe_to_categories: [...prev.subscribe_to_categories, newCategory],
-      }))
-      setNewCategory('')
+      }));
+      setNewCategory('');
     }
-  }
+  };
 
   const removeCategory = (category) => {
     setFormData((prev) => ({
       ...prev,
       subscribe_to_categories: prev.subscribe_to_categories.filter((c) => c !== category),
-    }))
-  }
+    }));
+  };
 
   const addSender = () => {
     if (newSender && !formData.subscribe_to_senders.includes(newSender)) {
       setFormData((prev) => ({
         ...prev,
         subscribe_to_senders: [...prev.subscribe_to_senders, newSender],
-      }))
-      setNewSender('')
+      }));
+      setNewSender('');
     }
-  }
+  };
 
   const removeSender = (sender) => {
     setFormData((prev) => ({
       ...prev,
       subscribe_to_senders: prev.subscribe_to_senders.filter((s) => s !== sender),
-    }))
-  }
+    }));
+  };
 
   const addKeyword = () => {
     if (newKeyword && !formData.subscribe_to_keywords.includes(newKeyword)) {
       setFormData((prev) => ({
         ...prev,
         subscribe_to_keywords: [...prev.subscribe_to_keywords, newKeyword],
-      }))
-      setNewKeyword('')
+      }));
+      setNewKeyword('');
     }
-  }
+  };
 
   const removeKeyword = (keyword) => {
     setFormData((prev) => ({
       ...prev,
       subscribe_to_keywords: prev.subscribe_to_keywords.filter((k) => k !== keyword),
-    }))
-  }
+    }));
+  };
 
   const handleSave = async () => {
     if (!formData.name || !formData.system_prompt) {
-      alert('Please fill in required fields (Name and System Prompt)')
-      return
+      alert('Please fill in required fields (Name and System Prompt)');
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       if (agent?.id) {
-        await agentsApi.updateAgent(agent.id, formData)
+        await agentsApi.updateAgent(agent.id, formData);
       } else {
-        await agentsApi.createAgent(formData)
+        await agentsApi.createAgent(formData);
       }
-      onSave()
-      onClose()
+      onSave();
+      onClose();
     } catch (error) {
-      logger.error('Failed to save agent:', error)
-      alert('Failed to save agent')
+      logger.error('Failed to save agent:', error);
+      alert('Failed to save agent');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleGenerateAIDraft = async (goal) => {
-    if (!goal?.trim()) return
-    setAiLoading(true)
-    setAiError('')
+    if (!goal?.trim()) return;
+    setAiLoading(true);
+    setAiError('');
     try {
       const res = await aiApi.assistWorkspace({
         page: 'agents',
         objective: goal.trim(),
         mode: 'draft',
         context: { current_form: formData },
-      })
-      const draft = res.data?.draft?.agent || {}
-      setAiMeta({ provider: res.data?.provider, model: res.data?.model })
+      });
+      const draft = res.data?.draft?.agent || {};
+      setAiMeta({ provider: res.data?.provider, model: res.data?.model });
       if (Object.keys(draft).length > 0) {
-        setFormData((prev) => ({ ...prev, ...draft }))
+        setFormData((prev) => ({ ...prev, ...draft }));
       }
     } catch (error) {
       const detail =
         error?.response?.data?.detail ||
         error?.response?.data?.error ||
         error?.message ||
-        'Failed to generate agent draft'
-      setAiError(detail)
+        'Failed to generate agent draft';
+      setAiError(detail);
     } finally {
-      setAiLoading(false)
+      setAiLoading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">{agent?.id ? 'Edit Agent' : 'Create New Agent'}</h2>
+          <h2 className="text-xl font-semibold text-slate-900">
+            {agent?.id ? 'Edit Agent' : 'Create New Agent'}
+          </h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X className="h-5 w-5" />
           </button>
@@ -189,8 +211,8 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                 <button
                   key={prompt}
                   onClick={() => {
-                    setAiGoal(prompt)
-                    handleGenerateAIDraft(prompt)
+                    setAiGoal(prompt);
+                    handleGenerateAIDraft(prompt);
                   }}
                   className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-100"
                 >
@@ -284,7 +306,8 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
               placeholder="Define the agent's role and behavior..."
             />
             <p className="text-xs text-slate-500">
-              This prompt defines how the agent behaves. Be specific about the agent's role, tone, and responsibilities.
+              This prompt defines how the agent behaves. Be specific about the agent's role, tone,
+              and responsibilities.
             </p>
           </div>
 
@@ -303,7 +326,9 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
           {/* Subscription Settings */}
           <div className="space-y-4">
             <h3 className="font-semibold text-slate-900">Email Subscription</h3>
-            <p className="text-sm text-slate-600">Configure which emails this agent should process</p>
+            <p className="text-sm text-slate-600">
+              Configure which emails this agent should process
+            </p>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Categories</label>
@@ -330,7 +355,10 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                     className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-sm flex items-center gap-1"
                   >
                     {cat}
-                    <button onClick={() => removeCategory(cat)} className="text-indigo-600 hover:text-indigo-800">
+                    <button
+                      onClick={() => removeCategory(cat)}
+                      className="text-indigo-600 hover:text-indigo-800"
+                    >
                       ×
                     </button>
                   </span>
@@ -363,7 +391,10 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                     className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-sm flex items-center gap-1"
                   >
                     {sender}
-                    <button onClick={() => removeSender(sender)} className="text-indigo-600 hover:text-indigo-800">
+                    <button
+                      onClick={() => removeSender(sender)}
+                      className="text-indigo-600 hover:text-indigo-800"
+                    >
                       ×
                     </button>
                   </span>
@@ -396,7 +427,10 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                     className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-sm flex items-center gap-1"
                   >
                     {keyword}
-                    <button onClick={() => removeKeyword(keyword)} className="text-indigo-600 hover:text-indigo-800">
+                    <button
+                      onClick={() => removeKeyword(keyword)}
+                      className="text-indigo-600 hover:text-indigo-800"
+                    >
                       ×
                     </button>
                   </span>
@@ -425,7 +459,9 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                   onChange={(e) => handleInputChange('require_approval', e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-slate-700">Require human approval before sending</span>
+                <span className="text-sm text-slate-700">
+                  Require human approval before sending
+                </span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -434,19 +470,27 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
                   onChange={(e) => handleInputChange('memory_enabled', e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-slate-700">Enable memory (remember past interactions)</span>
+                <span className="text-sm text-slate-700">
+                  Enable memory (remember past interactions)
+                </span>
               </label>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Context Window</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Context Window
+                </label>
                 <input
                   type="number"
                   value={formData.context_window}
-                  onChange={(e) => handleInputChange('context_window', parseInt(e.target.value) || 10)}
+                  onChange={(e) =>
+                    handleInputChange('context_window', parseInt(e.target.value) || 10)
+                  }
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                   min="1"
                   max="50"
                 />
-                <p className="mt-1 text-xs text-slate-500">Number of previous emails to consider (1-50)</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Number of previous emails to consider (1-50)
+                </p>
               </div>
             </div>
           </div>
@@ -470,7 +514,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AgentConfig
+export default AgentConfig;

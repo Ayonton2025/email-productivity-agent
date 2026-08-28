@@ -10,18 +10,14 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import encrypt_credential, get_current_user
-from app.models.database import Email, EmailProviderConfig, UserEmailAccount, get_db
-from app.models.document_models import EmailAttachment
+from app.models.database import EmailProviderConfig, UserEmailAccount, get_db
 from app.models.user_models import User
 from app.services.email_provider_service import EmailProviderService
-from app.services.gmail_sync_service import sync_gmail_inbox
-from app.services.imap_service import imap_service
-from app.services.smtp_service import smtp_service
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +28,12 @@ class ConnectEmailAccountRequest(BaseModel):
     """Connect email account with IMAP/SMTP credentials"""
 
     email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password")
-    display_name: Optional[str] = Field(None, max_length=255, description="Display name for account")
+    password: str = Field(
+        ..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password"
+    )
+    display_name: Optional[str] = Field(
+        None, max_length=255, description="Display name for account"
+    )
     auto_detect_provider: bool = Field(default=True, description="Auto-detect IMAP/SMTP settings")
 
 
@@ -105,9 +105,13 @@ async def gmail_auth_url(
     try:
         if not settings.GOOGLE_CLIENT_ID:
             logger.error("Google OAuth not configured - missing GOOGLE_CLIENT_ID")
-            raise HTTPException(status_code=500, detail="Google OAuth not configured (missing client id)")
+            raise HTTPException(
+                status_code=500, detail="Google OAuth not configured (missing client id)"
+            )
 
-        logger.info(f"Generating Gmail auth URL for user {current_user.id if current_user else 'unknown'}")
+        logger.info(
+            f"Generating Gmail auth URL for user {current_user.id if current_user else 'unknown'}"
+        )
 
         # Use the helper that requests Gmail scopes + offline access.
         provider = EmailProviderService()
@@ -128,7 +132,9 @@ async def gmail_auth_url_public(redirect_uri: str):
     try:
         if not settings.GOOGLE_CLIENT_ID:
             logger.error("Google OAuth not configured - missing GOOGLE_CLIENT_ID")
-            raise HTTPException(status_code=500, detail="Google OAuth not configured (missing client id)")
+            raise HTTPException(
+                status_code=500, detail="Google OAuth not configured (missing client id)"
+            )
 
         logger.info("Generating Gmail auth URL (public endpoint)")
 
@@ -156,7 +162,9 @@ async def gmail_connect_with_code(
     and create/update a visible UserEmailAccount entry for Gmail.
     """
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured (missing client id/secret)")
+        raise HTTPException(
+            status_code=500, detail="Google OAuth not configured (missing client id/secret)"
+        )
 
     provider = EmailProviderService()
 
@@ -172,7 +180,9 @@ async def gmail_connect_with_code(
         raise HTTPException(status_code=400, detail=f"Invalid OAuth code or redirect URI: {str(e)}")
     except Exception as e:
         logger.error(f"❌ Gmail OAuth code exchange failed: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Failed to exchange OAuth code for tokens: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to exchange OAuth code for tokens: {str(e)}"
+        )
 
     access_token = tokens.get("access_token")
     refresh_token = tokens.get("refresh_token")
@@ -257,7 +267,9 @@ async def gmail_connect_with_code(
     existing_account = res_acc.scalar_one_or_none()
 
     # Make primary only if this is the first connected account
-    res_any = await db.execute(select(UserEmailAccount).where(UserEmailAccount.user_id == current_user.id))
+    res_any = await db.execute(
+        select(UserEmailAccount).where(UserEmailAccount.user_id == current_user.id)
+    )
     has_any_accounts = res_any.scalars().first() is not None
 
     if existing_account:
@@ -293,7 +305,9 @@ async def gmail_connect_with_code(
         if isinstance(token_expiry_str, str):
             try:
                 # Parse ISO format datetime string
-                account.token_expires_at = datetime.fromisoformat(token_expiry_str.replace("Z", "+00:00"))
+                account.token_expires_at = datetime.fromisoformat(
+                    token_expiry_str.replace("Z", "+00:00")
+                )
             except (ValueError, AttributeError):
                 account.token_expires_at = None
         else:

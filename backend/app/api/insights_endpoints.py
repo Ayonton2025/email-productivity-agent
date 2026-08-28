@@ -26,7 +26,9 @@ router = APIRouter(prefix="/insights", tags=["insights"])
 
 @router.get("/risks", response_model=List[Dict[str, Any]])
 async def get_risks(
-    severity: Optional[str] = None, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    severity: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get active risks for the user"""
     try:
@@ -39,12 +41,16 @@ async def get_risks(
 
 @router.get("/opportunities", response_model=List[Dict[str, Any]])
 async def get_opportunities(
-    status: Optional[str] = None, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get active opportunities for the user"""
     try:
         decision_service = DecisionIntelligenceService(db)
-        opportunities = await decision_service.get_active_opportunities(user_id=current_user.id, status=status)
+        opportunities = await decision_service.get_active_opportunities(
+            user_id=current_user.id, status=status
+        )
         return [opp.to_dict() for opp in opportunities]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get opportunities: {str(e)}")
@@ -52,12 +58,16 @@ async def get_opportunities(
 
 @router.get("/deadlines", response_model=List[Dict[str, Any]])
 async def get_deadlines(
-    days_ahead: int = 7, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    days_ahead: int = 7,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get upcoming deadlines"""
     try:
         decision_service = DecisionIntelligenceService(db)
-        deadlines = await decision_service.get_upcoming_deadlines(user_id=current_user.id, days_ahead=days_ahead)
+        deadlines = await decision_service.get_upcoming_deadlines(
+            user_id=current_user.id, days_ahead=days_ahead
+        )
         return [commitment.to_dict() for commitment in deadlines]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get deadlines: {str(e)}")
@@ -65,7 +75,9 @@ async def get_deadlines(
 
 @router.get("/relationships", response_model=Dict[str, Any])
 async def get_relationships(
-    status: Optional[str] = None, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get relationship intelligence (contacts and companies)"""
     try:
@@ -103,7 +115,9 @@ async def relationship_heatmap(
     try:
         from sqlalchemy import select
 
-        result = await db.execute(select(Contact).where(Contact.user_id == current_user.id).limit(100))
+        result = await db.execute(
+            select(Contact).where(Contact.user_id == current_user.id).limit(100)
+        )
         contacts = list(result.scalars().all())
         cells = [
             {
@@ -122,7 +136,9 @@ async def relationship_heatmap(
 
 @router.get("/analytics", response_model=Dict[str, Any])
 async def get_analytics(
-    days: int = 30, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    days: int = 30,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get email analytics and insights"""
     try:
@@ -134,7 +150,9 @@ async def get_analytics(
 
         # Email statistics
         total_emails = await db.execute(
-            select(func.count(Email.id)).where(and_(Email.user_id == current_user.id, Email.received_at >= cutoff_date))
+            select(func.count(Email.id)).where(
+                and_(Email.user_id == current_user.id, Email.received_at >= cutoff_date)
+            )
         )
         total_count = total_emails.scalar() or 0
 
@@ -142,7 +160,11 @@ async def get_analytics(
         category_stats = await db.execute(
             select(Email.ai_category, func.count(Email.id))
             .where(
-                and_(Email.user_id == current_user.id, Email.received_at >= cutoff_date, Email.ai_category.isnot(None))
+                and_(
+                    Email.user_id == current_user.id,
+                    Email.received_at >= cutoff_date,
+                    Email.ai_category.isnot(None),
+                )
             )
             .group_by(Email.ai_category)
         )
@@ -152,7 +174,11 @@ async def get_analytics(
         sentiment_stats = await db.execute(
             select(Email.sentiment, func.count(Email.id))
             .where(
-                and_(Email.user_id == current_user.id, Email.received_at >= cutoff_date, Email.sentiment.isnot(None))
+                and_(
+                    Email.user_id == current_user.id,
+                    Email.received_at >= cutoff_date,
+                    Email.sentiment.isnot(None),
+                )
             )
             .group_by(Email.sentiment)
         )
@@ -161,14 +187,19 @@ async def get_analytics(
         # Commitments
         commitments_count = await db.execute(
             select(func.count(Commitment.id)).where(
-                and_(Commitment.user_id == current_user.id, Commitment.status.in_(["pending", "in_progress"]))
+                and_(
+                    Commitment.user_id == current_user.id,
+                    Commitment.status.in_(["pending", "in_progress"]),
+                )
             )
         )
         active_commitments = commitments_count.scalar() or 0
 
         # Risks
         risks_count = await db.execute(
-            select(func.count(Risk.id)).where(and_(Risk.user_id == current_user.id, Risk.status == "open"))
+            select(func.count(Risk.id)).where(
+                and_(Risk.user_id == current_user.id, Risk.status == "open")
+            )
         )
         active_risks = risks_count.scalar() or 0
 
@@ -176,23 +207,32 @@ async def get_analytics(
         opportunities_count = await db.execute(
             select(func.count(Opportunity.id)).where(
                 and_(
-                    Opportunity.user_id == current_user.id, Opportunity.status.in_(["new", "qualified", "in_progress"])
+                    Opportunity.user_id == current_user.id,
+                    Opportunity.status.in_(["new", "qualified", "in_progress"]),
                 )
             )
         )
         active_opportunities = opportunities_count.scalar() or 0
 
         # Contacts
-        contacts_count = await db.execute(select(func.count(Contact.id)).where(Contact.user_id == current_user.id))
+        contacts_count = await db.execute(
+            select(func.count(Contact.id)).where(Contact.user_id == current_user.id)
+        )
         total_contacts = contacts_count.scalar() or 0
 
         # Companies
-        companies_count = await db.execute(select(func.count(Company.id)).where(Company.user_id == current_user.id))
+        companies_count = await db.execute(
+            select(func.count(Company.id)).where(Company.user_id == current_user.id)
+        )
         total_companies = companies_count.scalar() or 0
 
         return {
             "period_days": days,
-            "email_statistics": {"total_emails": total_count, "by_category": categories, "by_sentiment": sentiments},
+            "email_statistics": {
+                "total_emails": total_count,
+                "by_category": categories,
+                "by_sentiment": sentiments,
+            },
             "intelligence": {
                 "active_commitments": active_commitments,
                 "active_risks": active_risks,
@@ -206,7 +246,9 @@ async def get_analytics(
 
 @router.get("/contacts/{contact_id}", response_model=Dict[str, Any])
 async def get_contact_details(
-    contact_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    contact_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get detailed information about a contact"""
     try:
@@ -216,7 +258,9 @@ async def get_contact_details(
 
         # Get contact
         result = await db.execute(
-            select(Contact).where(and_(Contact.id == contact_id, Contact.user_id == current_user.id))
+            select(Contact).where(
+                and_(Contact.id == contact_id, Contact.user_id == current_user.id)
+            )
         )
         contact = result.scalar_one_or_none()
 
@@ -232,7 +276,10 @@ async def get_contact_details(
         )
         interactions = list(interactions_result.scalars().all())
 
-        return {"contact": contact.to_dict(), "recent_interactions": [i.to_dict() for i in interactions]}
+        return {
+            "contact": contact.to_dict(),
+            "recent_interactions": [i.to_dict() for i in interactions],
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -241,7 +288,9 @@ async def get_contact_details(
 
 @router.get("/companies/{company_id}", response_model=Dict[str, Any])
 async def get_company_details(
-    company_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    company_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get detailed information about a company"""
     try:
@@ -249,7 +298,9 @@ async def get_company_details(
 
         # Get company
         result = await db.execute(
-            select(Company).where(and_(Company.id == company_id, Company.user_id == current_user.id))
+            select(Company).where(
+                and_(Company.id == company_id, Company.user_id == current_user.id)
+            )
         )
         company = result.scalar_one_or_none()
 
@@ -258,7 +309,9 @@ async def get_company_details(
 
         # Get contacts for this company
         relationship_service = RelationshipService(db)
-        contacts = await relationship_service.get_contacts_by_company(user_id=current_user.id, company_id=company_id)
+        contacts = await relationship_service.get_contacts_by_company(
+            user_id=current_user.id, company_id=company_id
+        )
 
         return {"company": company.to_dict(), "contacts": [c.to_dict() for c in contacts]}
     except HTTPException:
@@ -280,7 +333,9 @@ async def forecast_business_insights(
         from sqlalchemy import func, select
 
         open_risks_result = await db.execute(
-            select(func.count(Risk.id)).where(Risk.user_id == current_user.id, Risk.status == "open")
+            select(func.count(Risk.id)).where(
+                Risk.user_id == current_user.id, Risk.status == "open"
+            )
         )
         open_opps_result = await db.execute(
             select(func.count(Opportunity.id)).where(

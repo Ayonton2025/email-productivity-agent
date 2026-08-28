@@ -1,46 +1,49 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const { forgotPassword, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
+  const { forgotPassword, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/')
+      navigate('/');
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
-    const result = await forgotPassword(email)
+    const result = await forgotPassword(email);
 
     if (result.success) {
-      setSuccess('If an account with that email exists, a password reset link has been sent.')
-      setEmail('')
+      setSuccess('If an account with that email exists, a password reset link has been sent.');
+      setEmail('');
     } else {
-      setError(result.error)
+      setError(result.error);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <Link to="/login" className="inline-flex items-center text-sm text-indigo-100 hover:text-white mb-6">
+          <Link
+            to="/login"
+            className="inline-flex items-center text-sm text-indigo-100 hover:text-white mb-6"
+          >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to sign in
           </Link>
@@ -48,8 +51,12 @@ const ForgotPassword = () => {
           <div className="mx-auto h-12 w-12 bg-white rounded-lg flex items-center justify-center">
             <span className="text-2xl">🔒</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Reset your password</h2>
-          <p className="mt-2 text-center text-sm text-indigo-100">Enter your email and we'll send you a reset link</p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Reset your password
+          </h2>
+          <p className="mt-2 text-center text-sm text-indigo-100">
+            Enter your email and we'll send you a reset link
+          </p>
         </div>
 
         <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
@@ -125,7 +132,7 @@ const ForgotPassword = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ForgotPassword
+export default ForgotPassword;

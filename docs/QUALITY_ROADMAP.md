@@ -10,9 +10,9 @@ specific workarounds.
 
 ## Scorecard
 
-| Measure | Phase 0 baseline | Phase 2 current | Target |
+| Measure | Phase 0 baseline | Phase 4 current | Target |
 | --- | ---: | ---: | ---: |
-| Quality score | 31/100 | 57/100 | 100/100 |
+| Quality score | 31/100 | 62/100 | 100/100 |
 | Backend statement coverage | 30.77% | 31.72% | 80% |
 | Frontend statement coverage | Not collected | 15.99% | 70% |
 | Clean-clone Compose startup | Fail | Pass | Pass |
@@ -290,6 +290,51 @@ comment changes from hiding renewed growth.
 - Full frontend lint passed with 110 pre-existing warnings, down from the
   previous 112-warning allowance and with zero errors.
 - Focused backend Ruff checks passed with zero errors.
+
+## Phase 4: Explicit Lint and Format Policy
+
+Implemented on **2026-08-28**. The quality score increased by 5 points, from
+57/100 to 62/100, because backend and frontend quality policy is now stored in
+versioned, locally runnable configuration rather than inferred from CI commands.
+
+### Completed work
+
+- [x] Configured Ruff in `backend/pyproject.toml` with a 100-column limit and
+  the full `E`, `F`, `I`, and `B` rule families.
+- [x] Enabled strict mypy defaults for the declared typed boundary and retained
+  Python 3.11, third-party import, generated/migration exclusions, and named
+  legacy typing exceptions explicitly so each exception can be retired safely.
+- [x] Added the conventional `frontend/.prettierrc` with semicolons, single
+  quotes, trailing-comma, and 100-column policy; formatted its complete scope.
+- [x] Configured ESLint with recommended JavaScript, React, React Hooks, and
+  Prettier compatibility presets plus browser, Node, and test environments.
+- [x] Added unused-disable detection, a reproducible current warning ceiling,
+  and a separate zero-warning `lint:strict` target.
+- [x] Documented every local quality command and the division of responsibility
+  between Ruff/mypy and ESLint/Prettier.
+
+### Warning-debt policy
+
+The frontend currently has 110 warnings: unused legacy bindings, React Hook
+dependency findings, and complexity findings. The normal lint command cannot
+exceed that measured ceiling, and the ceiling may only move downward. New code
+must not add warnings. `npm run lint:strict` exposes the eventual zero-warning
+acceptance criterion without misrepresenting the current codebase as clean.
+
+### Phase 4 verification
+
+- Backend Ruff lint: all files passed with the configured `E/F/I/B` policy.
+- Backend Ruff format check: 206 governed Python files passed.
+- Backend mypy: 10 files passed under strict defaults and documented migration
+  exceptions.
+- Backend regression suite: all 119 tests passed; coverage remained above the
+  enforced 31% floor at 31.47%.
+- Frontend Prettier check: all 114 governed source/configuration files passed.
+- Frontend ESLint: zero errors and exactly 110 warnings, satisfying the ratchet.
+- Frontend complete suite: 23 files and 57 tests passed with coverage gates.
+- Frontend TypeScript check and production build passed.
+- Architecture checks passed after formatting; every Phase 3 critical module
+  remains below 400 lines.
 
 ## Planned remediation
 

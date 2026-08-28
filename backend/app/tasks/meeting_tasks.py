@@ -22,7 +22,9 @@ def meeting_followup_task(self):
 async def _meeting_followup_task(self):
     try:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(select(MeetingRecord).where(and_(MeetingRecord.status == "scheduled")))
+            result = await session.execute(
+                select(MeetingRecord).where(and_(MeetingRecord.status == "scheduled"))
+            )
             meetings = list(result.scalars().all())
             updated = 0
             for m in meetings:

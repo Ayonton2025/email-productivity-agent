@@ -48,7 +48,11 @@ async def test_paystack_exact_usd_default(monkeypatch):
     # Create an in-memory async session stub (we'll pass None since the code only uses session for saving)
     user_id = "test-user"
     user_email = "test@example.com"
-    plan_id = "professional" if "professional" in SUBSCRIPTION_PLANS else list(SUBSCRIPTION_PLANS.keys())[1]
+    plan_id = (
+        "professional"
+        if "professional" in SUBSCRIPTION_PLANS
+        else list(SUBSCRIPTION_PLANS.keys())[1]
+    )
 
     result = await ps.create_upgrade_session(
         user_id=user_id,
@@ -79,7 +83,11 @@ async def test_paystack_local_currency_when_opted(monkeypatch):
 
     user_id = "test-user"
     user_email = "test@example.com"
-    plan_id = "professional" if "professional" in SUBSCRIPTION_PLANS else list(SUBSCRIPTION_PLANS.keys())[1]
+    plan_id = (
+        "professional"
+        if "professional" in SUBSCRIPTION_PLANS
+        else list(SUBSCRIPTION_PLANS.keys())[1]
+    )
 
     result = await ps.create_upgrade_session(
         user_id=user_id,
@@ -93,4 +101,6 @@ async def test_paystack_local_currency_when_opted(monkeypatch):
     )
 
     # When local currency requested, currency should be KES
-    assert result.get("processor") in ["paystack", "coinbase", "paypal", "stripe"] or result.get("authorization_url")
+    assert result.get("processor") in ["paystack", "coinbase", "paypal", "stripe"] or result.get(
+        "authorization_url"
+    )

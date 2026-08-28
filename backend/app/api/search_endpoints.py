@@ -171,7 +171,9 @@ async def full_text_search(
 
     except Exception as e:
         logger.error(f"❌ Search failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Search failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Search failed"
+        )
 
 
 @router.get("/suggestions", response_model=dict)
@@ -230,14 +232,17 @@ async def get_search_suggestions(
 
     except Exception as e:
         logger.error(f"❌ Failed to get suggestions: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get suggestions")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get suggestions"
+        )
 
 
 @router.get("/advanced", response_model=dict)
 async def advanced_search(
     keywords: str = Query(..., description="Space-separated keywords"),
     search_fields: str = Query(
-        "subject,sender,body", description="Comma-separated fields to search (subject, sender, body, all)"
+        "subject,sender,body",
+        description="Comma-separated fields to search (subject, sender, body, all)",
     ),
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
@@ -350,4 +355,6 @@ async def advanced_search(
 
     except Exception as e:
         logger.error(f"❌ Advanced search failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Advanced search failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Advanced search failed"
+        )

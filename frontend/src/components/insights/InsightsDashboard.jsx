@@ -1,6 +1,6 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   TrendingUp,
@@ -11,110 +11,116 @@ import {
   Clock,
   DollarSign,
   Target,
-} from 'lucide-react'
-import { insightsApi } from '../../services/api'
+} from 'lucide-react';
+import { insightsApi } from '../../services/api';
 
 const getInsightsErrorMessage = (error) =>
-  error?.friendlyMessage || error?.response?.data?.detail || 'Unable to load insights. Please try again.'
+  error?.friendlyMessage ||
+  error?.response?.data?.detail ||
+  'Unable to load insights. Please try again.';
 
 const InsightsError = ({ message }) => {
-  if (!message) return null
+  if (!message) return null;
   return (
-    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+    <div
+      role="alert"
+      className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    >
       {message}
     </div>
-  )
-}
+  );
+};
 
 const InsightsDashboard = () => {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [analytics, setAnalytics] = useState(null)
-  const [risks, setRisks] = useState([])
-  const [opportunities, setOpportunities] = useState([])
-  const [deadlines, setDeadlines] = useState([])
-  const [relationships, setRelationships] = useState(null)
-  const [activeTab, setActiveTab] = useState('overview')
-  const [error, setError] = useState('')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState(null);
+  const [risks, setRisks] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [deadlines, setDeadlines] = useState([]);
+  const [relationships, setRelationships] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    loadAllData()
-  }, [])
+    loadAllData();
+  }, []);
 
   const loadAllData = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
     try {
-      const [analyticsRes, risksRes, opportunitiesRes, deadlinesRes, relationshipsRes] = await Promise.all([
-        insightsApi.getAnalytics(30),
-        insightsApi.getRisks(),
-        insightsApi.getOpportunities(),
-        insightsApi.getDeadlines(7),
-        insightsApi.getRelationships(),
-      ])
+      const [analyticsRes, risksRes, opportunitiesRes, deadlinesRes, relationshipsRes] =
+        await Promise.all([
+          insightsApi.getAnalytics(30),
+          insightsApi.getRisks(),
+          insightsApi.getOpportunities(),
+          insightsApi.getDeadlines(7),
+          insightsApi.getRelationships(),
+        ]);
 
-      setAnalytics(analyticsRes.data)
-      setRisks(risksRes.data || [])
-      setOpportunities(opportunitiesRes.data || [])
-      setDeadlines(deadlinesRes.data || [])
-      setRelationships(relationshipsRes.data)
+      setAnalytics(analyticsRes.data);
+      setRisks(risksRes.data || []);
+      setOpportunities(opportunitiesRes.data || []);
+      setDeadlines(deadlinesRes.data || []);
+      setRelationships(relationshipsRes.data);
     } catch (error) {
-      logger.error('Failed to load insights:', error)
-      setError(getInsightsErrorMessage(error))
+      logger.error('Failed to load insights:', error);
+      setError(getInsightsErrorMessage(error));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case 'critical':
-        return 'bg-red-100 text-red-800 border-red-200'
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'high':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'new':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800';
       case 'qualified':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-100 text-purple-800';
       case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800';
       case 'won':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800';
       case 'lost':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'No date'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  }
+    if (!dateString) return 'No date';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   const isOverdue = (deadline) => {
-    if (!deadline) return false
-    return new Date(deadline) < new Date()
-  }
+    if (!deadline) return false;
+    return new Date(deadline) < new Date();
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <RefreshCw className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -145,7 +151,7 @@ const InsightsDashboard = () => {
             { id: 'deadlines', name: 'Deadlines', icon: Calendar },
             { id: 'relationships', name: 'Relationships', icon: Users },
           ].map((tab) => {
-            const Icon = tab.icon
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
@@ -159,7 +165,7 @@ const InsightsDashboard = () => {
                 <Icon className="h-4 w-4" />
                 {tab.name}
               </button>
-            )
+            );
           })}
         </nav>
       </div>
@@ -209,7 +215,9 @@ const InsightsDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-500">Total Contacts</p>
-                  <p className="mt-2 text-3xl font-bold text-slate-900">{relationships?.total_contacts || 0}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {relationships?.total_contacts || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
                   <Users className="h-6 w-6 text-purple-600" />
@@ -221,7 +229,9 @@ const InsightsDashboard = () => {
           {/* Email Statistics */}
           {analytics && (
             <div className="bg-white rounded-lg shadow border border-slate-200 p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Email Statistics (Last 30 Days)</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                Email Statistics (Last 30 Days)
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <p className="text-sm text-slate-500">Total Emails</p>
@@ -245,12 +255,14 @@ const InsightsDashboard = () => {
                 <div>
                   <p className="text-sm text-slate-500">By Sentiment</p>
                   <div className="mt-2 space-y-1">
-                    {Object.entries(analytics.email_statistics?.by_sentiment || {}).map(([sent, count]) => (
-                      <div key={sent} className="flex justify-between text-sm">
-                        <span className="text-slate-600 capitalize">{sent}</span>
-                        <span className="font-medium">{count}</span>
-                      </div>
-                    ))}
+                    {Object.entries(analytics.email_statistics?.by_sentiment || {}).map(
+                      ([sent, count]) => (
+                        <div key={sent} className="flex justify-between text-sm">
+                          <span className="text-slate-600 capitalize">{sent}</span>
+                          <span className="font-medium">{count}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -274,7 +286,9 @@ const InsightsDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-slate-900">{risk.title}</h3>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor(risk.severity)}`}>
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor(risk.severity)}`}
+                        >
                           {risk.severity}
                         </span>
                       </div>
@@ -302,7 +316,9 @@ const InsightsDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-slate-900">{opp.title}</h3>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(opp.status)}`}>
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(opp.status)}`}
+                        >
                           {opp.status}
                         </span>
                       </div>
@@ -310,7 +326,8 @@ const InsightsDashboard = () => {
                       <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
                         {opp.estimated_value && (
                           <span className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />${opp.estimated_value.toLocaleString()}
+                            <DollarSign className="h-3 w-3" />$
+                            {opp.estimated_value.toLocaleString()}
                           </span>
                         )}
                         {opp.probability && (
@@ -350,10 +367,14 @@ const InsightsDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold text-slate-900">{risk.title}</h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(risk.severity)}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(risk.severity)}`}
+                        >
                           {risk.severity}
                         </span>
-                        <span className="px-2 py-1 rounded text-xs bg-slate-100 text-slate-700">{risk.risk_type}</span>
+                        <span className="px-2 py-1 rounded text-xs bg-slate-100 text-slate-700">
+                          {risk.risk_type}
+                        </span>
                       </div>
                       <p className="text-sm text-slate-600 mb-2">{risk.description}</p>
                       {risk.potential_impact && (
@@ -395,7 +416,9 @@ const InsightsDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold text-slate-900">{opp.title}</h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(opp.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(opp.status)}`}
+                        >
                           {opp.status}
                         </span>
                         <span className="px-2 py-1 rounded text-xs bg-slate-100 text-slate-700">
@@ -448,7 +471,9 @@ const InsightsDashboard = () => {
       {/* Deadlines Tab */}
       {activeTab === 'deadlines' && (
         <div className="bg-white rounded-lg shadow border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Upcoming Deadlines (Next 7 Days)</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            Upcoming Deadlines (Next 7 Days)
+          </h2>
           {deadlines.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
@@ -460,7 +485,9 @@ const InsightsDashboard = () => {
                 <div
                   key={commitment.id}
                   className={`p-4 rounded-lg border ${
-                    isOverdue(commitment.deadline) ? 'border-red-200 bg-red-50' : 'border-slate-200 hover:bg-slate-50'
+                    isOverdue(commitment.deadline)
+                      ? 'border-red-200 bg-red-50'
+                      : 'border-slate-200 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -468,7 +495,9 @@ const InsightsDashboard = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold text-slate-900">{commitment.title}</h3>
                         {isOverdue(commitment.deadline) && (
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">Overdue</span>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                            Overdue
+                          </span>
                         )}
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
@@ -529,7 +558,9 @@ const InsightsDashboard = () => {
                       >
                         {company.relationship_status}
                       </span>
-                      <span className="text-xs text-slate-500">{company.total_contacts} contacts</span>
+                      <span className="text-xs text-slate-500">
+                        {company.total_contacts} contacts
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -556,7 +587,9 @@ const InsightsDashboard = () => {
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-medium text-slate-900">{contact.display_name || contact.email}</h3>
+                        <h3 className="font-medium text-slate-900">
+                          {contact.display_name || contact.email}
+                        </h3>
                         <p className="text-sm text-slate-500">{contact.email}</p>
                       </div>
                     </div>
@@ -586,7 +619,7 @@ const InsightsDashboard = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InsightsDashboard
+export default InsightsDashboard;

@@ -146,11 +146,14 @@ async def classify_email(
 
     except PermissionError:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient credits for this operation"
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits for this operation",
         )
     except Exception as e:
         logger.error(f"Error classifying email: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to classify email")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to classify email"
+        )
 
 
 # ============================
@@ -191,11 +194,14 @@ async def extract_actions(
 
     except PermissionError:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient credits for this operation"
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits for this operation",
         )
     except Exception as e:
         logger.error(f"Error extracting actions: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to extract actions")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to extract actions"
+        )
 
 
 # ============================
@@ -227,11 +233,14 @@ async def analyze_sentiment(
 
     except PermissionError:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient credits for this operation"
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits for this operation",
         )
     except Exception as e:
         logger.error(f"Error analyzing sentiment: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to analyze sentiment")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to analyze sentiment"
+        )
 
 
 # ============================
@@ -259,11 +268,14 @@ async def summarize_thread(
 
     except PermissionError:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient credits for this operation"
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits for this operation",
         )
     except Exception as e:
         logger.error(f"Error summarizing thread: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to summarize thread")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to summarize thread"
+        )
 
 
 # ============================
@@ -285,17 +297,25 @@ async def analyze_relationship(
     try:
         # Use the LLM service to analyze relationship
         # This would use a dedicated prompt
-        result = {"relationship_score": 0.75, "engagement_level": "active", "relationship_type": "colleague"}
+        result = {
+            "relationship_score": 0.75,
+            "engagement_level": "active",
+            "relationship_type": "colleague",
+        }
 
         return RelationshipAnalysisResponse(**result)
 
     except PermissionError:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient credits for this operation"
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits for this operation",
         )
     except Exception as e:
         logger.error(f"Error analyzing relationship: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to analyze relationship")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to analyze relationship",
+        )
 
 
 # ============================
@@ -348,7 +368,9 @@ async def ai_provider_health(
     - `check_live=true`: runs live probes (super admin only).
     """
     if check_live and not _is_super_admin(current_user):
-        raise HTTPException(status_code=403, detail="Live provider checks require super admin access")
+        raise HTTPException(
+            status_code=403, detail="Live provider checks require super admin access"
+        )
     data = await llm_service.provider_health(session=session, include_live_checks=check_live)
     return {
         "success": True,
@@ -403,7 +425,11 @@ async def workspace_assist(
         )
         usage_result = await session.execute(usage_query)
         used_this_month = int(usage_result.scalar_one() or 0)
-        if monthly_limit > 0 and used_this_month >= monthly_limit and not _is_super_admin(current_user):
+        if (
+            monthly_limit > 0
+            and used_this_month >= monthly_limit
+            and not _is_super_admin(current_user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Workplace monthly limit reached ({monthly_limit} requests).",
@@ -419,7 +445,8 @@ async def workspace_assist(
         )
         if not result.get("success"):
             raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY, detail=result.get("error", "Assistant request failed")
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=result.get("error", "Assistant request failed"),
             )
         if execute_mode:
             draft_for_confirmation = result.get("draft", {}) or {}
@@ -432,7 +459,8 @@ async def workspace_assist(
             result["requires_confirmation"] = True
             result["confirmation_token"] = token
             result["assistant_message"] = (
-                result.get("assistant_message") or "Preview ready. Confirm execution to apply changes."
+                result.get("assistant_message")
+                or "Preview ready. Confirm execution to apply changes."
             )
 
         session.add(
@@ -447,7 +475,9 @@ async def workspace_assist(
         result["usage"] = {
             "month_used": used_this_month + 1,
             "month_limit": monthly_limit,
-            "month_remaining": max(0, monthly_limit - (used_this_month + 1)) if monthly_limit > 0 else None,
+            "month_remaining": max(0, monthly_limit - (used_this_month + 1))
+            if monthly_limit > 0
+            else None,
         }
         return result
     except HTTPException:
@@ -455,13 +485,18 @@ async def workspace_assist(
     except Exception as e:
         logger.error(f"Workspace assist error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate assistant response"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate assistant response",
         )
 
 
 def _canonical_draft_hash(page: str, objective: str, draft: dict) -> str:
     canonical = json.dumps(
-        {"page": (page or "").strip().lower(), "objective": (objective or "").strip(), "draft": draft or {}},
+        {
+            "page": (page or "").strip().lower(),
+            "objective": (objective or "").strip(),
+            "draft": draft or {},
+        },
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
@@ -478,7 +513,9 @@ def _create_confirmation_token(user_id: str, page: str, objective: str, draft: d
     }
     payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True, ensure_ascii=True)
     payload_b64 = base64.urlsafe_b64encode(payload_json.encode("utf-8")).decode("utf-8")
-    signature = hmac.new(settings.SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        settings.SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
     return f"{payload_b64}.{signature}"
 
 
@@ -488,7 +525,9 @@ def _decode_confirmation_token(token: str) -> dict:
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid confirmation token format")
 
-    expected = hmac.new(settings.SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).hexdigest()
+    expected = hmac.new(
+        settings.SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
     if not hmac.compare_digest(signature, expected):
         raise HTTPException(status_code=400, detail="Invalid confirmation token signature")
 
@@ -500,14 +539,18 @@ def _decode_confirmation_token(token: str) -> dict:
     return payload
 
 
-def _validate_confirmation_token(token_payload: dict, user_id: str, page: str, objective: str, draft: dict) -> None:
+def _validate_confirmation_token(
+    token_payload: dict, user_id: str, page: str, objective: str, draft: dict
+) -> None:
     if token_payload.get("uid") != user_id:
         raise HTTPException(status_code=403, detail="Token user mismatch")
     if int(token_payload.get("exp", 0)) < int(time.time()):
         raise HTTPException(status_code=400, detail="Confirmation token expired")
     expected_digest = _canonical_draft_hash(page, objective, draft)
     if token_payload.get("digest") != expected_digest:
-        raise HTTPException(status_code=400, detail="Draft changed since preview; regenerate and confirm again")
+        raise HTTPException(
+            status_code=400, detail="Draft changed since preview; regenerate and confirm again"
+        )
 
 
 async def _execute_assistant_draft(
@@ -522,7 +565,9 @@ async def _execute_assistant_draft(
             name = campaign_payload.get("name") or f"AI Campaign - {objective[:40]}"
             from_email = campaign_payload.get("from_email") or getattr(current_user, "email", None)
             if not from_email:
-                raise HTTPException(status_code=400, detail="Campaign execution requires from_email")
+                raise HTTPException(
+                    status_code=400, detail="Campaign execution requires from_email"
+                )
 
             campaign = Campaign(
                 user_id=current_user.id,
@@ -547,7 +592,9 @@ async def _execute_assistant_draft(
             await session.flush()
 
             created_sequences = 0
-            for idx, seq in enumerate(draft.get("sequences", []) if isinstance(draft, dict) else [], start=1):
+            for idx, seq in enumerate(
+                draft.get("sequences", []) if isinstance(draft, dict) else [], start=1
+            ):
                 if not seq.get("subject_template") or not seq.get("body_template"):
                     continue
                 sequence = CampaignSequence(
@@ -589,7 +636,11 @@ async def _execute_assistant_draft(
             return {
                 "mode": "execute",
                 "page": "campaigns",
-                "created": {"campaign_id": campaign.id, "sequences": created_sequences, "leads": created_leads},
+                "created": {
+                    "campaign_id": campaign.id,
+                    "sequences": created_sequences,
+                    "leads": created_leads,
+                },
             }
 
         if page_key == "workflows":
@@ -608,7 +659,9 @@ async def _execute_assistant_draft(
             await session.flush()
 
             created_steps = 0
-            for idx, step in enumerate(draft.get("steps", []) if isinstance(draft, dict) else [], start=1):
+            for idx, step in enumerate(
+                draft.get("steps", []) if isinstance(draft, dict) else [], start=1
+            ):
                 step_record = WorkflowStep(
                     workflow_id=workflow.id,
                     step_order=idx,
@@ -635,7 +688,9 @@ async def _execute_assistant_draft(
 
         if page_key == "agents":
             agent_payload = draft.get("agent", {}) if isinstance(draft, dict) else {}
-            system_prompt = agent_payload.get("system_prompt") or "You are a helpful email assistant."
+            system_prompt = (
+                agent_payload.get("system_prompt") or "You are a helpful email assistant."
+            )
             agent = Agent(
                 user_id=current_user.id,
                 name=agent_payload.get("name") or f"AI Agent - {objective[:40]}",

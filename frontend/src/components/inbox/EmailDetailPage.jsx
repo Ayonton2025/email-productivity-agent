@@ -1,6 +1,6 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { logger } from '../../utils/logger.js';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Mail,
@@ -16,50 +16,55 @@ import {
   ChevronUp,
   ExternalLink,
   Paperclip,
-} from 'lucide-react'
-import { emailApi, agentApi } from '../../services/api'
-import { EmailBodyRenderer, EmailContentRenderer, extractLinksFromEmail, shortenUrl } from '../../utils/emailParser.jsx'
-import AttachmentsSection from './AttachmentsSection'
-import { formatEmailDateLocal, getUserTimeZone } from '../../utils/timezone'
-import { useAuth } from '../../context/AuthContext'
+} from 'lucide-react';
+import { emailApi, agentApi } from '../../services/api';
+import {
+  EmailBodyRenderer,
+  EmailContentRenderer,
+  extractLinksFromEmail,
+  shortenUrl,
+} from '../../utils/emailParser.jsx';
+import AttachmentsSection from './AttachmentsSection';
+import { formatEmailDateLocal, getUserTimeZone } from '../../utils/timezone';
+import { useAuth } from '../../context/AuthContext';
 
 const parseAiSummary = (rawSummary) => {
-  const raw = typeof rawSummary === 'string' ? rawSummary.trim() : rawSummary
-  if (!raw) return { text: '' }
+  const raw = typeof rawSummary === 'string' ? rawSummary.trim() : rawSummary;
+  if (!raw) return { text: '' };
 
   if (typeof raw === 'object') {
-    const tasks = Array.isArray(raw.tasks) ? raw.tasks : []
-    return { tasks, meta: raw, text: tasks.length ? '' : JSON.stringify(raw) }
+    const tasks = Array.isArray(raw.tasks) ? raw.tasks : [];
+    return { tasks, meta: raw, text: tasks.length ? '' : JSON.stringify(raw) };
   }
 
   try {
-    const parsed = JSON.parse(raw)
-    const tasks = Array.isArray(parsed?.tasks) ? parsed.tasks : []
-    return { tasks, meta: parsed, text: tasks.length ? '' : raw }
+    const parsed = JSON.parse(raw);
+    const tasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
+    return { tasks, meta: parsed, text: tasks.length ? '' : raw };
   } catch {
-    return { text: raw }
+    return { text: raw };
   }
-}
+};
 
 const EmailDetailPage = ({ email, accountId, onBack }) => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [processing, setProcessing] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [reply, setReply] = useState(null)
-  const [error, setError] = useState(null)
-  const [sendSuccess, setSendSuccess] = useState(false)
-  const [showFullBody, setShowFullBody] = useState(false)
-  const [expandLinks, setExpandLinks] = useState(false)
-  const [mockWarning, setMockWarning] = useState(null)
-  const [isAIGenerated, setIsAIGenerated] = useState(false)
-  const userTimeZone = getUserTimeZone()
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [processing, setProcessing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [reply, setReply] = useState(null);
+  const [error, setError] = useState(null);
+  const [sendSuccess, setSendSuccess] = useState(false);
+  const [showFullBody, setShowFullBody] = useState(false);
+  const [expandLinks, setExpandLinks] = useState(false);
+  const [mockWarning, setMockWarning] = useState(null);
+  const [isAIGenerated, setIsAIGenerated] = useState(false);
+  const userTimeZone = getUserTimeZone();
 
-  const formatDate = (d) => formatEmailDateLocal(d)
+  const formatDate = (d) => formatEmailDateLocal(d);
 
-  const cat = email?.ai_category || email?.category || 'Uncategorized'
-  const aiSummaryRaw = email?.ai_summary || email?.summary
-  const aiSummary = parseAiSummary(aiSummaryRaw)
+  const cat = email?.ai_category || email?.category || 'Uncategorized';
+  const aiSummaryRaw = email?.ai_summary || email?.summary;
+  const aiSummary = parseAiSummary(aiSummaryRaw);
   const categoryClass =
     cat === 'Important'
       ? 'badge-important'
@@ -67,49 +72,49 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
         ? 'badge-todo'
         : cat === 'Newsletter'
           ? 'badge-newsletter'
-          : 'badge-default'
+          : 'badge-default';
 
   const getPriorityIcon = (p) => {
-    const v = (p || '').toLowerCase()
-    if (v === 'high') return <AlertCircle className="h-4 w-4 text-red-600" />
-    if (v === 'medium') return <Clock className="h-4 w-4 text-amber-600" />
-    if (v === 'low') return <CheckCircle className="h-4 w-4 text-emerald-600" />
-    return <Mail className="h-4 w-4 text-slate-400" />
-  }
+    const v = (p || '').toLowerCase();
+    if (v === 'high') return <AlertCircle className="h-4 w-4 text-red-600" />;
+    if (v === 'medium') return <Clock className="h-4 w-4 text-amber-600" />;
+    if (v === 'low') return <CheckCircle className="h-4 w-4 text-emerald-600" />;
+    return <Mail className="h-4 w-4 text-slate-400" />;
+  };
 
   const generateReply = async () => {
-    if (!email?.id) return
-    setProcessing(true)
-    setError(null)
-    setReply(null)
-    setMockWarning(null)
-    setSendSuccess(false)
+    if (!email?.id) return;
+    setProcessing(true);
+    setError(null);
+    setReply(null);
+    setMockWarning(null);
+    setSendSuccess(false);
     try {
-      const res = await emailApi.generateReply(email.id)
+      const res = await emailApi.generateReply(email.id);
       if (res.data?.reply) {
-        const plan = (user?.plan || '').toLowerCase()
-        const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
-        const isFreePlan = !plan || plan === 'personal' || plan === 'free'
-        const isMockReply = Boolean(res.data?.mock) || !res.data?.ai_generated
+        const plan = (user?.plan || '').toLowerCase();
+        const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser);
+        const isFreePlan = !plan || plan === 'personal' || plan === 'free';
+        const isMockReply = Boolean(res.data?.mock) || !res.data?.ai_generated;
         if (isFreePlan && isMockReply && !isSuperAdmin) {
           const proceedWithTemplate = window.confirm(
             'AI reply is available on paid plans. Click OK to proceed with the template reply, or Cancel to upgrade.'
-          )
+          );
           if (!proceedWithTemplate) {
-            navigate('/billing/upgrade')
-            return
+            navigate('/billing/upgrade');
+            return;
           }
         }
 
-        setReply(res.data.reply)
-        setIsAIGenerated(res.data?.ai_generated || false)
+        setReply(res.data.reply);
+        setIsAIGenerated(res.data?.ai_generated || false);
 
         // Display mock warning if present
         if (res.data?.mock_warning) {
-          setMockWarning(res.data.mock_warning)
-          logger.warn('⚠️ Mock reply warning:', res.data.mock_warning)
+          setMockWarning(res.data.mock_warning);
+          logger.warn('⚠️ Mock reply warning:', res.data.mock_warning);
         }
-        return
+        return;
       }
       const agentRes = await agentApi.processEmail({
         email_id: email.id,
@@ -117,56 +122,58 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
         email_content: email.body_text || email.body,
         email_subject: email.subject,
         sender: email.sender,
-      })
-      const data = agentRes.data || {}
-      const text = data.result || data.reply || data.message || (typeof data === 'string' ? data : null)
+      });
+      const data = agentRes.data || {};
+      const text =
+        data.result || data.reply || data.message || (typeof data === 'string' ? data : null);
       if (text) {
-        setReply(text)
-        setIsAIGenerated(true)
-      } else setError('Could not generate reply.')
+        setReply(text);
+        setIsAIGenerated(true);
+      } else setError('Could not generate reply.');
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to generate reply')
+      setError(e.response?.data?.detail || e.message || 'Failed to generate reply');
       setReply(
         `Dear ${(email.sender || '').split('@')[0]},\n\nThank you for your email regarding "${email?.subject || ''}".\n\nI have received your message and will respond shortly.\n\nBest regards`
-      )
+      );
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   const sendReply = async () => {
-    if (!reply || !accountId) return
-    const to = email?.sender
+    if (!reply || !accountId) return;
+    const to = email?.sender;
     if (!to) {
-      setError('No recipient.')
-      return
+      setError('No recipient.');
+      return;
     }
-    setSending(true)
-    setError(null)
-    setSendSuccess(false)
+    setSending(true);
+    setError(null);
+    setSendSuccess(false);
     try {
       await emailApi.sendEmail(accountId, {
         account_id: accountId,
         to,
-        subject: `Re: ${(email?.subject || '').replace(/^Re:\s*/i, '')}`.trim() || 'Re: (no subject)',
+        subject:
+          `Re: ${(email?.subject || '').replace(/^Re:\s*/i, '')}`.trim() || 'Re: (no subject)',
         body_text: reply,
         in_reply_to: email?.message_id || null,
         references: Array.isArray(email?.references) ? email.references : [],
         thread_id: email?.thread_id || null,
-      })
-      setSendSuccess(true)
+      });
+      setSendSuccess(true);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to send.')
+      setError(e.response?.data?.detail || e.message || 'Failed to send.');
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }
+  };
 
-  const rawBodyText = email?.body_text || email?.body || ''
-  const hasAttachmentMetadata = Array.isArray(email?.attachments) && email.attachments.length > 0
-  const emailLinks = extractLinksFromEmail(`${rawBodyText}\n${email?.body_html || ''}`)
-  const collapseSource = rawBodyText || String(email?.body_html || '')
-  const shouldCollapse = collapseSource.split('\n').length > 35 || collapseSource.length > 3500
+  const rawBodyText = email?.body_text || email?.body || '';
+  const hasAttachmentMetadata = Array.isArray(email?.attachments) && email.attachments.length > 0;
+  const emailLinks = extractLinksFromEmail(`${rawBodyText}\n${email?.body_html || ''}`);
+  const collapseSource = rawBodyText || String(email?.body_html || '');
+  const shouldCollapse = collapseSource.split('\n').length > 35 || collapseSource.length > 3500;
 
   return (
     <div className="page-content overflow-hidden flex flex-col">
@@ -184,8 +191,12 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="flex justify-between items-start gap-4 flex-wrap">
-            <h1 className="text-xl font-bold text-slate-900 break-words">{email?.subject || '(no subject)'}</h1>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${categoryClass}`}>
+            <h1 className="text-xl font-bold text-slate-900 break-words">
+              {email?.subject || '(no subject)'}
+            </h1>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${categoryClass}`}
+            >
               {cat}
             </span>
           </div>
@@ -209,7 +220,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
           </div>
 
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className={!showFullBody && shouldCollapse ? 'max-h-[520px] overflow-hidden relative' : ''}>
+            <div
+              className={
+                !showFullBody && shouldCollapse ? 'max-h-[520px] overflow-hidden relative' : ''
+              }
+            >
               <EmailContentRenderer
                 bodyText={rawBodyText || '(no content)'}
                 bodyHtml={email?.body_html}
@@ -226,7 +241,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
                   onClick={() => setShowFullBody((v) => !v)}
                   className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
                 >
-                  {showFullBody ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showFullBody ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
                   {showFullBody ? 'Show less' : 'See more'}
                 </button>
               </div>
@@ -337,7 +356,9 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
                   ) : null}
                 </div>
               ) : (
-                <p className="text-sky-800 text-sm whitespace-pre-wrap">{aiSummary.text || String(aiSummaryRaw)}</p>
+                <p className="text-sky-800 text-sm whitespace-pre-wrap">
+                  {aiSummary.text || String(aiSummaryRaw)}
+                </p>
               )}
             </div>
           ) : null}
@@ -377,7 +398,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
                 disabled={processing}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
-                {processing ? <Loader className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                {processing ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="h-4 w-4" />
+                )}
                 {processing ? 'Generating…' : 'Generate AI Reply'}
               </button>
             ) : (
@@ -403,7 +428,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
                     disabled={processing}
                     className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-100 disabled:opacity-60 transition-colors"
                   >
-                    {processing ? <Loader className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {processing ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
                     Generate another reply
                   </button>
                   <button
@@ -412,7 +441,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
                     disabled={sending || !accountId}
                     className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
-                    {sending ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {sending ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                     {sending ? 'Sending…' : 'Send reply'}
                   </button>
                 </div>
@@ -420,7 +453,11 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
             )}
           </div>
 
-          {error && <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm">{error}</div>}
+          {error && (
+            <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm">
+              {error}
+            </div>
+          )}
           {sendSuccess && (
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm flex items-center gap-2">
               <CheckCircle className="h-4 w-4 flex-shrink-0" />
@@ -430,7 +467,7 @@ const EmailDetailPage = ({ email, accountId, onBack }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EmailDetailPage
+export default EmailDetailPage;

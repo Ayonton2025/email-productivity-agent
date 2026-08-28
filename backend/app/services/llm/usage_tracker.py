@@ -1,12 +1,7 @@
 """Persistence boundary for token and cost usage."""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models.billing_models import UsageLog
-from app.models.database import AsyncSessionLocal
+from typing import Any, Dict
 
 
 class UsageTracker:

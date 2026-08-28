@@ -53,7 +53,9 @@ class HostedEmailAbuseService:
         elif not account.send_count_reset_at:
             account.send_count_reset_at = day_end
 
-        account_daily_limit = int(account.send_limit_daily or settings.HOSTED_EMAIL_DAILY_SEND_LIMIT or 0)
+        account_daily_limit = int(
+            account.send_limit_daily or settings.HOSTED_EMAIL_DAILY_SEND_LIMIT or 0
+        )
         if account_daily_limit > 0 and int(account.send_count_daily or 0) >= account_daily_limit:
             return {
                 "allowed": False,
@@ -118,12 +120,16 @@ class HostedEmailAbuseService:
             )
             if ai_risk is not None:
                 score = max(score, ai_risk)
-                ai_flagged = ai_risk >= float(settings.HOSTED_EMAIL_SPAM_SCORE_BLOCK_THRESHOLD or 0.75)
+                ai_flagged = ai_risk >= float(
+                    settings.HOSTED_EMAIL_SPAM_SCORE_BLOCK_THRESHOLD or 0.75
+                )
 
         threshold = float(settings.HOSTED_EMAIL_SPAM_SCORE_BLOCK_THRESHOLD or 0.75)
         return {
             "allowed": score < threshold,
-            "reason": None if score < threshold else f"Spam/risk score {score:.2f} exceeds threshold {threshold:.2f}",
+            "reason": None
+            if score < threshold
+            else f"Spam/risk score {score:.2f} exceeds threshold {threshold:.2f}",
             "spam_score": score,
             "link_count": signals["link_count"],
             "ai_flagged": ai_flagged,
@@ -199,7 +205,11 @@ class HostedEmailAbuseService:
         if link_count > max_links:
             score = max(score, 0.9)
 
-        return min(1.0, score), {"keyword_hits": keyword_hits, "link_count": link_count, "upper_ratio": upper_ratio}
+        return min(1.0, score), {
+            "keyword_hits": keyword_hits,
+            "link_count": link_count,
+            "upper_ratio": upper_ratio,
+        }
 
     async def _ai_spam_risk_score(
         self,

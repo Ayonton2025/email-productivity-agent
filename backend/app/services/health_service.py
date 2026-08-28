@@ -54,7 +54,9 @@ def check_external_services() -> dict[str, dict[str, str]]:
         "ai": {"status": "available" if settings.is_llm_configured() else "unavailable"},
         "payments": {
             "status": "available"
-            if any((settings.PAYSTACK_SECRET_KEY, settings.PAYPAL_CLIENT_ID, settings.STRIPE_API_KEY))
+            if any(
+                (settings.PAYSTACK_SECRET_KEY, settings.PAYPAL_CLIENT_ID, settings.STRIPE_API_KEY)
+            )
             else "unavailable"
         },
         "email": {

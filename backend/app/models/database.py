@@ -69,7 +69,9 @@ class User(Base):
 
     def generate_verification_token(self) -> str:
         token = jwt.encode(
-            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(days=1)}, settings.SECRET_KEY, algorithm="HS256"
+            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(days=1)},
+            settings.SECRET_KEY,
+            algorithm="HS256",
         )
         # Ensure token is string (jwt.encode returns bytes in some versions)
         if isinstance(token, bytes):
@@ -79,7 +81,9 @@ class User(Base):
 
     def generate_reset_token(self) -> str:
         token = jwt.encode(
-            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(hours=1)}, settings.SECRET_KEY, algorithm="HS256"
+            {"user_id": self.id, "exp": datetime.utcnow() + timedelta(hours=1)},
+            settings.SECRET_KEY,
+            algorithm="HS256",
         )
         # Ensure token is string
         if isinstance(token, bytes):
@@ -108,7 +112,9 @@ class UserEmailAccount(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     provider = Column(String, nullable=False)  # gmail, yahoo, outlook, etc
-    email_account_type = Column(String, default="external", nullable=False, index=True)  # external | hosted_internal
+    email_account_type = Column(
+        String, default="external", nullable=False, index=True
+    )  # external | hosted_internal
     hosted_provider = Column(String, nullable=True)  # mailcow, postal, mailu, resend, sendgrid
     email = Column(String, nullable=False, index=True)
     display_name = Column(String, nullable=True)
@@ -174,7 +180,6 @@ class UserEmailAccount(Base):
             "send_count_daily": self.send_count_daily,
             "send_count_reset_at": _to_utc_iso(self.send_count_reset_at),
             "created_at": _to_utc_iso(self.created_at),
-            "provider": self.provider,
             "has_oauth": bool(self.access_token),
             "watch_expiration": _to_utc_iso(self.watch_expiration),
         }
@@ -305,7 +310,9 @@ class PromptTemplate(Base):
     __tablename__ = "prompt_templates"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)  # NULL for system prompts
+    user_id = Column(
+        String, ForeignKey("users.id"), nullable=True, index=True
+    )  # NULL for system prompts
     name = Column(String, nullable=False)
     description = Column(Text)
     template = Column(Text, nullable=False)
@@ -465,7 +472,9 @@ async def init_db():
         # Now create all tables with fresh indices
         async with engine.begin() as conn:
             # Use checkfirst=True to avoid errors if tables/indexes already exist
-            await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=True))
+            await conn.run_sync(
+                lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=True)
+            )
 
             # Explicit table creation for LLM provider configs (sometimes missed in metadata.create_all)
             llm_provider_create_stmt = """
@@ -538,7 +547,9 @@ async def init_db():
                 try:
                     await conn.execute(text(stmt))
                 except Exception as alter_err:
-                    logger.info(f"⚠️  [init_db] Hosted email migration warning for '{stmt}': {alter_err}")
+                    logger.info(
+                        f"⚠️  [init_db] Hosted email migration warning for '{stmt}': {alter_err}"
+                    )
 
             billing_alter_statements = [
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR DEFAULT 'personal'",
@@ -579,7 +590,9 @@ async def init_db():
         if "already exists" in error_msg.lower() or "duplicate" in error_msg.lower():
             logger.error(f"⚠️ [init_db] Database initialization warning: {error_msg}")
             logger.info("⚠️ [init_db] This is usually safe to ignore if tables already exist.")
-            logger.error("⚠️ [init_db] If you see persistent errors, delete backend/local.db and restart.")
+            logger.error(
+                "⚠️ [init_db] If you see persistent errors, delete backend/local.db and restart."
+            )
         else:
             # Re-raise other errors
             logger.error(f"❌ [init_db] Database initialization failed: {error_msg}")
@@ -595,7 +608,9 @@ async def create_default_prompts():
 
     async with AsyncSessionLocal() as session:
         # Check if default prompts already exist
-        result = await session.execute(select(PromptTemplate).where(PromptTemplate.is_system == True))
+        result = await session.execute(
+            select(PromptTemplate).where(PromptTemplate.is_system == True)
+        )
         existing_prompts = result.scalars().all()
 
         if existing_prompts:

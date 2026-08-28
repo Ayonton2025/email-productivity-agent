@@ -30,7 +30,9 @@ class EmailIntelligenceMixin:
             Dict with reply data including 'body', 'mock', 'mock_warning' if applicable
         """
         try:
-            logger.info(f"📧 [EmailService] Generating reply for email: {email_id}, user_plan: {user_plan}")
+            logger.info(
+                f"📧 [EmailService] Generating reply for email: {email_id}, user_plan: {user_plan}"
+            )
 
             # Get the email
             email = await self.get_email_by_id(email_id, user_id)
@@ -40,7 +42,11 @@ class EmailIntelligenceMixin:
             # Generate reply using LLM
             if self.llm_service:
                 reply_data = await self.llm_service.generate_email_reply(
-                    {"sender": email.get("sender"), "subject": email.get("subject"), "body": email.get("body")},
+                    {
+                        "sender": email.get("sender"),
+                        "subject": email.get("subject"),
+                        "body": email.get("body"),
+                    },
                     tone="professional",
                     user_plan=user_plan,
                     user_name=user_name,
@@ -136,7 +142,10 @@ Best regards,
         try:
             db = session or self.db
             result = await db.execute(
-                select(Email).where(Email.processing_status == "pending").order_by(Email.received_at.asc()).limit(limit)
+                select(Email)
+                .where(Email.processing_status == "pending")
+                .order_by(Email.received_at.asc())
+                .limit(limit)
             )
             emails = result.scalars().all()
             return emails
@@ -164,7 +173,11 @@ Best regards,
                     resp = await self.llm_service.process_prompt(
                         prompt.template, email.body_text or email.body_html or ""
                     )
-                    summary = resp if isinstance(resp, str) else (resp.get("text") if isinstance(resp, dict) else None)
+                    summary = (
+                        resp
+                        if isinstance(resp, str)
+                        else (resp.get("text") if isinstance(resp, dict) else None)
+                    )
             except Exception:
                 summary = None
 
@@ -191,7 +204,9 @@ Best regards,
 
             from app.models.database import UserEmailAccount
 
-            result = await db.execute(select(UserEmailAccount).where(UserEmailAccount.id == account_id))
+            result = await db.execute(
+                select(UserEmailAccount).where(UserEmailAccount.id == account_id)
+            )
             account = result.scalar_one_or_none()
             if not account:
                 return {"success": False, "error": "account_not_found"}

@@ -80,7 +80,9 @@ async def get_user_send_readiness(
         has_oauth_token = bool(account.access_token)
         has_password_credentials = bool(account.encrypted_password)
         smtp_configured = bool(account.smtp_host and int(account.smtp_port or 0) > 0)
-        token_not_expired = True if not account.token_expires_at else bool(account.token_expires_at > now)
+        token_not_expired = (
+            True if not account.token_expires_at else bool(account.token_expires_at > now)
+        )
         daily_limit = int(account.send_limit_daily or 0)
         daily_count = int(account.send_count_daily or 0)
         daily_limit_ok = daily_limit <= 0 or daily_count < daily_limit
@@ -102,7 +104,9 @@ async def get_user_send_readiness(
         campaign_send_ready = bool(
             account.is_active and smtp_configured and has_password_credentials and daily_limit_ok
         )
-        reply_send_ready = bool(account.is_active and (campaign_send_ready or (has_oauth_token and token_not_expired)))
+        reply_send_ready = bool(
+            account.is_active and (campaign_send_ready or (has_oauth_token and token_not_expired))
+        )
 
         any_campaign_ready = any_campaign_ready or campaign_send_ready
         any_reply_ready = any_reply_ready or reply_send_ready
@@ -132,10 +136,14 @@ async def get_user_send_readiness(
     celery_enabled = bool(settings.CELERY_ENABLED)
     redis_configured = bool(settings.CELERY_BROKER_URL and settings.CELERY_RESULT_BACKEND)
 
-    overall_campaign_ready = bool(user.is_active and any_campaign_ready and celery_enabled and redis_configured)
+    overall_campaign_ready = bool(
+        user.is_active and any_campaign_ready and celery_enabled and redis_configured
+    )
     overall_reply_ready = bool(user.is_active and any_reply_ready)
 
-    recommended = next((a for a in account_checks if a["is_primary"] and a["campaign_send_ready"]), None)
+    recommended = next(
+        (a for a in account_checks if a["is_primary"] and a["campaign_send_ready"]), None
+    )
     if not recommended:
         recommended = next((a for a in account_checks if a["campaign_send_ready"]), None)
 
@@ -235,12 +243,16 @@ async def get_user_access_profile(
     )
     if sub:
         feature_candidates.update((sub.features or {}).keys())
-        feature_candidates.update(SUBSCRIPTION_PLANS.get(sub.plan_id, {}).get("features", {}).keys())
+        feature_candidates.update(
+            SUBSCRIPTION_PLANS.get(sub.plan_id, {}).get("features", {}).keys()
+        )
 
     feature_access = {}
     for feature in sorted(feature_candidates):
         try:
-            feature_access[feature] = bool(await gating.can_access_feature(user.id, feature, session))
+            feature_access[feature] = bool(
+                await gating.can_access_feature(user.id, feature, session)
+            )
         except Exception:
             feature_access[feature] = False
 
@@ -258,7 +270,10 @@ async def get_user_access_profile(
             "status": getattr(sub, "status", "none"),
             "plan_name": getattr(sub, "plan_name", "Free"),
             "features": (
-                sub.features or SUBSCRIPTION_PLANS.get(getattr(sub, "plan_id", "personal"), {}).get("features", {})
+                sub.features
+                or SUBSCRIPTION_PLANS.get(getattr(sub, "plan_id", "personal"), {}).get(
+                    "features", {}
+                )
             )
             if sub
             else {},
@@ -321,7 +336,12 @@ async def update_user_access_profile(
     setting.updated_at = datetime.utcnow()
 
     await session.commit()
-    return {"success": True, "email": email_key, "override": current_data[email_key], "is_active": bool(user.is_active)}
+    return {
+        "success": True,
+        "email": email_key,
+        "override": current_data[email_key],
+        "is_active": bool(user.is_active),
+    }
 
 
 @router.get("/feature-templates")

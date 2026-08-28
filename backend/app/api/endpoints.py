@@ -50,7 +50,9 @@ async def get_user_inbox(
         # await email_service.ensure_user_has_emails(current_user.id)
 
         # Use user-specific method to get only current user's emails
-        emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
+        emails = await email_service.get_user_emails(
+            user_id=current_user.id, limit=limit, offset=offset
+        )
         logger.info(f"📧 [get_user_inbox] Found {len(emails)} emails")
 
         filtered_emails = emails
@@ -88,7 +90,9 @@ async def get_user_inbox(
 
 
 @router.get("/prompts/my", response_model=List[Dict[str, Any]])
-async def get_user_prompts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_user_prompts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Get user's prompts"""
     try:
         prompt_service = PromptService(db)
@@ -101,7 +105,10 @@ async def get_user_prompts(current_user: User = Depends(get_current_user), db: A
 # ADD THIS MISSING ENDPOINT
 @router.post("/prompts/{prompt_id}/test")
 async def test_prompt(
-    prompt_id: str, test_data: dict, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    prompt_id: str,
+    test_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Test a prompt with sample input"""
     try:
@@ -109,7 +116,7 @@ async def test_prompt(
 
         from app.models.database import PromptTemplate
 
-        prompt_service = PromptService(db)
+        _prompt_service = PromptService(db)
         llm_service = LLMService()
 
         # Get the prompt
@@ -139,7 +146,9 @@ async def test_prompt(
 
 
 @router.get("/system-prompts")
-async def get_system_prompts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_system_prompts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Get all system prompts"""
     try:
         prompt_service = PromptService(db)
@@ -151,7 +160,9 @@ async def get_system_prompts(current_user: User = Depends(get_current_user), db:
 
 
 @router.post("/emails/sync")
-async def sync_user_emails(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def sync_user_emails(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Sync user emails"""
     try:
         return {
@@ -189,7 +200,9 @@ async def get_user_email_accounts_simple(
 
 @router.post("/email-accounts/gmail")
 async def connect_gmail_simple(
-    auth_data: GmailConnectionRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    auth_data: GmailConnectionRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Connect Gmail account"""
     try:
@@ -262,12 +275,18 @@ async def get_emails(limit: int = 50, offset: int = 0, db: AsyncSession = Depend
 
 
 @router.post("/emails/load-mock")
-async def load_mock_emails(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def load_mock_emails(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Load mock emails for current user"""
     try:
         email_service = EmailService(db)
         emails = await email_service.load_mock_emails(current_user.id)
-        return {"message": f"Loaded {len(emails)} mock emails", "emails": emails, "user_id": current_user.id}
+        return {
+            "message": f"Loaded {len(emails)} mock emails",
+            "emails": emails,
+            "user_id": current_user.id,
+        }
     except Exception as e:
         logger.error(f"❌ [load_mock_emails] Error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to load mock emails: {str(e)}")
@@ -275,7 +294,9 @@ async def load_mock_emails(current_user: User = Depends(get_current_user), db: A
 
 # NEW ENDPOINT: Load mock emails only if user has very few emails
 @router.post("/emails/load-mock-if-empty")
-async def load_mock_emails_if_empty(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def load_mock_emails_if_empty(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Load mock emails only if user has very few emails"""
     try:
         email_service = EmailService(db)
@@ -289,7 +310,11 @@ async def load_mock_emails_if_empty(current_user: User = Depends(get_current_use
             }
         else:
             emails = await email_service.load_mock_emails(current_user.id)
-            return {"message": f"Loaded {len(emails)} mock emails", "emails": emails, "user_id": current_user.id}
+            return {
+                "message": f"Loaded {len(emails)} mock emails",
+                "emails": emails,
+                "user_id": current_user.id,
+            }
 
     except Exception as e:
         logger.error(f"❌ [load_mock_emails_if_empty] Error: {e}")
@@ -297,7 +322,11 @@ async def load_mock_emails_if_empty(current_user: User = Depends(get_current_use
 
 
 @router.get("/emails/{email_id}", response_model=Dict[str, Any])
-async def get_email(email_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_email(
+    email_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Get a specific email (user-specific)"""
     try:
         email_service = EmailService(db)
@@ -319,7 +348,10 @@ async def get_email(email_id: str, current_user: User = Depends(get_current_user
 
 @router.put("/emails/{email_id}/category")
 async def update_email_category(
-    email_id: str, category: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    email_id: str,
+    category: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Update email category (user-specific)"""
     try:
@@ -350,10 +382,14 @@ async def create_prompt(prompt_data: PromptCreateRequest, db: AsyncSession = Dep
 
 
 @router.put("/prompts/{prompt_id}", response_model=Dict[str, Any])
-async def update_prompt(prompt_id: str, prompt_data: PromptUpdateRequest, db: AsyncSession = Depends(get_db)):
+async def update_prompt(
+    prompt_id: str, prompt_data: PromptUpdateRequest, db: AsyncSession = Depends(get_db)
+):
     """Update a prompt"""
     prompt_service = PromptService(db)
-    updated = await prompt_service.update_prompt(prompt_id, prompt_data.model_dump(exclude_unset=True))
+    updated = await prompt_service.update_prompt(
+        prompt_id, prompt_data.model_dump(exclude_unset=True)
+    )
     if not updated:
         raise HTTPException(status_code=404, detail="Prompt not found")
     return updated
@@ -371,7 +407,9 @@ async def delete_prompt(prompt_id: str, db: AsyncSession = Depends(get_db)):
 
 # Draft endpoints
 @router.get("/drafts", response_model=List[Dict[str, Any]])
-async def get_drafts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_drafts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Get user's drafts"""
     email_service = EmailService(db)
     return await email_service.get_user_drafts(user_id=current_user.id)
@@ -379,18 +417,26 @@ async def get_drafts(current_user: User = Depends(get_current_user), db: AsyncSe
 
 @router.post("/drafts", response_model=Dict[str, Any])
 async def create_draft(
-    draft_data: DraftCreateRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    draft_data: DraftCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a draft for current user"""
     email_service = EmailService(db)
-    return await email_service.create_draft(draft_data.model_dump(mode="json"), user_id=current_user.id)
+    return await email_service.create_draft(
+        draft_data.model_dump(mode="json"), user_id=current_user.id
+    )
 
 
 @router.put("/drafts/{draft_id}", response_model=Dict[str, Any])
-async def update_draft(draft_id: str, draft_data: DraftUpdateRequest, db: AsyncSession = Depends(get_db)):
+async def update_draft(
+    draft_id: str, draft_data: DraftUpdateRequest, db: AsyncSession = Depends(get_db)
+):
     """Update a draft"""
     email_service = EmailService(db)
-    updated = await email_service.update_draft(draft_id, draft_data.model_dump(mode="json", exclude_unset=True))
+    updated = await email_service.update_draft(
+        draft_id, draft_data.model_dump(mode="json", exclude_unset=True)
+    )
     if not updated:
         raise HTTPException(status_code=404, detail="Draft not found")
     return updated
@@ -432,14 +478,18 @@ async def generate_email_reply(
         if not email:
             raise HTTPException(status_code=404, detail="Email not found")
 
-        logger.info(f"📧 [generate_email_reply] Generating reply for email from: {email.get('sender')}")
+        logger.info(
+            f"📧 [generate_email_reply] Generating reply for email from: {email.get('sender')}"
+        )
 
         # ✅ Generate reply with user plan information
         reply_data = await email_service.generate_reply_draft(
             email_id,
             current_user.id,
             user_plan=user_plan,
-            user_name=(getattr(current_user, "full_name", None) or current_user.email.split("@")[0]),
+            user_name=(
+                getattr(current_user, "full_name", None) or current_user.email.split("@")[0]
+            ),
         )
 
         reply_body = reply_data.get("body", "")
@@ -489,7 +539,9 @@ async def generate_email_reply(
 # Agent endpoints
 @router.post("/agent/process")
 async def process_with_agent(
-    request: AgentProcessRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: AgentProcessRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Process email with agent using system prompts"""
     try:
@@ -525,10 +577,14 @@ async def process_with_agent(
         else:
             prompt = await prompt_service.get_active_prompt(prompt_type)
             if not prompt:
-                raise HTTPException(status_code=404, detail=f"No active prompt found for {prompt_type}")
+                raise HTTPException(
+                    status_code=404, detail=f"No active prompt found for {prompt_type}"
+                )
             prompt_text = prompt.template
 
-        email_content = f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
+        email_content = (
+            f"From: {email['sender']}\nSubject: {email['subject']}\nBody: {email['body']}"
+        )
 
         # Pass system prompt to LLM service
         result = await llm_service.process_prompt(prompt_text, email_content, system_prompt_text)
@@ -568,7 +624,9 @@ async def get_agent_status(
 ):
     """Compatibility status endpoint used by frontend agentApi.getAgentStatus."""
     email_service = EmailService(db)
-    total_emails = len(await email_service.get_user_emails(user_id=current_user.id, limit=1000, offset=0))
+    total_emails = len(
+        await email_service.get_user_emails(user_id=current_user.id, limit=1000, offset=0)
+    )
     return {
         "status": "ready",
         "user_id": current_user.id,
@@ -579,7 +637,9 @@ async def get_agent_status(
 
 
 @router.websocket("/ws/agent")
-async def websocket_agent(websocket: WebSocket, client_id: str = "default", db: AsyncSession = Depends(get_db)):
+async def websocket_agent(
+    websocket: WebSocket, client_id: str = "default", db: AsyncSession = Depends(get_db)
+):
     """WebSocket for agent"""
     from app.api.websockets import manager
 
@@ -650,6 +710,10 @@ async def api_info():
                 "POST /prompts/{prompt_id}/test",
             ],
             "agent": ["POST /agent/process", "POST /agent/chat", "WS /ws/agent"],
-            "email_accounts": ["GET /email-accounts", "POST /email-accounts/gmail", "GET /debug/email-accounts"],
+            "email_accounts": [
+                "GET /email-accounts",
+                "POST /email-accounts/gmail",
+                "GET /debug/email-accounts",
+            ],
         },
     }

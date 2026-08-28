@@ -1,11 +1,11 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 
-import { useAuth } from '../context/AuthContext'
-import { isSuperAdminUser } from './navigation'
+import { useAuth } from '../context/AuthContext';
+import { isSuperAdminUser } from './navigation';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,15 +17,15 @@ const ProtectedRoute = ({ children }) => {
           <div className="loading-subtext">Loading your workspace...</div>
         </div>
       </div>
-    )
+    );
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />
-}
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
 
 // Public Route Component (redirect if authenticated)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -37,15 +37,15 @@ const PublicRoute = ({ children }) => {
           <div className="loading-subtext">Loading...</div>
         </div>
       </div>
-    )
+    );
   }
 
-  return !isAuthenticated ? children : <Navigate to="/" replace />
-}
+  return !isAuthenticated ? children : <Navigate to="/" replace />;
+};
 
 // Helper function to check if user is admin
 const SuperAdminRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -57,12 +57,12 @@ const SuperAdminRoute = ({ children }) => {
           <div className="loading-subtext">Checking access...</div>
         </div>
       </div>
-    )
+    );
   }
 
-  return isSuperAdminUser(user) ? children : <Navigate to="/inbox" replace />
-}
+  return isSuperAdminUser(user) ? children : <Navigate to="/inbox" replace />;
+};
 
 // Wrapper for detail views that need sidebar
 
-export { ProtectedRoute, PublicRoute, SuperAdminRoute }
+export { ProtectedRoute, PublicRoute, SuperAdminRoute };

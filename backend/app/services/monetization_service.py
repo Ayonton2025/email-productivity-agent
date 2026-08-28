@@ -34,7 +34,9 @@ class SubscriptionService:
     """Manage user subscriptions and tier transitions"""
 
     @staticmethod
-    async def create_subscription(user_id: str, tenant_id: str, plan_id: str, session: AsyncSession):
+    async def create_subscription(
+        user_id: str, tenant_id: str, plan_id: str, session: AsyncSession
+    ):
         """Create new subscription for user"""
         if plan_id not in SUBSCRIPTION_PLANS:
             raise ValueError(f"Invalid plan: {plan_id}")
@@ -118,7 +120,9 @@ class AICreditService:
         cost = AI_ACTION_COSTS[action]["units"]
 
         # Check monthly allocation
-        available = subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used
+        available = (
+            subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used
+        )
 
         return available >= cost
 
@@ -146,7 +150,9 @@ class AICreditService:
             return {"success": False, "message": f"Unknown AI action: {action}"}
 
         cost = AI_ACTION_COSTS[action]["units"]
-        available = subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used
+        available = (
+            subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used
+        )
 
         # Check if enough credits
         if available < cost:
@@ -175,7 +181,10 @@ class AICreditService:
 
         # Log in usage_logs for analytics
         usage_log = UsageLog(
-            user_id=user_id, tenant_id=subscription.tenant_id, metric=f"ai_{action}_used", quantity=cost
+            user_id=user_id,
+            tenant_id=subscription.tenant_id,
+            metric=f"ai_{action}_used",
+            quantity=cost,
         )
         session.add(usage_log)
 
@@ -185,7 +194,8 @@ class AICreditService:
             "success": True,
             "units_consumed": cost,
             "cost_usd": float(cost * 0.001),
-            "remaining": subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used,
+            "remaining": subscription.ai_credits_monthly_allocation
+            - subscription.ai_credits_monthly_used,
             "message": "Credits deducted successfully",
         }
 
@@ -200,7 +210,8 @@ class AICreditService:
             "balance": subscription.ai_credits_monthly_allocation,
             "allocated": subscription.ai_credits_monthly_allocation,
             "used": subscription.ai_credits_monthly_used,
-            "available": subscription.ai_credits_monthly_allocation - subscription.ai_credits_monthly_used,
+            "available": subscription.ai_credits_monthly_allocation
+            - subscription.ai_credits_monthly_used,
             "reset_date": subscription.ai_credits_reset_date.isoformat()
             if subscription.ai_credits_reset_date
             else None,
@@ -222,11 +233,16 @@ class OutboundEmailService:
         if not subscription:
             return False
 
-        available = subscription.outbound_emails_monthly_allocation - subscription.outbound_emails_monthly_used
+        available = (
+            subscription.outbound_emails_monthly_allocation
+            - subscription.outbound_emails_monthly_used
+        )
         return available >= count
 
     @staticmethod
-    async def deduct_outbound(user_id: str, count: int, session: AsyncSession, campaign_type: str = "general") -> Dict:
+    async def deduct_outbound(
+        user_id: str, count: int, session: AsyncSession, campaign_type: str = "general"
+    ) -> Dict:
         """
         Deduct outbound email limit.
 
@@ -237,7 +253,10 @@ class OutboundEmailService:
         if not subscription:
             return {"success": False, "message": "No subscription"}
 
-        available = subscription.outbound_emails_monthly_allocation - subscription.outbound_emails_monthly_used
+        available = (
+            subscription.outbound_emails_monthly_allocation
+            - subscription.outbound_emails_monthly_used
+        )
 
         if available < count:
             return {
@@ -263,11 +282,14 @@ class OutboundEmailService:
         return {
             "success": True,
             "sent": count,
-            "remaining": subscription.outbound_emails_monthly_allocation - subscription.outbound_emails_monthly_used,
+            "remaining": subscription.outbound_emails_monthly_allocation
+            - subscription.outbound_emails_monthly_used,
         }
 
     @staticmethod
-    async def add_outbound_addon(user_id: str, tenant_id: str, package_id: str, session: AsyncSession):
+    async def add_outbound_addon(
+        user_id: str, tenant_id: str, package_id: str, session: AsyncSession
+    ):
         """Add outbound campaign package"""
         if package_id not in OUTBOUND_PACKAGES:
             raise ValueError(f"Unknown package: {package_id}")
@@ -325,7 +347,11 @@ class FeatureGatingService:
                 "current_tier": subscription.plan_id,
             }
 
-        return {"allowed": True, "reason": "Feature access granted", "current_tier": subscription.plan_id}
+        return {
+            "allowed": True,
+            "reason": "Feature access granted",
+            "current_tier": subscription.plan_id,
+        }
 
     @staticmethod
     async def check_team_limit(user_id: str, session: AsyncSession) -> Dict:
@@ -354,7 +380,9 @@ class EnterpriseBillingService:
     """Enterprise-specific billing features"""
 
     @staticmethod
-    async def add_enterprise_module(user_id: str, tenant_id: str, module_id: str, session: AsyncSession):
+    async def add_enterprise_module(
+        user_id: str, tenant_id: str, module_id: str, session: AsyncSession
+    ):
         """Add enterprise module"""
         if module_id not in ENTERPRISE_MODULES:
             raise ValueError(f"Unknown module: {module_id}")
@@ -420,11 +448,15 @@ class BillingReportService:
         addon_cost = sum(Decimal(str(a.price_usd)) for a in addons)
 
         # Calculate overage
-        overages_used = subscription.ai_credits_monthly_used - subscription.ai_credits_monthly_allocation
+        overages_used = (
+            subscription.ai_credits_monthly_used - subscription.ai_credits_monthly_allocation
+        )
         overage_cost = Decimal(0)
         if overages_used > 0:
             overage_cost = (
-                Decimal(str(overages_used)) * Decimal(str(OVERAGE_PRICING["per_1000_units"])) / Decimal("1000")
+                Decimal(str(overages_used))
+                * Decimal(str(OVERAGE_PRICING["per_1000_units"]))
+                / Decimal("1000")
             )
 
         total_cost = subscription_cost + addon_cost + overage_cost

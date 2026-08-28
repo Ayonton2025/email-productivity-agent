@@ -30,7 +30,9 @@ def _require_confirm(args: argparse.Namespace) -> bool:
     return args.confirm
 
 
-async def _rotate_keys(old_key: Optional[str], new_key: str, provider_filter: Optional[str], dry_run: bool):
+async def _rotate_keys(
+    old_key: Optional[str], new_key: str, provider_filter: Optional[str], dry_run: bool
+):
     original_key = settings.ENCRYPTION_KEY
 
     # If an explicit old_key is provided, use it for decryption. Otherwise use current settings.
@@ -106,12 +108,22 @@ async def _rotate_keys(old_key: Optional[str], new_key: str, provider_filter: Op
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Re-encrypt LLM provider API keys with a new ENCRYPTION_KEY")
-    parser.add_argument("--old-key", help="Old ENCRYPTION_KEY used to decrypt existing DB values (optional)")
+    parser = argparse.ArgumentParser(
+        description="Re-encrypt LLM provider API keys with a new ENCRYPTION_KEY"
+    )
+    parser.add_argument(
+        "--old-key", help="Old ENCRYPTION_KEY used to decrypt existing DB values (optional)"
+    )
     parser.add_argument("--new-key", required=True, help="New ENCRYPTION_KEY to encrypt keys with")
     parser.add_argument("--provider", help="Limit rotation to a specific provider (e.g., 'openai')")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing to DB")
-    parser.add_argument("--confirm", action="store_true", help="Confirm applying changes (required unless --dry-run)")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would change without writing to DB"
+    )
+    parser.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Confirm applying changes (required unless --dry-run)",
+    )
 
     args = parser.parse_args(argv)
 

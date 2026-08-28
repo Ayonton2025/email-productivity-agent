@@ -62,7 +62,9 @@ class DocumentAnalysis(Base):
     file_name = Column(String, nullable=False)
     file_extension = Column(String, nullable=True)
     file_size_display = Column(String, nullable=True)  # "2.5 MB"
-    extracted_title = Column(String, nullable=True)  # Title extracted from first page (if available)
+    extracted_title = Column(
+        String, nullable=True
+    )  # Title extracted from first page (if available)
     page_count = Column(Integer, nullable=True)  # For PDF, DOCX
 
     # Paid tier: full analysis
@@ -108,6 +110,8 @@ class DocumentAnalysis(Base):
             )
         else:
             # Free tier: show upgrade message
-            base["upgrade_message"] = "📄 To read full document analysis, please upgrade your subscription"
+            base["upgrade_message"] = (
+                "📄 To read full document analysis, please upgrade your subscription"
+            )
 
         return base

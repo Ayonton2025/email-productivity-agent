@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import ContactSalesForm from './ContactSalesForm'
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import ContactSalesForm from './ContactSalesForm';
 import {
   ArrowRight,
   Check,
@@ -21,67 +21,68 @@ import {
   MessageSquare,
   PlayCircle,
   TrendingUp,
-} from 'lucide-react'
-import './LandingPage.css'
+} from 'lucide-react';
+import './LandingPage.css';
 
 const LandingPage = () => {
-  const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
-  const [showContactForm, setShowContactForm] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
-  const canvasRef = useRef(null)
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const ctx = canvas.getContext('2d')
-    let animationId
+    const ctx = canvas.getContext('2d');
+    let animationId;
 
     const resizeCanvas = () => {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-    }
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
 
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    let time = 0
+    let time = 0;
     const drawAnimation = () => {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)'
-      ctx.lineWidth = 1
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+      ctx.lineWidth = 1;
 
       for (let i = 0; i < 5; i++) {
-        const x = Math.sin(time * 0.001 + i) * 100 + canvas.width / 2 + scrollY * 0.1
-        const y = Math.cos(time * 0.0008 + i) * 100 + canvas.height / 2
+        const x = Math.sin(time * 0.001 + i) * 100 + canvas.width / 2 + scrollY * 0.1;
+        const y = Math.cos(time * 0.0008 + i) * 100 + canvas.height / 2;
 
-        ctx.beginPath()
+        ctx.beginPath();
         ctx.arc(
           x,
           y,
-          (i === 0 ? 50 : 30) + Math.sin(time * (i === 0 ? 0.002 : 0.003) + i) * (i === 0 ? 20 : 15),
+          (i === 0 ? 50 : 30) +
+            Math.sin(time * (i === 0 ? 0.002 : 0.003) + i) * (i === 0 ? 20 : 15),
           0,
           Math.PI * 2
-        )
-        ctx.stroke()
+        );
+        ctx.stroke();
       }
 
-      time += 1
-      animationId = requestAnimationFrame(drawAnimation)
-    }
+      time += 1;
+      animationId = requestAnimationFrame(drawAnimation);
+    };
 
-    drawAnimation()
-    return () => cancelAnimationFrame(animationId)
-  }, [scrollY])
+    drawAnimation();
+    return () => cancelAnimationFrame(animationId);
+  }, [scrollY]);
 
   const plans = [
     {
@@ -162,22 +163,22 @@ const LandingPage = () => {
       cta: 'Request Early Access',
       highlighted: false,
     },
-  ]
+  ];
 
-  const handleSignIn = () => navigate('/login')
-  const handleGetStarted = () => navigate('/register?mode=standard')
-  const handleGetBylixEmail = () => navigate('/register?mode=hosted')
+  const handleSignIn = () => navigate('/login');
+  const handleGetStarted = () => navigate('/register?mode=standard');
+  const handleGetBylixEmail = () => navigate('/register?mode=hosted');
 
   const handleStartFreeTrial = (planId = 'plus') => {
     if (isAuthenticated) {
-      navigate(`/billing/upgrade?plan=${planId}`)
+      navigate(`/billing/upgrade?plan=${planId}`);
     } else {
-      navigate('/register')
+      navigate('/register');
     }
-  }
+  };
 
-  const handleContactSales = () => setShowContactForm(true)
-  const handleDashboard = () => navigate('/')
+  const handleContactSales = () => setShowContactForm(true);
+  const handleDashboard = () => navigate('/');
 
   return (
     <div className="landing-page">
@@ -190,13 +191,25 @@ const LandingPage = () => {
             <div className="logo-text">Bylix Email</div>
           </div>
           <nav className="nav-links">
-            <button onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}>
+            <button
+              onClick={() =>
+                document.getElementById('features').scrollIntoView({ behavior: 'smooth' })
+              }
+            >
               Features
             </button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })}>
+            <button
+              onClick={() =>
+                document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })
+              }
+            >
               Pricing
             </button>
-            <button onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}>Demo</button>
+            <button
+              onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
+            >
+              Demo
+            </button>
           </nav>
           <div className="header-actions">
             {isAuthenticated ? (
@@ -225,8 +238,8 @@ const LandingPage = () => {
           </div>
           <h1 className="hero-title">The Intelligence Layer for Email.</h1>
           <p className="hero-subtitle">
-            Bylix Email transforms your inbox into an intelligent, structured, and automated operational system. This is
-            not another inbox UI. This is communication that executes.
+            Bylix Email transforms your inbox into an intelligent, structured, and automated
+            operational system. This is not another inbox UI. This is communication that executes.
           </p>
           <div className="hero-cta">
             <button className="btn btn-primary btn-lg" onClick={() => handleStartFreeTrial('plus')}>
@@ -262,7 +275,10 @@ const LandingPage = () => {
       <section id="features" className="features-section">
         <div className="section-header">
           <h2>Where Communication Becomes Execution</h2>
-          <p>Email was built for messaging. Bylix Email rebuilds it for operational clarity and action.</p>
+          <p>
+            Email was built for messaging. Bylix Email rebuilds it for operational clarity and
+            action.
+          </p>
         </div>
 
         <div className="features-grid">
@@ -272,7 +288,8 @@ const LandingPage = () => {
             </div>
             <h3>Intelligent Prioritization</h3>
             <p>
-              Detect urgency, identify high-value contacts, flag deadlines, and sort by impact instead of chronology.
+              Detect urgency, identify high-value contacts, flag deadlines, and sort by impact
+              instead of chronology.
             </p>
           </div>
 
@@ -281,7 +298,10 @@ const LandingPage = () => {
               <MessageSquare size={32} />
             </div>
             <h3>Context-Aware AI Composition</h3>
-            <p>Draft replies that mirror your tone, reference history, and adapt communication style dynamically.</p>
+            <p>
+              Draft replies that mirror your tone, reference history, and adapt communication style
+              dynamically.
+            </p>
           </div>
 
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.06}px)` }}>
@@ -289,7 +309,10 @@ const LandingPage = () => {
               <Workflow size={32} />
             </div>
             <h3>Workflow Orchestration</h3>
-            <p>Route invoices to finance, contracts to legal, leads to CRM, and tasks to teams automatically.</p>
+            <p>
+              Route invoices to finance, contracts to legal, leads to CRM, and tasks to teams
+              automatically.
+            </p>
           </div>
 
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.07}px)` }}>
@@ -297,7 +320,10 @@ const LandingPage = () => {
               <BarChart3 size={32} />
             </div>
             <h3>Operational Intelligence Dashboard</h3>
-            <p>Track response latency, communication bottlenecks, thread risk, and opportunity signals in one view.</p>
+            <p>
+              Track response latency, communication bottlenecks, thread risk, and opportunity
+              signals in one view.
+            </p>
           </div>
 
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.05}px)` }}>
@@ -306,7 +332,8 @@ const LandingPage = () => {
             </div>
             <h3>Adaptive Learning Engine</h3>
             <p>
-              Bylix learns behavior patterns over time so routing, ranking, and drafting become increasingly precise.
+              Bylix learns behavior patterns over time so routing, ranking, and drafting become
+              increasingly precise.
             </p>
           </div>
 
@@ -316,7 +343,8 @@ const LandingPage = () => {
             </div>
             <h3>Enterprise-Grade Governance</h3>
             <p>
-              Use policy controls, audit trails, and team-level visibility to keep communication secure and accountable.
+              Use policy controls, audit trails, and team-level visibility to keep communication
+              secure and accountable.
             </p>
           </div>
         </div>
@@ -359,7 +387,9 @@ const LandingPage = () => {
             <div className="step-number">2</div>
             <div className="step-content">
               <h3>Define Operational Rules</h3>
-              <p>Set routing and trigger logic for invoices, contracts, follow-ups, and approvals.</p>
+              <p>
+                Set routing and trigger logic for invoices, contracts, follow-ups, and approvals.
+              </p>
               <div className="step-image">⚙️</div>
             </div>
           </div>
@@ -372,7 +402,10 @@ const LandingPage = () => {
             <div className="step-number">3</div>
             <div className="step-content">
               <h3>Activate Intelligence</h3>
-              <p>Bylix prioritizes, drafts, and orchestrates communication-driven workflows automatically.</p>
+              <p>
+                Bylix prioritizes, drafts, and orchestrates communication-driven workflows
+                automatically.
+              </p>
               <div className="step-image">🤖</div>
             </div>
           </div>
@@ -385,7 +418,10 @@ const LandingPage = () => {
             <div className="step-number">4</div>
             <div className="step-content">
               <h3>Measure and Improve</h3>
-              <p>Use analytics to reduce task leakage, speed decisions, and improve execution quality.</p>
+              <p>
+                Use analytics to reduce task leakage, speed decisions, and improve execution
+                quality.
+              </p>
               <div className="step-image">📊</div>
             </div>
           </div>
@@ -395,7 +431,9 @@ const LandingPage = () => {
       <section id="pricing" className="pricing-section">
         <div className="section-header">
           <h2>Pricing for Operators and Teams</h2>
-          <p>Start free, scale with intelligence, and move to enterprise orchestration when ready.</p>
+          <p>
+            Start free, scale with intelligence, and move to enterprise orchestration when ready.
+          </p>
         </div>
 
         <div className="pricing-grid">
@@ -425,9 +463,9 @@ const LandingPage = () => {
                 className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-outline'} btn-full`}
                 onClick={() => {
                   if (plan.id === 'enterprise') {
-                    handleContactSales()
+                    handleContactSales();
                   } else {
-                    handleStartFreeTrial(plan.id)
+                    handleStartFreeTrial(plan.id);
                   }
                 }}
               >
@@ -520,8 +558,8 @@ const LandingPage = () => {
             <a
               href="#"
               onClick={(e) => {
-                e.preventDefault()
-                document.getElementById('features').scrollIntoView({ behavior: 'smooth' })
+                e.preventDefault();
+                document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
               }}
             >
               Features
@@ -529,8 +567,8 @@ const LandingPage = () => {
             <a
               href="#"
               onClick={(e) => {
-                e.preventDefault()
-                document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })
+                e.preventDefault();
+                document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
               }}
             >
               Pricing
@@ -560,7 +598,7 @@ const LandingPage = () => {
         </div>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default LandingPage
+export default LandingPage;

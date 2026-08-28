@@ -66,4 +66,6 @@ async def create_contact(payload: ContactRequest):
             "queued": True,
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to process contact request: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process contact request: {str(exc)}"
+        )

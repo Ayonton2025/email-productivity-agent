@@ -1,58 +1,58 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const { login, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/'
+  const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true })
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from])
+  }, [isAuthenticated, navigate, from]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-    setError('')
-  }
+    });
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    logger.debug('🔑 [Login] Starting login process for:', formData.email)
-    const result = await login(formData.email, formData.password)
+    logger.debug('🔑 [Login] Starting login process for:', formData.email);
+    const result = await login(formData.email, formData.password);
 
-    logger.debug('🔍 [Login] Login result:', result)
+    logger.debug('🔍 [Login] Login result:', result);
 
     if (result.success) {
-      logger.debug('✅ [Login] Successful, redirecting to:', from)
-      navigate(from, { replace: true })
+      logger.debug('✅ [Login] Successful, redirecting to:', from);
+      navigate(from, { replace: true });
     } else {
-      logger.error('❌ [Login] Failed:', result.error)
-      setError(result.error)
+      logger.error('❌ [Login] Failed:', result.error);
+      setError(result.error);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
@@ -61,8 +61,12 @@ const Login = () => {
           <div className="mx-auto h-12 w-12 bg-white rounded-lg flex items-center justify-center">
             <span className="text-2xl">✉️</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Sign in to Bylix Email</h2>
-          <p className="mt-2 text-center text-sm text-indigo-100">The intelligence layer for email</p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Sign in to Bylix Email
+          </h2>
+          <p className="mt-2 text-center text-sm text-indigo-100">
+            The intelligence layer for email
+          </p>
         </div>
 
         <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
@@ -174,7 +178,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

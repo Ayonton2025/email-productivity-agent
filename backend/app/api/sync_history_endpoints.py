@@ -21,7 +21,9 @@ router = APIRouter(prefix="/emails/sync", tags=["sync-history"])
 
 @router.get("/history", response_model=List[dict])
 async def get_sync_history(
-    limit: int = 50, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    limit: int = 50,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get recent email sync history for the current user.
@@ -58,7 +60,9 @@ async def get_sync_history(
                 "started_at": record.started_at.isoformat(),
                 "completed_at": record.completed_at.isoformat() if record.completed_at else None,
                 "duration_seconds": (
-                    (record.completed_at - record.started_at).total_seconds() if record.completed_at else None
+                    (record.completed_at - record.started_at).total_seconds()
+                    if record.completed_at
+                    else None
                 ),
                 "error_message": record.error_message,
             }
@@ -67,11 +71,16 @@ async def get_sync_history(
 
     except Exception as e:
         logger.error(f"❌ Failed to get sync history: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve sync history")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve sync history",
+        )
 
 
 @router.get("/stats", response_model=dict)
-async def get_sync_stats(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_sync_stats(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """
     Get email sync statistics for the current user.
 
@@ -95,7 +104,8 @@ async def get_sync_stats(current_user: User = Depends(get_current_user), db: Asy
     except Exception as e:
         logger.error(f"❌ Failed to get sync stats: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve sync statistics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve sync statistics",
         )
 
 
@@ -128,11 +138,16 @@ async def get_sync_details(
         sync_record = result.scalars().first()
 
         if not sync_record:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sync record not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Sync record not found"
+            )
 
         # Verify ownership
         if sync_record.user_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this sync record")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this sync record",
+            )
 
         return {
             "id": sync_record.id,
@@ -140,7 +155,9 @@ async def get_sync_details(
             "status": sync_record.status,
             "emails_processed": sync_record.emails_processed or [],
             "started_at": sync_record.started_at.isoformat(),
-            "completed_at": sync_record.completed_at.isoformat() if sync_record.completed_at else None,
+            "completed_at": sync_record.completed_at.isoformat()
+            if sync_record.completed_at
+            else None,
             "error_message": sync_record.error_message,
         }
 
@@ -148,4 +165,7 @@ async def get_sync_details(
         raise
     except Exception as e:
         logger.error(f"❌ Failed to get sync details: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve sync details")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve sync details",
+        )

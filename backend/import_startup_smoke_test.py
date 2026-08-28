@@ -2,8 +2,6 @@
 Run inside the backend Python environment.
 """
 
-import sys
-
 results = {}
 
 try:

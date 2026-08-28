@@ -31,7 +31,9 @@ async def queue_offline_action(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    rec = OfflineSyncQueueItem(user_id=current_user.id, action=body.action, payload=body.payload, status="queued")
+    rec = OfflineSyncQueueItem(
+        user_id=current_user.id, action=body.action, payload=body.payload, status="queued"
+    )
     db.add(rec)
     await db.commit()
     await db.refresh(rec)
@@ -45,7 +47,10 @@ async def process_offline_queue(
 ):
     result = await db.execute(
         select(OfflineSyncQueueItem).where(
-            and_(OfflineSyncQueueItem.user_id == current_user.id, OfflineSyncQueueItem.status == "queued")
+            and_(
+                OfflineSyncQueueItem.user_id == current_user.id,
+                OfflineSyncQueueItem.status == "queued",
+            )
         )
     )
     items = list(result.scalars().all())
@@ -61,5 +66,7 @@ async def list_offline_queue(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(OfflineSyncQueueItem).where(OfflineSyncQueueItem.user_id == current_user.id))
+    result = await db.execute(
+        select(OfflineSyncQueueItem).where(OfflineSyncQueueItem.user_id == current_user.id)
+    )
     return [x.to_dict() for x in result.scalars().all()]

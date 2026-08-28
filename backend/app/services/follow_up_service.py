@@ -21,7 +21,9 @@ from app.services.smtp_service import smtp_service
 
 class FollowUpService:
     async def get_or_create_policy(self, user_id: str, session: AsyncSession) -> FollowUpPolicy:
-        result = await session.execute(select(FollowUpPolicy).where(FollowUpPolicy.user_id == user_id))
+        result = await session.execute(
+            select(FollowUpPolicy).where(FollowUpPolicy.user_id == user_id)
+        )
         policy = result.scalar_one_or_none()
         if policy:
             return policy
@@ -45,7 +47,9 @@ class FollowUpService:
         session: AsyncSession,
         delay_hours: Optional[int] = None,
     ) -> Email:
-        email_result = await session.execute(select(Email).where(and_(Email.id == email_id, Email.user_id == user_id)))
+        email_result = await session.execute(
+            select(Email).where(and_(Email.id == email_id, Email.user_id == user_id))
+        )
         email = email_result.scalar_one_or_none()
         if not email:
             raise ValueError("Email not found")
@@ -66,9 +70,17 @@ class FollowUpService:
         await session.flush()
         return email
 
-    async def process_due_followups(self, session: AsyncSession, limit: int = 100) -> Dict[str, int]:
+    async def process_due_followups(
+        self, session: AsyncSession, limit: int = 100
+    ) -> Dict[str, int]:
         now = datetime.utcnow()
-        stats = {"processed": 0, "queued_for_approval": 0, "auto_sent": 0, "skipped_replied": 0, "failed": 0}
+        stats = {
+            "processed": 0,
+            "queued_for_approval": 0,
+            "auto_sent": 0,
+            "skipped_replied": 0,
+            "failed": 0,
+        }
 
         due_result = await session.execute(
             select(Email)
@@ -119,7 +131,9 @@ class FollowUpService:
                     email.follow_up_scheduled_at = None
                     continue
 
-                draft_subject, draft_body = await self._generate_followup_content(email, policy, next_stage, session)
+                draft_subject, draft_body = await self._generate_followup_content(
+                    email, policy, next_stage, session
+                )
                 execution = FollowUpExecution(
                     user_id=email.user_id,
                     source_email_id=email.id,
@@ -138,7 +152,9 @@ class FollowUpService:
                 await session.flush()
 
                 if policy.auto_send:
-                    ok, err = await self._send_execution(execution=execution, source_email=email, session=session)
+                    ok, err = await self._send_execution(
+                        execution=execution, source_email=email, session=session
+                    )
                     if ok:
                         execution.status = "auto_sent"
                         execution.processed_at = datetime.utcnow()
@@ -182,7 +198,9 @@ class FollowUpService:
         )
         return list(result.scalars().all())
 
-    async def approve_execution(self, user_id: str, execution_id: str, session: AsyncSession) -> FollowUpExecution:
+    async def approve_execution(
+        self, user_id: str, execution_id: str, session: AsyncSession
+    ) -> FollowUpExecution:
         execution_result = await session.execute(
             select(FollowUpExecution).where(
                 and_(
@@ -214,7 +232,9 @@ class FollowUpService:
             return execution
 
         policy = await self.get_or_create_policy(user_id=user_id, session=session)
-        ok, err = await self._send_execution(execution=execution, source_email=source_email, session=session)
+        ok, err = await self._send_execution(
+            execution=execution, source_email=source_email, session=session
+        )
         if ok:
             execution.status = "approved_sent"
             execution.processed_at = datetime.utcnow()
@@ -230,7 +250,9 @@ class FollowUpService:
         if not source_email.thread_id:
             return False
 
-        outbound_time = source_email.last_sent_at or source_email.sent_at or source_email.received_at
+        outbound_time = (
+            source_email.last_sent_at or source_email.sent_at or source_email.received_at
+        )
         if not outbound_time:
             return False
 

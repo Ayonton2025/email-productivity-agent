@@ -63,7 +63,9 @@ class AgentUpdate(BaseModel):
 
 @router.get("/", response_model=List[Dict[str, Any]])
 async def get_agents(
-    agent_type: Optional[str] = None, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    agent_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get all agents for the user"""
     try:
@@ -80,10 +82,16 @@ async def get_agents(
 
 
 @router.get("/{agent_id}", response_model=Dict[str, Any])
-async def get_agent(agent_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_agent(
+    agent_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Get a specific agent"""
     try:
-        result = await db.execute(select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id)))
+        result = await db.execute(
+            select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id))
+        )
         agent = result.scalar_one_or_none()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
@@ -96,7 +104,9 @@ async def get_agent(agent_id: str, current_user: User = Depends(get_current_user
 
 @router.post("/", response_model=Dict[str, Any])
 async def create_agent(
-    agent_data: AgentCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    agent_data: AgentCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a new agent"""
     try:
@@ -138,7 +148,9 @@ async def update_agent(
 ):
     """Update an agent"""
     try:
-        result = await db.execute(select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id)))
+        result = await db.execute(
+            select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id))
+        )
         agent = result.scalar_one_or_none()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
@@ -190,11 +202,15 @@ async def update_agent(
 
 @router.delete("/{agent_id}")
 async def delete_agent(
-    agent_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    agent_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete an agent"""
     try:
-        result = await db.execute(select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id)))
+        result = await db.execute(
+            select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id))
+        )
         agent = result.scalar_one_or_none()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
@@ -211,12 +227,17 @@ async def delete_agent(
 
 @router.get("/{agent_id}/activities", response_model=List[Dict[str, Any]])
 async def get_agent_activities(
-    agent_id: str, limit: int = 50, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    agent_id: str,
+    limit: int = 50,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get agent activity history"""
     try:
         # Verify agent belongs to user
-        result = await db.execute(select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id)))
+        result = await db.execute(
+            select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id))
+        )
         agent = result.scalar_one_or_none()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
@@ -246,7 +267,9 @@ async def get_agent_memory(
     """Get agent memory"""
     try:
         # Verify agent belongs to user
-        result = await db.execute(select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id)))
+        result = await db.execute(
+            select(Agent).where(and_(Agent.id == agent_id, Agent.user_id == current_user.id))
+        )
         agent = result.scalar_one_or_none()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
@@ -254,7 +277,9 @@ async def get_agent_memory(
         query = select(AgentMemory).where(AgentMemory.agent_id == agent_id)
         if memory_type:
             query = query.where(AgentMemory.memory_type == memory_type)
-        query = query.order_by(desc(AgentMemory.importance_score), desc(AgentMemory.created_at)).limit(limit)
+        query = query.order_by(
+            desc(AgentMemory.importance_score), desc(AgentMemory.created_at)
+        ).limit(limit)
 
         memory_result = await db.execute(query)
         memories = list(memory_result.scalars().all())
@@ -312,7 +337,9 @@ async def negotiate_with_agent(
 
         confidence = max(0, min(100, int(body.confidence)))
         approval_required = (
-            agent.require_approval or (confidence < int(agent.approval_threshold or 75)) or (not body.auto_send)
+            agent.require_approval
+            or (confidence < int(agent.approval_threshold or 75))
+            or (not body.auto_send)
         )
 
         draft = EmailDraft(
@@ -352,7 +379,9 @@ async def negotiate_with_agent(
             "success": True,
             "draft_id": draft.id,
             "approval_required": approval_required,
-            "message": "Negotiation draft queued for approval" if approval_required else "Negotiation draft ready",
+            "message": "Negotiation draft queued for approval"
+            if approval_required
+            else "Negotiation draft ready",
         }
     except HTTPException:
         raise

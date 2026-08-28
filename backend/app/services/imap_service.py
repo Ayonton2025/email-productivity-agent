@@ -194,7 +194,9 @@ class IMAPService:
 
     # ============== EMAIL SYNC ==============
 
-    async def sync_inbox(self, account: UserEmailAccount, db: AsyncSession, limit: int = 100) -> Tuple[int, str]:
+    async def sync_inbox(
+        self, account: UserEmailAccount, db: AsyncSession, limit: int = 100
+    ) -> Tuple[int, str]:
         """
         Full sync of inbox emails
         Returns: (emails_synced, status_message)
@@ -230,7 +232,10 @@ class IMAPService:
 
                         # Check if already exists
                         stmt = select(Email).where(
-                            and_(Email.account_id == account.id, Email.message_id == parsed["message_id"])
+                            and_(
+                                Email.account_id == account.id,
+                                Email.message_id == parsed["message_id"],
+                            )
                         )
                         existing = await db.execute(stmt)
                         if existing.scalar_one_or_none():
@@ -266,16 +271,23 @@ class IMAPService:
                                 await email_attachment_integration.process_imap_attachments(
                                     email.id, account.user_id, attachments_metadata, raw_email, db
                                 )
-                                logger.info(f"✅ Processed IMAP attachments for: {parsed['subject']}")
+                                logger.info(
+                                    f"✅ Processed IMAP attachments for: {parsed['subject']}"
+                                )
 
                                 # Trigger document analysis for attachments
                                 if HAS_DOCUMENT_ANALYSIS:
                                     try:
                                         user_plan = "free"  # Default plan
-                                        user_result = await db.execute(select(User).where(User.id == account.user_id))
+                                        user_result = await db.execute(
+                                            select(User).where(User.id == account.user_id)
+                                        )
                                         user = user_result.scalars().first()
                                         if user:
-                                            if getattr(user, "subscription_status", "free") == "active":
+                                            if (
+                                                getattr(user, "subscription_status", "free")
+                                                == "active"
+                                            ):
                                                 user_plan = getattr(user, "plan", "pro") or "pro"
                                             elif (getattr(user, "plan", "") or "").lower() in {
                                                 "pro",
@@ -287,14 +299,22 @@ class IMAPService:
 
                                         # Queue analysis for this email's attachments
                                         await task_handler.analyze_email_attachments(
-                                            email_id=email.id, user_id=account.user_id, user_plan=user_plan
+                                            email_id=email.id,
+                                            user_id=account.user_id,
+                                            user_plan=user_plan,
                                         )
-                                        logger.info(f"📊 Queued document analysis for IMAP email: {email.id}")
+                                        logger.info(
+                                            f"📊 Queued document analysis for IMAP email: {email.id}"
+                                        )
                                     except Exception as e:
-                                        logger.warning(f"⚠️ Could not queue IMAP attachment analysis: {e}")
+                                        logger.warning(
+                                            f"⚠️ Could not queue IMAP attachment analysis: {e}"
+                                        )
                                         # Don't fail email sync if analysis queueing fails
                             except Exception as e:
-                                logger.error(f"⚠️ Failed to process IMAP attachments for {parsed['subject']}: {e}")
+                                logger.error(
+                                    f"⚠️ Failed to process IMAP attachments for {parsed['subject']}: {e}"
+                                )
                                 # Don't fail the whole sync if attachments fail
 
                         emails_synced += 1

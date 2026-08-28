@@ -42,11 +42,16 @@ async def executive_summary(
 
     since = datetime.utcnow() - timedelta(days=30)
     campaigns_result = await db.execute(
-        select(Campaign).where(and_(Campaign.user_id == current_user.id, Campaign.created_at >= since))
+        select(Campaign).where(
+            and_(Campaign.user_id == current_user.id, Campaign.created_at >= since)
+        )
     )
     hosted_result = await db.execute(
         select(HostedEmailSendLog).where(
-            and_(HostedEmailSendLog.user_id == current_user.id, HostedEmailSendLog.created_at >= since)
+            and_(
+                HostedEmailSendLog.user_id == current_user.id,
+                HostedEmailSendLog.created_at >= since,
+            )
         )
     )
     deliverability = compute_deliverability_payload(
@@ -54,7 +59,9 @@ async def executive_summary(
         hosted_logs=list(hosted_result.scalars().all()),
     )
 
-    member_rows = await db.execute(select(SharedInboxMember).where(SharedInboxMember.user_id == current_user.id))
+    member_rows = await db.execute(
+        select(SharedInboxMember).where(SharedInboxMember.user_id == current_user.id)
+    )
     inbox_memberships = list(member_rows.scalars().all())
     inbox_ids = [row.inbox_id for row in inbox_memberships]
     open_items = 0
@@ -103,5 +110,7 @@ async def executive_command(
         session=db,
     )
     if not result.get("success"):
-        raise HTTPException(status_code=502, detail=result.get("error", "Executive AI command failed"))
+        raise HTTPException(
+            status_code=502, detail=result.get("error", "Executive AI command failed")
+        )
     return result

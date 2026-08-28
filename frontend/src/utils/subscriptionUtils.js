@@ -88,7 +88,7 @@ const PLAN_LIMITS = {
       prioritySupport: true,
     },
   },
-}
+};
 
 /**
  * Get plan limit object for a given plan
@@ -96,8 +96,8 @@ const PLAN_LIMITS = {
  * @returns {object} Plan limit object
  */
 export const getPlanLimits = (planId = 'personal') => {
-  return PLAN_LIMITS[planId?.toLowerCase()] || PLAN_LIMITS.personal
-}
+  return PLAN_LIMITS[planId?.toLowerCase()] || PLAN_LIMITS.personal;
+};
 
 /**
  * Check if user has reached a limit
@@ -106,8 +106,8 @@ export const getPlanLimits = (planId = 'personal') => {
  * @returns {boolean} True if limit reached
  */
 export const hasReachedLimit = (currentUsage, limit) => {
-  return currentUsage >= limit
-}
+  return currentUsage >= limit;
+};
 
 /**
  * Check if user is approaching a limit (80%+ usage)
@@ -116,8 +116,8 @@ export const hasReachedLimit = (currentUsage, limit) => {
  * @returns {boolean} True if approaching limit
  */
 export const isApproachingLimit = (currentUsage, limit) => {
-  return currentUsage >= limit * 0.8
-}
+  return currentUsage >= limit * 0.8;
+};
 
 /**
  * Get percentage of limit used
@@ -126,9 +126,9 @@ export const isApproachingLimit = (currentUsage, limit) => {
  * @returns {number} Percentage (0-100)
  */
 export const getLimitPercentage = (currentUsage, limit) => {
-  if (limit === Infinity) return 0
-  return Math.min((currentUsage / limit) * 100, 100)
-}
+  if (limit === Infinity) return 0;
+  return Math.min((currentUsage / limit) * 100, 100);
+};
 
 /**
  * Check if user can access a feature
@@ -137,9 +137,9 @@ export const getLimitPercentage = (currentUsage, limit) => {
  * @returns {boolean} True if feature is available
  */
 export const canAccessFeature = (planId = 'personal', featureName) => {
-  const plan = getPlanLimits(planId)
-  return plan.features[featureName] || false
-}
+  const plan = getPlanLimits(planId);
+  return plan.features[featureName] || false;
+};
 
 /**
  * Get required plan to access a feature
@@ -156,9 +156,9 @@ export const getRequiredPlanForFeature = (featureName) => {
     apiAccess: 'professional',
     webhooks: 'professional',
     prioritySupport: 'enterprise',
-  }
-  return featurePlanMap[featureName] || 'professional'
-}
+  };
+  return featurePlanMap[featureName] || 'professional';
+};
 
 /**
  * Get upgrade suggestion based on usage
@@ -174,24 +174,24 @@ export const getUpgradeSuggestion = (
   emailAccountsUsed = 0,
   emailAccountsLimit = 1
 ) => {
-  const creditsPercentage = (aiCreditsUsed / aiCreditsLimit) * 100
-  const accountsPercentage = (emailAccountsUsed / emailAccountsLimit) * 100
+  const creditsPercentage = (aiCreditsUsed / aiCreditsLimit) * 100;
+  const accountsPercentage = (emailAccountsUsed / emailAccountsLimit) * 100;
 
-  let reason = null
-  let priority = 'low'
+  let reason = null;
+  let priority = 'low';
 
   if (creditsPercentage >= 95) {
-    reason = 'AI credits'
-    priority = 'critical'
+    reason = 'AI credits';
+    priority = 'critical';
   } else if (accountsPercentage >= 95) {
-    reason = 'email accounts'
-    priority = 'critical'
+    reason = 'email accounts';
+    priority = 'critical';
   } else if (creditsPercentage >= 80) {
-    reason = 'AI credits'
-    priority = 'high'
+    reason = 'AI credits';
+    priority = 'high';
   } else if (accountsPercentage >= 80) {
-    reason = 'email accounts'
-    priority = 'high'
+    reason = 'email accounts';
+    priority = 'high';
   }
 
   return {
@@ -200,8 +200,8 @@ export const getUpgradeSuggestion = (
     priority,
     creditsPercentage: Math.min(creditsPercentage, 100),
     accountsPercentage: Math.min(accountsPercentage, 100),
-  }
-}
+  };
+};
 
 /**
  * Get recommended plan based on usage
@@ -210,24 +210,24 @@ export const getUpgradeSuggestion = (
  * @returns {string} Recommended plan
  */
 export const getRecommendedPlan = (currentPlan = 'personal', usage = {}) => {
-  const { aiCreditsUsed = 0, emailAccountsUsed = 0, workflowsCreated = 0 } = usage
+  const { aiCreditsUsed = 0, emailAccountsUsed = 0, workflowsCreated = 0 } = usage;
 
   // If approaching Plus limits, recommend Professional
   if (currentPlan === 'plus') {
     if (aiCreditsUsed > 800 || emailAccountsUsed > 2) {
-      return 'professional'
+      return 'professional';
     }
   }
 
   // If on Personal, recommend Plus
   if (currentPlan === 'personal') {
     if (aiCreditsUsed > 80 || emailAccountsUsed > 0 || workflowsCreated > 0) {
-      return 'plus'
+      return 'plus';
     }
   }
 
-  return currentPlan
-}
+  return currentPlan;
+};
 
 /**
  * Format limit for display
@@ -235,10 +235,10 @@ export const getRecommendedPlan = (currentPlan = 'personal', usage = {}) => {
  * @returns {string} Formatted limit string
  */
 export const formatLimit = (limit) => {
-  if (limit === Infinity) return 'Unlimited'
-  if (limit >= 1000) return `${(limit / 1000).toFixed(1)}k`
-  return limit.toString()
-}
+  if (limit === Infinity) return 'Unlimited';
+  if (limit >= 1000) return `${(limit / 1000).toFixed(1)}k`;
+  return limit.toString();
+};
 
 export default {
   getPlanLimits,
@@ -250,4 +250,4 @@ export default {
   getUpgradeSuggestion,
   getRecommendedPlan,
   formatLimit,
-}
+};

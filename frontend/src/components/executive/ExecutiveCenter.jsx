@@ -1,45 +1,45 @@
-import React, { useEffect, useState } from 'react'
-import { Crown, Sparkles, RefreshCw, AlertCircle } from 'lucide-react'
-import { executiveApi } from '../../services/api'
+import React, { useEffect, useState } from 'react';
+import { Crown, Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
+import { executiveApi } from '../../services/api';
 
 const ExecutiveCenter = () => {
-  const [loading, setLoading] = useState(true)
-  const [commandLoading, setCommandLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [summary, setSummary] = useState(null)
-  const [objective, setObjective] = useState('')
-  const [commandResult, setCommandResult] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [commandLoading, setCommandLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [summary, setSummary] = useState(null);
+  const [objective, setObjective] = useState('');
+  const [commandResult, setCommandResult] = useState(null);
 
   const loadSummary = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
     try {
-      const res = await executiveApi.getSummary()
-      setSummary(res.data || null)
+      const res = await executiveApi.getSummary();
+      setSummary(res.data || null);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load executive summary')
+      setError(e?.response?.data?.detail || 'Failed to load executive summary');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadSummary()
-  }, [])
+    loadSummary();
+  }, []);
 
   const runCommand = async () => {
-    if (!objective.trim()) return
-    setCommandLoading(true)
-    setError('')
+    if (!objective.trim()) return;
+    setCommandLoading(true);
+    setError('');
     try {
-      const res = await executiveApi.command({ objective: objective.trim() })
-      setCommandResult(res.data || null)
+      const res = await executiveApi.command({ objective: objective.trim() });
+      setCommandResult(res.data || null);
     } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to run executive AI command')
+      setError(e?.response?.data?.detail || 'Failed to run executive AI command');
     } finally {
-      setCommandLoading(false)
+      setCommandLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -115,19 +115,20 @@ const ExecutiveCenter = () => {
             <p className="text-sm font-semibold text-slate-900">
               {commandResult.assistant_message || 'Executive response'}
             </p>
-            {Array.isArray(commandResult.suggested_actions) && commandResult.suggested_actions.length > 0 && (
-              <ul className="list-disc pl-5 text-sm text-slate-700 mt-2">
-                {commandResult.suggested_actions.map((action) => (
-                  <li key={action}>{action}</li>
-                ))}
-              </ul>
-            )}
+            {Array.isArray(commandResult.suggested_actions) &&
+              commandResult.suggested_actions.length > 0 && (
+                <ul className="list-disc pl-5 text-sm text-slate-700 mt-2">
+                  {commandResult.suggested_actions.map((action) => (
+                    <li key={action}>{action}</li>
+                  ))}
+                </ul>
+              )}
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Card = ({ title, value, subtitle }) => (
   <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -135,6 +136,6 @@ const Card = ({ title, value, subtitle }) => (
     <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
     <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
   </div>
-)
+);
 
-export default ExecutiveCenter
+export default ExecutiveCenter;

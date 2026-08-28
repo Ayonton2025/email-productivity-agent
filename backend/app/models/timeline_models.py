@@ -29,7 +29,9 @@ class RelationshipTimelineEvent(Base):
     occurred_at = Column(DateTime, default=datetime.utcnow, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
-    __table_args__ = (Index("idx_timeline_user_contact_time", "user_id", "contact_id", "occurred_at"),)
+    __table_args__ = (
+        Index("idx_timeline_user_contact_time", "user_id", "contact_id", "occurred_at"),
+    )
 
     def to_dict(self):
         return {

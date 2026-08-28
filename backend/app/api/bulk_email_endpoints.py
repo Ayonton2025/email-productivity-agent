@@ -73,7 +73,9 @@ async def bulk_mark_read(
     """
     try:
         if not request.email_ids:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty"
+            )
 
         # Verify all emails belong to current user
         result = await db.execute(
@@ -83,26 +85,38 @@ async def bulk_mark_read(
 
         if len(emails) != len(request.email_ids):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Some emails don't exist or don't belong to you"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Some emails don't exist or don't belong to you",
             )
 
         # Perform bulk update
-        await db.execute(update(Email).where(Email.id.in_(request.email_ids)).values(is_read=request.is_read))
+        await db.execute(
+            update(Email).where(Email.id.in_(request.email_ids)).values(is_read=request.is_read)
+        )
         await db.commit()
 
         # Broadcast WebSocket event
         for email_id in request.email_ids:
-            await connection_manager.broadcast_email_read(current_user.id, email_id, request.is_read)
+            await connection_manager.broadcast_email_read(
+                current_user.id, email_id, request.is_read
+            )
 
         logger.info(f"✅ Bulk marked {len(request.email_ids)} emails as read={request.is_read}")
 
-        return {"status": "success", "updated_count": len(request.email_ids), "email_ids": request.email_ids}
+        return {
+            "status": "success",
+            "updated_count": len(request.email_ids),
+            "email_ids": request.email_ids,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Bulk mark read failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to mark emails as read")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark emails as read",
+        )
 
 
 @router.patch("/flag", response_model=dict)
@@ -129,7 +143,9 @@ async def bulk_flag(
     """
     try:
         if not request.email_ids:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty"
+            )
 
         # Verify all emails belong to current user
         result = await db.execute(
@@ -139,26 +155,41 @@ async def bulk_flag(
 
         if len(emails) != len(request.email_ids):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Some emails don't exist or don't belong to you"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Some emails don't exist or don't belong to you",
             )
 
         # Perform bulk update
-        await db.execute(update(Email).where(Email.id.in_(request.email_ids)).values(is_flagged=request.is_flagged))
+        await db.execute(
+            update(Email)
+            .where(Email.id.in_(request.email_ids))
+            .values(is_flagged=request.is_flagged)
+        )
         await db.commit()
 
         # Broadcast WebSocket event
         for email_id in request.email_ids:
-            await connection_manager.broadcast_email_flagged(current_user.id, email_id, request.is_flagged)
+            await connection_manager.broadcast_email_flagged(
+                current_user.id, email_id, request.is_flagged
+            )
 
-        logger.info(f"✅ Bulk flagged {len(request.email_ids)} emails as flagged={request.is_flagged}")
+        logger.info(
+            f"✅ Bulk flagged {len(request.email_ids)} emails as flagged={request.is_flagged}"
+        )
 
-        return {"status": "success", "updated_count": len(request.email_ids), "email_ids": request.email_ids}
+        return {
+            "status": "success",
+            "updated_count": len(request.email_ids),
+            "email_ids": request.email_ids,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Bulk flag failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to flag emails")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to flag emails"
+        )
 
 
 @router.patch("/categorize", response_model=dict)
@@ -185,7 +216,9 @@ async def bulk_categorize(
     """
     try:
         if not request.email_ids:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty"
+            )
 
         # Validate category
         valid_categories = ["work", "personal", "newsletter", "promotions", "support", "other"]
@@ -203,22 +236,33 @@ async def bulk_categorize(
 
         if len(emails) != len(request.email_ids):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Some emails don't exist or don't belong to you"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Some emails don't exist or don't belong to you",
             )
 
         # Perform bulk update
-        await db.execute(update(Email).where(Email.id.in_(request.email_ids)).values(user_category=request.category))
+        await db.execute(
+            update(Email)
+            .where(Email.id.in_(request.email_ids))
+            .values(user_category=request.category)
+        )
         await db.commit()
 
         logger.info(f"✅ Bulk categorized {len(request.email_ids)} emails as {request.category}")
 
-        return {"status": "success", "updated_count": len(request.email_ids), "category": request.category}
+        return {
+            "status": "success",
+            "updated_count": len(request.email_ids),
+            "category": request.category,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Bulk categorize failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to categorize emails")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to categorize emails"
+        )
 
 
 @router.delete("/", response_model=dict)
@@ -244,7 +288,9 @@ async def bulk_delete(
     """
     try:
         if not request.email_ids:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="email_ids cannot be empty"
+            )
 
         # Verify all emails belong to current user
         result = await db.execute(
@@ -254,12 +300,15 @@ async def bulk_delete(
 
         if len(emails) != len(request.email_ids):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Some emails don't exist or don't belong to you"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Some emails don't exist or don't belong to you",
             )
 
         if request.soft_delete:
             # Soft delete: mark as deleted but keep in database
-            await db.execute(update(Email).where(Email.id.in_(request.email_ids)).values(is_deleted=True))
+            await db.execute(
+                update(Email).where(Email.id.in_(request.email_ids)).values(is_deleted=True)
+            )
             action = "soft deleted"
         else:
             # Hard delete: remove from database
@@ -278,11 +327,15 @@ async def bulk_delete(
         raise
     except Exception as e:
         logger.error(f"❌ Bulk delete failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete emails")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete emails"
+        )
 
 
 @router.get("/statistics", response_model=dict)
-async def get_bulk_statistics(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_bulk_statistics(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """
     Get statistics for bulk operations availability.
 
@@ -311,4 +364,6 @@ async def get_bulk_statistics(current_user: User = Depends(get_current_user), db
 
     except Exception as e:
         logger.error(f"❌ Failed to get bulk statistics: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get statistics")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get statistics"
+        )

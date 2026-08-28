@@ -1,5 +1,5 @@
-import React from 'react'
-import { Brain, CheckCircle, Search, Settings } from 'lucide-react'
+import React from 'react';
+import { Brain, CheckCircle, Search, Settings } from 'lucide-react';
 
 const PromptList = ({
   selectedPrompt,
@@ -71,22 +71,26 @@ const PromptList = ({
             </div>
           )}
           {systemPrompts.map((prompt) => {
-            const CategoryIcon = getCategoryIcon(prompt.category)
+            const CategoryIcon = getCategoryIcon(prompt.category);
             return (
               <div
                 key={prompt.id}
                 onClick={() => {
-                  setSelectedPrompt(prompt)
-                  setIsEditing(false)
-                  setShowTestPanel(false)
+                  setSelectedPrompt(prompt);
+                  setIsEditing(false);
+                  setShowTestPanel(false);
                 }}
                 className={`p-4 cursor-pointer transition-colors ${
-                  selectedPrompt?.id === prompt.id ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-50'
+                  selectedPrompt?.id === prompt.id
+                    ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                    : 'hover:bg-gray-50'
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
-                    <CategoryIcon className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`} />
+                    <CategoryIcon
+                      className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`}
+                    />
                     <h3 className="font-semibold text-gray-900">{prompt.name}</h3>
                   </div>
                   <div className="flex items-center gap-1">
@@ -97,7 +101,9 @@ const PromptList = ({
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{prompt.description || 'No description'}</p>
+                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                  {prompt.description || 'No description'}
+                </p>
 
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span
@@ -108,9 +114,11 @@ const PromptList = ({
                   <span>v{prompt.version}</span>
                 </div>
 
-                <div className="mt-2 text-xs text-gray-400 font-mono">{formatTemplatePreview(prompt.template)}</div>
+                <div className="mt-2 text-xs text-gray-400 font-mono">
+                  {formatTemplatePreview(prompt.template)}
+                </div>
               </div>
-            )
+            );
           })}
 
           {/* User Prompts Section */}
@@ -120,22 +128,26 @@ const PromptList = ({
             </div>
           )}
           {userPrompts.map((prompt) => {
-            const CategoryIcon = getCategoryIcon(prompt.category)
+            const CategoryIcon = getCategoryIcon(prompt.category);
             return (
               <div
                 key={prompt.id}
                 onClick={() => {
-                  setSelectedPrompt(prompt)
-                  setIsEditing(false)
-                  setShowTestPanel(false)
+                  setSelectedPrompt(prompt);
+                  setIsEditing(false);
+                  setShowTestPanel(false);
                 }}
                 className={`p-4 cursor-pointer transition-colors ${
-                  selectedPrompt?.id === prompt.id ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-50'
+                  selectedPrompt?.id === prompt.id
+                    ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                    : 'hover:bg-gray-50'
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
-                    <CategoryIcon className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`} />
+                    <CategoryIcon
+                      className={`h-4 w-4 ${getCategoryColor(prompt.category).split(' ')[1]}`}
+                    />
                     <h3 className="font-semibold text-gray-900">{prompt.name}</h3>
                   </div>
                   <div className="flex items-center gap-1">
@@ -143,7 +155,9 @@ const PromptList = ({
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{prompt.description || 'No description'}</p>
+                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                  {prompt.description || 'No description'}
+                </p>
 
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span
@@ -154,14 +168,16 @@ const PromptList = ({
                   <span>v{prompt.version}</span>
                 </div>
 
-                <div className="mt-2 text-xs text-gray-400 font-mono">{formatTemplatePreview(prompt.template)}</div>
+                <div className="mt-2 text-xs text-gray-400 font-mono">
+                  {formatTemplatePreview(prompt.template)}
+                </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </div>
   </div>
-)
+);
 
-export default PromptList
+export default PromptList;

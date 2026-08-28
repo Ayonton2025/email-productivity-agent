@@ -10,18 +10,14 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.security import encrypt_credential, get_current_user
-from app.models.database import Email, EmailProviderConfig, UserEmailAccount, get_db
-from app.models.document_models import EmailAttachment
+from app.core.security import get_current_user
+from app.models.database import UserEmailAccount, get_db
 from app.models.user_models import User
-from app.services.email_provider_service import EmailProviderService
 from app.services.gmail_sync_service import sync_gmail_inbox
 from app.services.imap_service import imap_service
-from app.services.smtp_service import smtp_service
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +28,12 @@ class ConnectEmailAccountRequest(BaseModel):
     """Connect email account with IMAP/SMTP credentials"""
 
     email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password")
-    display_name: Optional[str] = Field(None, max_length=255, description="Display name for account")
+    password: str = Field(
+        ..., min_length=1, max_length=500, description="IMAP/SMTP password or app-specific password"
+    )
+    display_name: Optional[str] = Field(
+        None, max_length=255, description="Display name for account"
+    )
     auto_detect_provider: bool = Field(default=True, description="Auto-detect IMAP/SMTP settings")
 
 
@@ -95,20 +95,28 @@ router = APIRouter(prefix="/email-accounts", tags=["email-accounts"])
 
 
 @router.get("/list")
-async def list_email_accounts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def list_email_accounts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """List all connected email accounts"""
     try:
         stmt = select(UserEmailAccount).where(UserEmailAccount.user_id == current_user.id)
         result = await db.execute(stmt)
         accounts = result.scalars().all()
 
-        return {"success": True, "accounts": [acc.to_dict() for acc in accounts], "count": len(accounts)}
+        return {
+            "success": True,
+            "accounts": [acc.to_dict() for acc in accounts],
+            "count": len(accounts),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/")
-async def get_user_email_accounts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_user_email_accounts(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     """Get user's connected email accounts"""
     try:
         stmt = (
@@ -150,7 +158,9 @@ async def get_email_account(
 
 @router.delete("/{account_id}")
 async def disconnect_email_account(
-    account_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    account_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Disconnect email account"""
     try:
@@ -202,18 +212,27 @@ async def sync_emails(
 
         limit = request.limit if request else 100
 
-        logger.info(f"Starting sync for account {account.email} ({account.provider}), user {current_user.id}")
+        logger.info(
+            f"Starting sync for account {account.email} ({account.provider}), user {current_user.id}"
+        )
 
         # Gmail OAuth-based sync
         if account.provider == "gmail":
-            emails_synced, status = await sync_gmail_inbox(db=db, account=account, max_results=limit)
+            emails_synced, status = await sync_gmail_inbox(
+                db=db, account=account, max_results=limit
+            )
         else:
             # IMAP-based sync
             emails_synced, status = await imap_service.sync_inbox(account, db, limit=limit)
 
         logger.info(f"Sync completed: {emails_synced} emails synced from {account.email}")
 
-        return {"success": True, "message": status, "emails_synced": emails_synced, "account": account.to_dict()}
+        return {
+            "success": True,
+            "message": status,
+            "emails_synced": emails_synced,
+            "account": account.to_dict(),
+        }
 
     except HTTPException:
         raise

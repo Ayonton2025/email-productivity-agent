@@ -1,50 +1,50 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { Bot, Plus, Play, Pause, Trash2, Edit, Settings, Activity, RefreshCw } from 'lucide-react'
-import { agentsApi } from '../../services/api'
-import AgentConfig from './AgentConfig'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { Bot, Plus, Play, Pause, Trash2, Edit, Settings, Activity, RefreshCw } from 'lucide-react';
+import { agentsApi } from '../../services/api';
+import AgentConfig from './AgentConfig';
 
 const Agents = () => {
-  const [agents, setAgents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [editingAgent, setEditingAgent] = useState(null)
+  const [agents, setAgents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingAgent, setEditingAgent] = useState(null);
 
   useEffect(() => {
-    loadAgents()
-  }, [])
+    loadAgents();
+  }, []);
 
   const loadAgents = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await agentsApi.getAgents()
-      setAgents(res.data || [])
+      const res = await agentsApi.getAgents();
+      setAgents(res.data || []);
     } catch (error) {
-      logger.error('Failed to load agents:', error)
+      logger.error('Failed to load agents:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (agentId) => {
-    if (!window.confirm('Are you sure you want to delete this agent?')) return
+    if (!window.confirm('Are you sure you want to delete this agent?')) return;
     try {
-      await agentsApi.deleteAgent(agentId)
-      await loadAgents()
+      await agentsApi.deleteAgent(agentId);
+      await loadAgents();
     } catch (error) {
-      logger.error('Failed to delete agent:', error)
-      alert('Failed to delete agent')
+      logger.error('Failed to delete agent:', error);
+      alert('Failed to delete agent');
     }
-  }
+  };
 
   const handleToggleActive = async (agent) => {
     try {
-      await agentsApi.updateAgent(agent.id, { is_active: !agent.is_active })
-      await loadAgents()
+      await agentsApi.updateAgent(agent.id, { is_active: !agent.is_active });
+      await loadAgents();
     } catch (error) {
-      logger.error('Failed to update agent:', error)
+      logger.error('Failed to update agent:', error);
     }
-  }
+  };
 
   const agentTypes = {
     sales: { label: 'Sales Agent', color: 'bg-blue-100 text-blue-800' },
@@ -53,7 +53,7 @@ const Agents = () => {
     executive_assistant: { label: 'Executive Assistant', color: 'bg-indigo-100 text-indigo-800' },
     legal_filter: { label: 'Legal Filter', color: 'bg-red-100 text-red-800' },
     student: { label: 'Student Assistant', color: 'bg-yellow-100 text-yellow-800' },
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -88,7 +88,9 @@ const Agents = () => {
         <div className="bg-white rounded-lg shadow border border-slate-200 p-12 text-center">
           <Bot className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">No agents yet</h3>
-          <p className="text-slate-500 mb-6">Create your first autonomous agent to handle emails automatically</p>
+          <p className="text-slate-500 mb-6">
+            Create your first autonomous agent to handle emails automatically
+          </p>
           <button
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -119,7 +121,9 @@ const Agents = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {agent.is_running && <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>}
+                  {agent.is_running && (
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  )}
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
                       agent.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -129,7 +133,9 @@ const Agents = () => {
                   </span>
                 </div>
               </div>
-              {agent.description && <p className="text-sm text-slate-600 mb-4">{agent.description}</p>}
+              {agent.description && (
+                <p className="text-sm text-slate-600 mb-4">{agent.description}</p>
+              )}
               <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
                 <span className="flex items-center gap-1">
                   <Activity className="h-4 w-4" />
@@ -167,14 +173,14 @@ const Agents = () => {
         <AgentConfig
           agent={editingAgent}
           onClose={() => {
-            setShowCreateModal(false)
-            setEditingAgent(null)
+            setShowCreateModal(false);
+            setEditingAgent(null);
           }}
           onSave={loadAgents}
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Agents
+export default Agents;

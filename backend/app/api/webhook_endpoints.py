@@ -91,7 +91,9 @@ async def handle_gmail_sync(email_address: str, history_id: str, db: AsyncSessio
         logger.info(f"🔄 Starting incremental Gmail sync for {email_address}")
 
         # Find the account
-        result = await db.execute(select(UserEmailAccount).where(UserEmailAccount.email == email_address))
+        result = await db.execute(
+            select(UserEmailAccount).where(UserEmailAccount.email == email_address)
+        )
         account = result.scalar_one_or_none()
 
         if not account:
@@ -114,7 +116,9 @@ async def handle_gmail_sync(email_address: str, history_id: str, db: AsyncSessio
 
         # Fetch new messages since last historyId
         try:
-            logger.info(f"📧 Fetching emails since historyId {account.history_id or '(first sync)'}")
+            logger.info(
+                f"📧 Fetching emails since historyId {account.history_id or '(first sync)'}"
+            )
 
             # If this is the first incremental sync, fetch last 10 emails
             if not account.history_id:
@@ -125,7 +129,9 @@ async def handle_gmail_sync(email_address: str, history_id: str, db: AsyncSessio
                     service.users()
                     .history()
                     .list(
-                        userId="me", startHistoryId=account.history_id, historyTypes=["messageAdded", "messageDeleted"]
+                        userId="me",
+                        startHistoryId=account.history_id,
+                        historyTypes=["messageAdded", "messageDeleted"],
                     )
                     .execute()
                 )
@@ -146,7 +152,12 @@ async def handle_gmail_sync(email_address: str, history_id: str, db: AsyncSessio
                 raw_emails = []
                 for msg_id in message_ids[:20]:  # Limit to 20 per push
                     try:
-                        full = service.users().messages().get(userId="me", id=msg_id, format="full").execute()
+                        full = (
+                            service.users()
+                            .messages()
+                            .get(userId="me", id=msg_id, format="full")
+                            .execute()
+                        )
                         raw_emails.append(full)
                     except Exception as e:
                         logger.error(f"❌ Failed to fetch message {msg_id}: {e}")
@@ -161,7 +172,9 @@ async def handle_gmail_sync(email_address: str, history_id: str, db: AsyncSessio
                 account_id=account.id,
                 parsed_emails=parsed_emails,
                 gmail_service=service,  # Pass Gmail service for attachment download
-                message_ids=message_ids[: len(raw_emails)],  # Pass message IDs for attachment extraction
+                message_ids=message_ids[
+                    : len(raw_emails)
+                ],  # Pass message IDs for attachment extraction
             )
 
             logger.info(f"✅ Stored {len(email_ids)} new emails")

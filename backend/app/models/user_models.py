@@ -50,7 +50,11 @@ class User(Base):
 
     def generate_verification_token(self) -> str:
         """Generate email verification token"""
-        token_data = {"user_id": self.id, "email": self.email, "exp": datetime.utcnow() + timedelta(days=1)}
+        token_data = {
+            "user_id": self.id,
+            "email": self.email,
+            "exp": datetime.utcnow() + timedelta(days=1),
+        }
         token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.verification_token = token
         logger.info("User verification token generated", extra={"user_id": str(self.id)})
@@ -58,7 +62,11 @@ class User(Base):
 
     def generate_reset_token(self) -> str:
         """Generate password reset token"""
-        token_data = {"user_id": self.id, "email": self.email, "exp": datetime.utcnow() + timedelta(hours=1)}
+        token_data = {
+            "user_id": self.id,
+            "email": self.email,
+            "exp": datetime.utcnow() + timedelta(hours=1),
+        }
         token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.reset_token = token
         return token

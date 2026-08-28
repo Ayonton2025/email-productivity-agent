@@ -15,11 +15,17 @@ def test_health_reports_database_redis_and_external_services(client):
     assert data["dependencies"]["database"]["status"] == "connected"
     assert data["dependencies"]["redis"] == {"status": "available", "mode": "mock"}
     assert set(data["dependencies"]["external_services"]) == {"ai", "payments", "email"}
-    assert all(service["status"] == "available" for service in data["dependencies"]["external_services"].values())
+    assert all(
+        service["status"] == "available"
+        for service in data["dependencies"]["external_services"].values()
+    )
 
 
 def test_versioned_health_uses_operational_payload(client):
-    assert client.get("/api/v1/health").json()["dependencies"] == client.get("/health").json()["dependencies"]
+    assert (
+        client.get("/api/v1/health").json()["dependencies"]
+        == client.get("/health").json()["dependencies"]
+    )
 
 
 def test_api_health_timestamp_is_present(client):

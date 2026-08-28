@@ -3,15 +3,15 @@
 import logging
 from typing import Any, Dict, Optional
 
-from sqlalchemy import select
-
 from app.models.database import Email
 
 logger = logging.getLogger(__name__)
 
 
 class DuplicateCheckerMixin:
-    async def _check_duplicate_email(self, user_id: str, email_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _check_duplicate_email(
+        self, user_id: str, email_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Check if a similar email already exists for this user"""
         try:
             from sqlalchemy import select

@@ -14,26 +14,23 @@ import hashlib
 import hmac
 import json
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import desc, func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.billing.schemas import (
-    AvailablePlansResponse,
-    CouponRequest,
-    CreditsResponse,
-    CreditTopupRequest,
-    PaymentMethodUpdateRequest,
-    SubscriptionResponse,
-    UpgradeRequest,
-)
 from app.core.config import settings
-from app.core.security import get_current_user, logger
-from app.models.billing_models import CREDIT_PACK_PRICING_USD, SUBSCRIPTION_PLANS, PaymentTransaction
+from app.core.security import logger
+from app.models.billing_models import (
+    PaymentTransaction,
+)
 from app.models.database import User, get_db
-from app.services.billing_service import CreditService, FeatureGatingService, PaymentService, SubscriptionService
+from app.services.billing_service import (
+    CreditService,
+    FeatureGatingService,
+    PaymentService,
+    SubscriptionService,
+)
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 
@@ -44,16 +41,21 @@ gating_service = FeatureGatingService()
 _IP_REQUEST_LOG = {}
 
 
-def _enforce_ip_rate_limit(request: Request, key: str, max_requests: int = 20, window_seconds: int = 60) -> None:
+def _enforce_ip_rate_limit(
+    request: Request, key: str, max_requests: int = 20, window_seconds: int = 60
+) -> None:
     xff = request.headers.get("x-forwarded-for", "")
-    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    ip = (
+        xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    )
     now = datetime.utcnow().timestamp()
     bucket_key = f"{key}:{ip}"
     events = _IP_REQUEST_LOG.get(bucket_key, [])
     events = [ts for ts in events if now - ts <= window_seconds]
     if len(events) >= max_requests:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests, please retry shortly."
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests, please retry shortly.",
         )
     events.append(now)
     _IP_REQUEST_LOG[bucket_key] = events
@@ -83,10 +85,14 @@ async def paystack_webhook(request: Request, session: AsyncSession = Depends(get
         body = await request.body()
         signature = request.headers.get("x-paystack-signature")
         if settings.PAYSTACK_SECRET_KEY:
-            computed = hmac.new(settings.PAYSTACK_SECRET_KEY.encode("utf-8"), body, hashlib.sha512).hexdigest()
+            computed = hmac.new(
+                settings.PAYSTACK_SECRET_KEY.encode("utf-8"), body, hashlib.sha512
+            ).hexdigest()
             if not signature or not hmac.compare_digest(signature, computed):
                 logger.warning("Invalid Paystack webhook signature")
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature"
+                )
         else:
             logger.warning("PAYSTACK_SECRET_KEY not set; skipping signature verification")
 
@@ -100,7 +106,9 @@ async def paystack_webhook(request: Request, session: AsyncSession = Depends(get
                 from sqlalchemy import select
 
                 result = await session.execute(
-                    select(PaymentTransaction).where(PaymentTransaction.payment_reference == reference)
+                    select(PaymentTransaction).where(
+                        PaymentTransaction.payment_reference == reference
+                    )
                 )
                 transaction = result.scalar()
 
@@ -161,14 +169,15 @@ async def paypal_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         logger.info(f"📨 PayPal Webhook: {event_type}")
 
         if event_type in {"CHECKOUT.ORDER.COMPLETED", "PAYMENT.SALE.COMPLETED"}:
-            order_id = resource.get("id") or resource.get("supplementary_data", {}).get("related_ids", {}).get(
-                "order_id"
-            )
+            order_id = resource.get("id") or resource.get("supplementary_data", {}).get(
+                "related_ids", {}
+            ).get("order_id")
 
             if order_id:
                 result = await db.execute(
                     select(PaymentTransaction).where(
-                        PaymentTransaction.payment_reference == order_id, PaymentTransaction.payment_method == "paypal"
+                        PaymentTransaction.payment_reference == order_id,
+                        PaymentTransaction.payment_method == "paypal",
                     )
                 )
                 transaction = result.scalar_one_or_none()

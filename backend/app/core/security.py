@@ -189,7 +189,8 @@ async def _lazy_get_db():
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: AsyncSession = Depends(_lazy_get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(_lazy_get_db),
 ):
     """
     FastAPI dependency to verify JWT token and return User model.

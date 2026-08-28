@@ -1,11 +1,15 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Check, Zap, Star, TrendingUp, AlertCircle, Loader, Info } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import { initiateUpgrade, getAvailablePlans, getAvailablePaymentMethods } from '../../services/paymentService'
-import { useSubscription } from '../../hooks/useSubscription'
-import './BillingUpgrade.css'
+import { logger } from '../../utils/logger.js';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Check, Zap, Star, TrendingUp, AlertCircle, Loader, Info } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import {
+  initiateUpgrade,
+  getAvailablePlans,
+  getAvailablePaymentMethods,
+} from '../../services/paymentService';
+import { useSubscription } from '../../hooks/useSubscription';
+import './BillingUpgrade.css';
 
 /**
  * BillingUpgrade Component
@@ -13,63 +17,68 @@ import './BillingUpgrade.css'
  * Can pre-select a plan via query parameter (?plan=plus)
  */
 const BillingUpgrade = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [searchParams] = useSearchParams()
-  const { userPlan } = useSubscription()
-  const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'plus')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState(null)
-  const [couponCode, setCouponCode] = useState('')
-  const [discount, setDiscount] = useState(0)
-  const [showDebugInfo, setShowDebugInfo] = useState(false)
-  const [backendStatus, setBackendStatus] = useState('checking')
-  const [plans, setPlans] = useState([])
-  const [showMethodsModal, setShowMethodsModal] = useState(false)
-  const [paymentMethods, setPaymentMethods] = useState([])
-  const [selectedMethod, setSelectedMethod] = useState('card')
-  const [pendingPlanId, setPendingPlanId] = useState(null)
-  const [countryCode, setCountryCode] = useState('US')
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { userPlan } = useSubscription();
+  const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'plus');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('checking');
+  const [plans, setPlans] = useState([]);
+  const [showMethodsModal, setShowMethodsModal] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedMethod, setSelectedMethod] = useState('card');
+  const [pendingPlanId, setPendingPlanId] = useState(null);
+  const [countryCode, setCountryCode] = useState('US');
 
   const normalizeApiBase = () => {
     if (import.meta.env.DEV) {
-      return '/api/v1'
+      return '/api/v1';
     }
-    const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
-    const trimmed = raw.replace(/\/+$/, '')
-    return trimmed.endsWith('/api/v1') ? trimmed : `${trimmed}/api/v1`
-  }
+    const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+    const trimmed = raw.replace(/\/+$/, '');
+    return trimmed.endsWith('/api/v1') ? trimmed : `${trimmed}/api/v1`;
+  };
 
   // Check backend availability on mount
   useEffect(() => {
     const checkBackendHealth = async () => {
       try {
-        const healthUrl = `${normalizeApiBase()}/health`
+        const healthUrl = `${normalizeApiBase()}/health`;
 
         const response = await fetch(healthUrl, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           },
-        })
-        setBackendStatus(response.ok ? 'available' : 'offline')
+        });
+        setBackendStatus(response.ok ? 'available' : 'offline');
       } catch (err) {
-        logger.warn('🔍 Backend health check failed:', err.message)
-        setBackendStatus('offline')
+        logger.warn('🔍 Backend health check failed:', err.message);
+        setBackendStatus('offline');
       }
-    }
+    };
 
-    checkBackendHealth()
-  }, [])
+    checkBackendHealth();
+  }, []);
 
   useEffect(() => {
     const loadPlans = async () => {
       try {
-        const data = await getAvailablePlans()
+        const data = await getAvailablePlans();
         const serverPlans = Object.entries(data?.plans || {}).map(([id, plan]) => ({
           id,
           name: plan.name || id,
           price: typeof plan.price === 'number' ? plan.price : null,
-          period: plan.billing_cycle === 'monthly' ? '/month' : plan.billing_cycle === 'annual' ? '/year' : '',
+          period:
+            plan.billing_cycle === 'monthly'
+              ? '/month'
+              : plan.billing_cycle === 'annual'
+                ? '/year'
+                : '',
           description: plan.description || '',
           features: Object.entries(plan.features || {})
             .filter(([, enabled]) => Boolean(enabled))
@@ -78,28 +87,28 @@ const BillingUpgrade = () => {
           highlighted: id === 'professional',
           disabled: false,
           perks: [],
-        }))
-        setPlans(serverPlans.length ? serverPlans : fallbackPlans)
+        }));
+        setPlans(serverPlans.length ? serverPlans : fallbackPlans);
       } catch (err) {
-        logger.warn('Failed to load plans from backend, using fallback plans', err)
-        setPlans(fallbackPlans)
+        logger.warn('Failed to load plans from backend, using fallback plans', err);
+        setPlans(fallbackPlans);
       }
-    }
-    loadPlans()
-  }, [])
+    };
+    loadPlans();
+  }, []);
 
   useEffect(() => {
     const inferCountryCode = () => {
       try {
-        const locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US'
-        const parts = locale.split('-')
-        return (parts[1] || 'US').toUpperCase()
+        const locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US';
+        const parts = locale.split('-');
+        return (parts[1] || 'US').toUpperCase();
       } catch (e) {
-        return 'US'
+        return 'US';
       }
-    }
-    setCountryCode(inferCountryCode())
-  }, [])
+    };
+    setCountryCode(inferCountryCode());
+  }, []);
 
   const fallbackPlans = [
     {
@@ -146,110 +155,120 @@ const BillingUpgrade = () => {
       disabled: false,
       perks: [],
     },
-  ]
+  ];
 
   const handleUpgrade = async (planId) => {
-    logger.debug(`🔄 [Billing] Attempting upgrade to plan: ${planId}`)
+    logger.debug(`🔄 [Billing] Attempting upgrade to plan: ${planId}`);
 
     if (planId === userPlan) {
-      setError('You are already on this plan')
-      return
+      setError('You are already on this plan');
+      return;
     }
 
     if (planId === 'personal') {
-      setError('You are already on the Free plan, or cannot downgrade here.')
-      return
+      setError('You are already on the Free plan, or cannot downgrade here.');
+      return;
     }
 
     if (planId === 'enterprise') {
-      logger.debug('📧 [Billing] Redirecting to sales email')
-      window.location.href = 'mailto:sales@bylix.email?subject=Enterprise%20Plan%20Inquiry'
-      return
+      logger.debug('📧 [Billing] Redirecting to sales email');
+      window.location.href = 'mailto:sales@bylix.email?subject=Enterprise%20Plan%20Inquiry';
+      return;
     }
 
     // Instead of immediately starting a provider redirect, show the payment-method chooser
-    setError(null)
+    setError(null);
     try {
-      setIsProcessing(true)
-      const methodsResp = await getAvailablePaymentMethods(countryCode)
-      const methods = (methodsResp && methodsResp.payment_methods) || []
+      setIsProcessing(true);
+      const methodsResp = await getAvailablePaymentMethods(countryCode);
+      const methods = (methodsResp && methodsResp.payment_methods) || [];
       // Ensure card / Paystack appears first by default when available
       methods.sort((a, b) => {
-        if (a.id === 'card') return -1
-        if (b.id === 'card') return 1
-        return 0
-      })
-      setPendingPlanId(planId)
-      setPaymentMethods(methods)
-      setSelectedMethod(methods.length ? methods[0].id || 'card' : 'card')
-      setShowMethodsModal(true)
+        if (a.id === 'card') return -1;
+        if (b.id === 'card') return 1;
+        return 0;
+      });
+      setPendingPlanId(planId);
+      setPaymentMethods(methods);
+      setSelectedMethod(methods.length ? methods[0].id || 'card' : 'card');
+      setShowMethodsModal(true);
     } catch (err) {
-      logger.error('❌ [Billing] Could not load payment methods, falling back to default flow', err)
+      logger.error(
+        '❌ [Billing] Could not load payment methods, falling back to default flow',
+        err
+      );
       // Fallback: continue with original auto flow
-      setIsProcessing(true)
-      setShowMethodsModal(false)
+      setIsProcessing(true);
+      setShowMethodsModal(false);
       try {
-        const response = await initiateUpgrade(planId, 'auto', { countryCode, preferLocalCurrency: false })
-        if (response.authorization_url) window.location.href = response.authorization_url
-        else if (response.approval_url) window.location.href = response.approval_url
-        else if (response.checkout_url) window.location.href = response.checkout_url
-        else throw new Error('No redirect URL returned')
+        const response = await initiateUpgrade(planId, 'auto', {
+          countryCode,
+          preferLocalCurrency: false,
+        });
+        if (response.authorization_url) window.location.href = response.authorization_url;
+        else if (response.approval_url) window.location.href = response.approval_url;
+        else if (response.checkout_url) window.location.href = response.checkout_url;
+        else throw new Error('No redirect URL returned');
       } catch (e) {
-        setError(e.message || 'Upgrade failed')
+        setError(e.message || 'Upgrade failed');
       } finally {
-        setIsProcessing(false)
+        setIsProcessing(false);
       }
     }
-    setIsProcessing(false)
-  }
+    setIsProcessing(false);
+  };
 
   const confirmPaymentMethod = async (planId) => {
-    setShowMethodsModal(false)
-    setIsProcessing(true)
-    setError(null)
+    setShowMethodsModal(false);
+    setIsProcessing(true);
+    setError(null);
     try {
-      const response = await initiateUpgrade(planId, selectedMethod, { countryCode, preferLocalCurrency: false })
+      const response = await initiateUpgrade(planId, selectedMethod, {
+        countryCode,
+        preferLocalCurrency: false,
+      });
       if (response.authorization_url) {
-        window.location.href = response.authorization_url
+        window.location.href = response.authorization_url;
       } else if (response.approval_url) {
-        window.location.href = response.approval_url
+        window.location.href = response.approval_url;
       } else if (response.checkout_url) {
-        window.location.href = response.checkout_url
+        window.location.href = response.checkout_url;
       } else if (response.success === true) {
-        if (response.mock_mode) throw new Error('Payment providers not configured for real checkout')
-        throw new Error('Payment session created without redirect URL.')
+        if (response.mock_mode)
+          throw new Error('Payment providers not configured for real checkout');
+        throw new Error('Payment session created without redirect URL.');
       } else {
-        throw new Error('Invalid payment service response')
+        throw new Error('Invalid payment service response');
       }
     } catch (err) {
-      logger.error('❌ [Billing] Confirm payment method error:', err)
-      setError(err?.message || 'Failed to start payment')
+      logger.error('❌ [Billing] Confirm payment method error:', err);
+      setError(err?.message || 'Failed to start payment');
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleApplyCoupon = async (e) => {
-    e.preventDefault()
-    if (!couponCode.trim()) return
+    e.preventDefault();
+    if (!couponCode.trim()) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
       // Mock coupon validation - replace with actual API call
       if (couponCode === 'SAVE10') {
-        setDiscount(10)
+        setDiscount(10);
       } else if (couponCode === 'SAVE20') {
-        setDiscount(20)
+        setDiscount(20);
       } else {
-        setError('Invalid coupon code')
-        setDiscount(0)
+        setError('Invalid coupon code');
+        setDiscount(0);
       }
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
-  const currentPlan = plans.find((p) => p.id === selectedPlan)
+  const currentPlan = plans.find((p) => p.id === selectedPlan);
 
   return (
     <div className="billing-upgrade-container">
@@ -327,10 +346,15 @@ Response (one of):
             <a
               href="#"
               onClick={(e) => {
-                e.preventDefault()
-                setShowDebugInfo(!showDebugInfo)
+                e.preventDefault();
+                setShowDebugInfo(!showDebugInfo);
               }}
-              style={{ fontSize: '12px', color: '#6366f1', marginTop: '8px', display: 'inline-block' }}
+              style={{
+                fontSize: '12px',
+                color: '#6366f1',
+                marginTop: '8px',
+                display: 'inline-block',
+              }}
             >
               {showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}
             </a>
@@ -352,7 +376,9 @@ Response (one of):
           </div>
           <div className="debug-row">
             <span>Paystack Key:</span>
-            <span>{import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ? '✓ Configured' : '✗ Not configured'}</span>
+            <span>
+              {import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ? '✓ Configured' : '✗ Not configured'}
+            </span>
           </div>
           <div className="debug-row">
             <span>Auth Token:</span>
@@ -382,13 +408,14 @@ Response (one of):
           </div>
           <div className="flex items-end">
             <p className="text-xs text-slate-500">
-              Clicking <strong>Upgrade</strong> opens hosted checkout with card as default; users can switch to other
-              available methods there.
+              Clicking <strong>Upgrade</strong> opens hosted checkout with card as default; users
+              can switch to other available methods there.
             </p>
           </div>
         </div>
         <p className="text-xs text-slate-500 mt-2">
-          Default is exact USD charging to match website pricing; provider fallback applies automatically when required.
+          Default is exact USD charging to match website pricing; provider fallback applies
+          automatically when required.
         </p>
       </div>
 
@@ -411,7 +438,9 @@ Response (one of):
                 <>
                   <span className="price">${plan.price}</span>
                   <span className="period">{plan.period}</span>
-                  <div className="text-xs text-slate-500">~ KES {Math.round(Number(plan.price || 0) * 150)}</div>
+                  <div className="text-xs text-slate-500">
+                    ~ KES {Math.round(Number(plan.price || 0) * 150)}
+                  </div>
                 </>
               ) : (
                 <span className="price-custom">Custom Pricing</span>
@@ -486,9 +515,9 @@ Response (one of):
               <button
                 className="btn btn-default"
                 onClick={() => {
-                  setShowMethodsModal(false)
-                  setPaymentMethods([])
-                  setPendingPlanId(null)
+                  setShowMethodsModal(false);
+                  setPaymentMethods([]);
+                  setPendingPlanId(null);
                 }}
               >
                 Cancel
@@ -512,37 +541,44 @@ Response (one of):
           <div className="faq-item">
             <h4>Can I change my plan anytime?</h4>
             <p>
-              Yes! You can upgrade or downgrade your plan at any time. Changes take effect at the start of your next
-              billing cycle.
+              Yes! You can upgrade or downgrade your plan at any time. Changes take effect at the
+              start of your next billing cycle.
             </p>
           </div>
           <div className="faq-item">
             <h4>What payment methods do you accept?</h4>
-            <p>We accept major cards and local payment methods through Paystack and supported regional processors.</p>
+            <p>
+              We accept major cards and local payment methods through Paystack and supported
+              regional processors.
+            </p>
           </div>
           <div className="faq-item">
             <h4>Is there a free trial?</h4>
             <p>
-              Start with our free Personal plan. Upgrade anytime to access more features and credits without a trial
-              period.
+              Start with our free Personal plan. Upgrade anytime to access more features and credits
+              without a trial period.
             </p>
           </div>
           <div className="faq-item">
             <h4>Do you offer refunds?</h4>
             <p>
-              We offer a 14-day money-back guarantee if you're not satisfied. Contact our support team for assistance.
+              We offer a 14-day money-back guarantee if you're not satisfied. Contact our support
+              team for assistance.
             </p>
           </div>
           <div className="faq-item">
             <h4>What are AI Credits used for?</h4>
             <p>
-              AI Credits power our intelligent features including email suggestions, smart replies, and automated
-              categorization.
+              AI Credits power our intelligent features including email suggestions, smart replies,
+              and automated categorization.
             </p>
           </div>
           <div className="faq-item">
             <h4>Can I get a custom plan?</h4>
-            <p>Absolutely! Contact our sales team for enterprise solutions tailored to your organization's needs.</p>
+            <p>
+              Absolutely! Contact our sales team for enterprise solutions tailored to your
+              organization's needs.
+            </p>
           </div>
         </div>
       </div>
@@ -565,7 +601,7 @@ Response (one of):
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BillingUpgrade
+export default BillingUpgrade;

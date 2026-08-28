@@ -22,7 +22,7 @@ from typing import Any, Dict
 class JSONFormatter(logging.Formatter):
     """Custom formatter that outputs structured JSON logs"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.service_name = os.getenv("SERVICE_NAME", "bylix-email-platform")
         self.environment = os.getenv("ENVIRONMENT", "development")
@@ -89,7 +89,7 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_data, default=str)
 
 
-def configure_logging():
+def configure_logging() -> logging.Logger:
     """Configure structured JSON logging for the application"""
 
     # Get log level from environment

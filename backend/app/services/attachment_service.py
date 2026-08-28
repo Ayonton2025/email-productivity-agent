@@ -83,7 +83,9 @@ class AttachmentService:
     }
 
     def __init__(self):
-        self.storage_root = Path(getattr(settings, "ATTACHMENT_STORAGE_PATH", "/app/storage/attachments"))
+        self.storage_root = Path(
+            getattr(settings, "ATTACHMENT_STORAGE_PATH", "/app/storage/attachments")
+        )
         self.storage_root.mkdir(parents=True, exist_ok=True)
         logger.info(f"📎 Attachment storage initialized at: {self.storage_root}")
 
@@ -169,7 +171,13 @@ class AttachmentService:
             return None
 
     async def store_attachment(
-        self, session: AsyncSession, email_id: str, user_id: str, filename: str, mime_type: str, content: bytes
+        self,
+        session: AsyncSession,
+        email_id: str,
+        user_id: str,
+        filename: str,
+        mime_type: str,
+        content: bytes,
     ) -> Optional[EmailAttachment]:
         """
         Store attachment metadata in database and file on disk
@@ -234,7 +242,11 @@ class DocumentAnalysisService:
         self.attachment_service = AttachmentService()
 
     async def analyze_document(
-        self, session: AsyncSession, attachment: EmailAttachment, user_id: str, user_plan: str = "free"
+        self,
+        session: AsyncSession,
+        attachment: EmailAttachment,
+        user_id: str,
+        user_plan: str = "free",
     ) -> Optional[DocumentAnalysis]:
         """
         Analyze document based on user plan

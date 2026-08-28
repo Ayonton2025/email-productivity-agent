@@ -38,7 +38,9 @@ class EmailProviderService:
         return normalized
 
     # Gmail Integration - OAuth Methods
-    async def authenticate_gmail_with_token(self, access_token: str, refresh_token: str = None) -> bool:
+    async def authenticate_gmail_with_token(
+        self, access_token: str, refresh_token: str = None
+    ) -> bool:
         """Authenticate with Gmail using OAuth tokens"""
         try:
             logger.info(
@@ -63,7 +65,7 @@ class EmailProviderService:
 
             logger.info("🔐 [EmailProviderService] Building Gmail service...")
             # Create a custom request handler that doesn't auto-refresh
-            http = None
+            _http = None
 
             # Test the credentials
             self.gmail_service = build("gmail", "v1", credentials=creds)
@@ -82,8 +84,13 @@ class EmailProviderService:
                     f"❌ [EmailProviderService] API validation failed: {type(auth_error).__name__}: {auth_error}"
                 )
                 # Check if it's a refresh token error
-                if "refresh_token" in str(auth_error).lower() or "refresh" in str(auth_error).lower():
-                    logger.info("⚠️ [EmailProviderService] Token needs refresh but no client credentials provided")
+                if (
+                    "refresh_token" in str(auth_error).lower()
+                    or "refresh" in str(auth_error).lower()
+                ):
+                    logger.info(
+                        "⚠️ [EmailProviderService] Token needs refresh but no client credentials provided"
+                    )
                     logger.info(
                         "ℹ️ [EmailProviderService] This is expected for tokens from OAuth playground or third-party apps"
                     )
@@ -106,13 +113,17 @@ class EmailProviderService:
                         )
                         return True
                     except Exception as fallback_error:
-                        logger.error(f"❌ [EmailProviderService] Fallback authentication also failed: {fallback_error}")
+                        logger.error(
+                            f"❌ [EmailProviderService] Fallback authentication also failed: {fallback_error}"
+                        )
                         return False
                 return False
 
         except HttpError as error:
             logger.error(f"❌ Gmail HTTP error: {error}")
-            logger.error(f'❌ Error details: {error.content if hasattr(error, "content") else "N/A"}')
+            logger.error(
+                f'❌ Error details: {error.content if hasattr(error, "content") else "N/A"}'
+            )
             return False
         except Exception as e:
             logger.error(f"❌ Gmail token validation error: {type(e).__name__}: {e}")
@@ -138,7 +149,9 @@ class EmailProviderService:
         auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
         return auth_url
 
-    async def exchange_gmail_code(self, client_id: str, client_secret: str, code: str, redirect_uri: str) -> dict:
+    async def exchange_gmail_code(
+        self, client_id: str, client_secret: str, code: str, redirect_uri: str
+    ) -> dict:
         """Exchange authorization code for tokens"""
         try:
             flow = Flow.from_client_config(
@@ -183,7 +196,9 @@ class EmailProviderService:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(credentials_file, self.GMAIL_SCOPES)
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    credentials_file, self.GMAIL_SCOPES
+                )
                 creds = flow.run_local_server(port=0)
 
             with open(token_file, "w") as token:
@@ -202,13 +217,23 @@ class EmailProviderService:
             return []
 
         try:
-            results = self.gmail_service.users().messages().list(userId="me", maxResults=max_results).execute()
+            results = (
+                self.gmail_service.users()
+                .messages()
+                .list(userId="me", maxResults=max_results)
+                .execute()
+            )
 
             messages = results.get("messages", [])
             emails = []
 
             for message in messages:
-                msg = self.gmail_service.users().messages().get(userId="me", id=message["id"], format="full").execute()
+                msg = (
+                    self.gmail_service.users()
+                    .messages()
+                    .get(userId="me", id=message["id"], format="full")
+                    .execute()
+                )
 
                 email_data = self._parse_gmail_message(msg)
                 if email_data:
@@ -226,7 +251,9 @@ class EmailProviderService:
             headers = message["payload"].get("headers", [])
             subject = next((h["value"] for h in headers if h["name"] == "Subject"), "No Subject")
             sender = next((h["value"] for h in headers if h["name"] == "From"), "Unknown Sender")
-            date = next((h["value"] for h in headers if h["name"] == "Date"), datetime.now().isoformat())
+            date = next(
+                (h["value"] for h in headers if h["name"] == "Date"), datetime.now().isoformat()
+            )
 
             # Extract body
             body = self._extract_gmail_body(message["payload"])
@@ -262,7 +289,9 @@ class EmailProviderService:
         return "No body content"
 
     # Outlook Integration
-    async def authenticate_outlook(self, client_id: str, client_secret: str, tenant_id: str) -> bool:
+    async def authenticate_outlook(
+        self, client_id: str, client_secret: str, tenant_id: str
+    ) -> bool:
         """Authenticate with Outlook/Microsoft Graph API"""
         authority = f"https://login.microsoftonline.com/{tenant_id}"
         app = msal.ConfidentialClientApplication(
@@ -283,7 +312,10 @@ class EmailProviderService:
         if not hasattr(self, "outlook_access_token"):
             return []
 
-        headers = {"Authorization": f"Bearer {self.outlook_access_token}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {self.outlook_access_token}",
+            "Content-Type": "application/json",
+        }
 
         try:
             url = f"https://graph.microsoft.com/v1.0/me/messages?$top={max_results}&$select=subject,from,receivedDateTime,body,id"
@@ -320,7 +352,9 @@ class EmailProviderService:
             logger.error(f"Error parsing Outlook message: {e}")
             return None
 
-    async def send_email_reply(self, provider: str, original_email_id: str, draft_content: Dict[str, str]) -> bool:
+    async def send_email_reply(
+        self, provider: str, original_email_id: str, draft_content: Dict[str, str]
+    ) -> bool:
         """Send a validated reply, falling back to another configured provider."""
         draft_content = dict(draft_content)
         draft_content["recipient"] = self.validate_email_address(draft_content.get("recipient", ""))
@@ -341,7 +375,9 @@ class EmailProviderService:
                 return await self._send_gmail_reply(original_email_id, draft_content)
         return False
 
-    async def _send_gmail_reply(self, original_email_id: str, draft_content: Dict[str, str]) -> bool:
+    async def _send_gmail_reply(
+        self, original_email_id: str, draft_content: Dict[str, str]
+    ) -> bool:
         """Send reply through Gmail"""
         try:
             message = self._create_gmail_message(draft_content)
@@ -351,13 +387,21 @@ class EmailProviderService:
             logger.error(f"Error sending Gmail reply: {error}")
             return False
 
-    async def _send_outlook_reply(self, original_email_id: str, draft_content: Dict[str, str]) -> bool:
+    async def _send_outlook_reply(
+        self, original_email_id: str, draft_content: Dict[str, str]
+    ) -> bool:
         """Send reply through Outlook"""
         try:
             message = self._create_outlook_message(draft_content)
-            headers = {"Authorization": f"Bearer {self.outlook_access_token}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {self.outlook_access_token}",
+                "Content-Type": "application/json",
+            }
             response = requests.post(
-                "https://graph.microsoft.com/v1.0/me/sendMail", headers=headers, json=message, timeout=15
+                "https://graph.microsoft.com/v1.0/me/sendMail",
+                headers=headers,
+                json=message,
+                timeout=15,
             )
             return response.status_code == 202
         except requests.RequestException as error:

@@ -22,9 +22,10 @@ async def check_llm_provider_health():
 
         async with AsyncSessionLocal() as session:
             # Get health status for all providers
-            health_result = await llm_service.provider_health(session=session, include_live_checks=True)
+            health_result = await llm_service.provider_health(
+                session=session, include_live_checks=True
+            )
 
-            has_error = False
             error_details = []
 
             # Update database with health status for each provider
@@ -44,7 +45,6 @@ async def check_llm_provider_health():
                     )
 
                     if not is_healthy and reason:
-                        has_error = True
                         error_details.append(
                             {
                                 "provider": provider,
@@ -57,9 +57,13 @@ async def check_llm_provider_health():
 
             # Log summary
             total_providers = len(health_result.get("providers", []))
-            healthy_count = sum(1 for p in health_result.get("providers", []) if p.get("status") == "healthy")
+            healthy_count = sum(
+                1 for p in health_result.get("providers", []) if p.get("status") == "healthy"
+            )
 
-            logger.info(f"🏥 [LLM Health Monitor] Summary: {healthy_count}/{total_providers} providers healthy")
+            logger.info(
+                f"🏥 [LLM Health Monitor] Summary: {healthy_count}/{total_providers} providers healthy"
+            )
 
             if error_details:
                 logger.warning(f"⚠️ [LLM Health Monitor] Issues detected: {error_details}")

@@ -1,12 +1,12 @@
-import { logger } from '../utils/logger.js'
+import { logger } from '../utils/logger.js';
 /**
  * Payment Processing Service
  * Handles Paystack payment flows
  */
 
-import api from './api'
+import api from './api';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 /**
  * Initiate premium subscription upgrade
@@ -16,25 +16,25 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
  */
 export const initiateUpgrade = async (planId, paymentMethod = 'auto', options = {}) => {
   try {
-    const { countryCode = 'US', preferLocalCurrency = false } = options
+    const { countryCode = 'US', preferLocalCurrency = false } = options;
 
     const payload = {
       plan_id: planId,
       country_code: countryCode,
       prefer_local_currency: preferLocalCurrency,
-    }
+    };
     if (paymentMethod) {
-      payload.payment_method = paymentMethod
+      payload.payment_method = paymentMethod;
     }
 
-    const response = await api.post('/billing/upgrade', payload)
+    const response = await api.post('/billing/upgrade', payload);
 
-    return response.data
+    return response.data;
   } catch (error) {
-    logger.error('Upgrade initiation error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Upgrade initiation error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Get current subscription status
@@ -42,13 +42,13 @@ export const initiateUpgrade = async (planId, paymentMethod = 'auto', options = 
  */
 export const getSubscription = async () => {
   try {
-    const response = await api.get('/billing/subscription')
-    return response.data
+    const response = await api.get('/billing/subscription');
+    return response.data;
   } catch (error) {
-    logger.error('Subscription fetch error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Subscription fetch error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Get current credit usage
@@ -56,33 +56,33 @@ export const getSubscription = async () => {
  */
 export const getCreditUsage = async () => {
   try {
-    const response = await api.get('/billing/credits')
-    return response.data
+    const response = await api.get('/billing/credits');
+    return response.data;
   } catch (error) {
-    logger.error('Credit usage fetch error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Credit usage fetch error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 export const getAvailablePlans = async () => {
   try {
-    const response = await api.get('/billing/plans')
-    return response.data
+    const response = await api.get('/billing/plans');
+    return response.data;
   } catch (error) {
-    logger.error('Plans fetch error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Plans fetch error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 export const getAvailablePaymentMethods = async (countryCode = 'US') => {
   try {
-    const response = await api.get(`/billing/payment-methods/${countryCode}`)
-    return response.data
+    const response = await api.get(`/billing/payment-methods/${countryCode}`);
+    return response.data;
   } catch (error) {
-    logger.error('Payment methods fetch error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Payment methods fetch error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Initialize Paystack payment
@@ -93,9 +93,9 @@ export const getAvailablePaymentMethods = async (countryCode = 'US') => {
  */
 export const processPaystackPayment = (paymentData, onSuccess, onError) => {
   if (!window.PaystackPop) {
-    logger.error('Paystack not loaded')
-    onError(new Error('Paystack not loaded'))
-    return
+    logger.error('Paystack not loaded');
+    onError(new Error('Paystack not loaded'));
+    return;
   }
 
   const handler = window.PaystackPop.setup({
@@ -105,15 +105,15 @@ export const processPaystackPayment = (paymentData, onSuccess, onError) => {
     ref: paymentData.reference,
     plan: paymentData.plan_code,
     onClose: () => {
-      onError(new Error('Payment cancelled'))
+      onError(new Error('Payment cancelled'));
     },
     onSuccess: (response) => {
-      onSuccess(response)
+      onSuccess(response);
     },
-  })
+  });
 
-  handler.openIframe()
-}
+  handler.openIframe();
+};
 
 /**
  * Cancel subscription
@@ -121,13 +121,13 @@ export const processPaystackPayment = (paymentData, onSuccess, onError) => {
  */
 export const cancelSubscription = async () => {
   try {
-    const response = await api.post('/billing/cancel')
-    return response.data
+    const response = await api.post('/billing/cancel');
+    return response.data;
   } catch (error) {
-    logger.error('Cancellation error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Cancellation error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Update payment method
@@ -136,13 +136,13 @@ export const cancelSubscription = async () => {
  */
 export const updatePaymentMethod = async (paymentMethod) => {
   try {
-    const response = await api.put('/billing/payment-method', { payment_method: paymentMethod })
-    return response.data
+    const response = await api.put('/billing/payment-method', { payment_method: paymentMethod });
+    return response.data;
   } catch (error) {
-    logger.error('Payment method update error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Payment method update error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Get billing history
@@ -150,13 +150,13 @@ export const updatePaymentMethod = async (paymentMethod) => {
  */
 export const getBillingHistory = async () => {
   try {
-    const response = await api.get('/billing/history')
-    return response.data
+    const response = await api.get('/billing/history');
+    return response.data;
   } catch (error) {
-    logger.error('Billing history fetch error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Billing history fetch error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Validate coupon/promo code
@@ -165,13 +165,13 @@ export const getBillingHistory = async () => {
  */
 export const validateCoupon = async (code) => {
   try {
-    const response = await api.post('/billing/coupon/validate', { code })
-    return response.data
+    const response = await api.post('/billing/coupon/validate', { code });
+    return response.data;
   } catch (error) {
-    logger.error('Coupon validation error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Coupon validation error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 /**
  * Apply coupon to account
@@ -180,13 +180,13 @@ export const validateCoupon = async (code) => {
  */
 export const applyCoupon = async (code) => {
   try {
-    const response = await api.post('/billing/coupon/apply', { code })
-    return response.data
+    const response = await api.post('/billing/coupon/apply', { code });
+    return response.data;
   } catch (error) {
-    logger.error('Coupon apply error:', error.response?.data || error.message || error)
-    throw error
+    logger.error('Coupon apply error:', error.response?.data || error.message || error);
+    throw error;
   }
-}
+};
 
 export default {
   initiateUpgrade,
@@ -200,4 +200,4 @@ export default {
   getBillingHistory,
   validateCoupon,
   applyCoupon,
-}
+};
