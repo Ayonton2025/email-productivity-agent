@@ -64,4 +64,4 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     entrypoint: []
-    command: ["npm", "test"]
+    command: ["npm", "run", "test:coverage"]

@@ -8,12 +8,23 @@ import {
   Users,
   BarChart3,
   RefreshCw,
-  ChevronRight,
   Clock,
   DollarSign,
   Target,
 } from 'lucide-react'
 import { insightsApi } from '../../services/api'
+
+const getInsightsErrorMessage = (error) =>
+  error?.friendlyMessage || error?.response?.data?.detail || 'Unable to load insights. Please try again.'
+
+const InsightsError = ({ message }) => {
+  if (!message) return null
+  return (
+    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      {message}
+    </div>
+  )
+}
 
 const InsightsDashboard = () => {
   const navigate = useNavigate()
@@ -24,6 +35,7 @@ const InsightsDashboard = () => {
   const [deadlines, setDeadlines] = useState([])
   const [relationships, setRelationships] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     loadAllData()
@@ -31,6 +43,7 @@ const InsightsDashboard = () => {
 
   const loadAllData = async () => {
     setLoading(true)
+    setError('')
     try {
       const [analyticsRes, risksRes, opportunitiesRes, deadlinesRes, relationshipsRes] = await Promise.all([
         insightsApi.getAnalytics(30),
@@ -47,6 +60,7 @@ const InsightsDashboard = () => {
       setRelationships(relationshipsRes.data)
     } catch (error) {
       logger.error('Failed to load insights:', error)
+      setError(getInsightsErrorMessage(error))
     } finally {
       setLoading(false)
     }
@@ -105,6 +119,7 @@ const InsightsDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <InsightsError message={error} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

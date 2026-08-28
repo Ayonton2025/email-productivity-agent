@@ -10,11 +10,11 @@ specific workarounds.
 
 ## Scorecard
 
-| Measure | Phase 0 baseline | Phase 1 current | Target |
+| Measure | Phase 0 baseline | Phase 2 current | Target |
 | --- | ---: | ---: | ---: |
-| Quality score | 31/100 | 40/100 | 100/100 |
-| Backend statement coverage | 30.77% | 30.77% | 100% |
-| Frontend coverage | Not collected | Not collected | 100% |
+| Quality score | 31/100 | 48/100 | 100/100 |
+| Backend statement coverage | 30.77% | 31% (rounded report) | 80% |
+| Frontend statement coverage | Not collected | 15.42% | 70% |
 | Clean-clone Compose startup | Fail | Pass | Pass |
 | Backend health endpoint | Unavailable | HTTP 200 | HTTP 200 |
 | Frontend application | Unavailable | HTTP 200 | HTTP 200 |
@@ -148,6 +148,75 @@ missing `prompt_templates` relation. This does not affect the default mock-mode
 installation verified above; it remains tracked for the database-migration
 phase and must be resolved before connected deployment is declared ready.
 
+## Phase 2: Test Coverage and Critical Paths
+
+Implemented on **2026-08-28**. The quality score increased by 8 points, from
+40/100 to 48/100, for reproducible frontend coverage, enforced non-regression
+gates, and tests around the highest-risk email and LLM paths. The numeric
+coverage targets are not claimed as complete: measuring all production source
+revealed 31.32% backend and 15.42% frontend statement coverage.
+
+### Completed work
+
+- [x] Added `pytest-mock` as a pinned, reproducible backend test dependency.
+- [x] Added email ingestion duplicate-detection coverage and verified that a
+  duplicate returns the persisted message without creating another record.
+- [x] Added provider-boundary validation for malformed recipient addresses.
+- [x] Implemented and tested Gmail-to-Outlook and Outlook-to-Gmail delivery
+  fallback when the preferred provider fails and the alternate is configured.
+- [x] Added LLM provider-switching coverage for OpenAI failure followed by a
+  successful Anthropic response.
+- [x] Added LLM structured-response, input/output token, and model-cost tests.
+- [x] Extracted testable API interceptor behavior and covered successful
+  responses, `401` credential removal/redirect, public-route behavior, and
+  friendly `5xx` errors.
+- [x] Expanded Prompt Manager tests for rendering/filtering, loading, delete
+  interaction, and delete failure; added an accessible name to its icon-only
+  destructive action.
+- [x] Tested the real email composer inside `EmailDetailPage` for rendering,
+  generation loading/success/failure, and reply submission. There is no
+  standalone `EmailComposer.jsx` in this repository, so creating an unused
+  duplicate component was deliberately avoided.
+- [x] Added Insights Dashboard rendering, tab interaction, loading completion,
+  friendly error, and retry coverage; the component now exposes failed loads
+  through an accessible alert instead of only logging them.
+- [x] Added V8 coverage instrumentation with terminal, JSON-summary, and HTML
+  reports. CI and `docker-compose.test.yml` now execute frontend coverage.
+
+### Verified results
+
+- Backend focused service suite: 6/6 passed.
+- Backend complete suite: 115/115 passed with 13 warnings.
+- Backend complete-source coverage: 31% (15,152 statements; 9,630 missed).
+- Frontend focused critical-flow suite: 15/15 passed.
+- Frontend complete suite: 22/22 files and 47/47 tests passed.
+- Frontend complete-source coverage: 15.42% statements, 45.16% branches,
+  21.21% functions, and 15.42% lines.
+
+### Coverage ratchet
+
+The previous backend gate was 30%. It is now 31%, the highest conservative
+whole-application integer gate supported by the measured suite. Frontend now
+starts with enforced 15% statement/line, 45% branch, and 20% function gates.
+These are floors, not targets, and must never be lowered to merge a change.
+
+The planned backend sequence is **31 → 40 → 50 → 60 → 70 → 80**. Once 60%
+is reached, the originally proposed 60 → 70 → 80 sequence applies directly.
+The frontend sequence is **15 → 30 → 50 → 60 → 70**. Each increase requires a
+complete-suite report in the same change. Jumping the backend directly to 60%
+today would make CI fail by roughly 29 percentage points and would be a false
+quality signal, so it is explicitly deferred rather than hidden with broad
+coverage exclusions.
+
+### Next coverage priorities
+
+1. Authentication endpoints and `AuthContext` session restoration/expiry.
+2. `email_service.py` ingestion, synchronization, persistence, and rollback
+   branches beyond duplicate detection.
+3. LLM timeout, malformed JSON, retry exhaustion, cache, and budget limits.
+4. Frontend application routing/context plus inbox list and account connection.
+5. Billing/webhook contract tests and empty-database migration tests.
+
 ## Planned remediation
 
 ### P0: Restore one-command startup
@@ -163,9 +232,9 @@ phase and must be resolved before connected deployment is declared ready.
 
 ### P1: Make quality measurable
 
-- [ ] Add frontend coverage collection and publish text plus machine-readable
+- [x] Add frontend coverage collection and publish text plus machine-readable
   reports for both applications.
-- [ ] Ratchet coverage thresholds upward in small, enforced increments; do not
+- [x] Ratchet coverage thresholds upward in small, enforced increments; do not
   exclude business-critical code merely to improve the percentage.
 - [ ] Define the weighted 100-point rubric and record evidence for every point.
 - [ ] Separate unit, integration, contract, smoke, and end-to-end test results.
@@ -190,6 +259,9 @@ phase and must be resolved before connected deployment is declared ready.
 | 2026-08-27 | None in Phase 0 | Baseline must be observed before implementation changes | Clean clone and Compose run recorded above |
 | 2026-08-27 | Default Compose runs backend/frontend in mock mode; infrastructure and workers moved behind `connected` profile | Make fresh installation credential-free while preserving the connected deployment path | Default service list contains two services; both return HTTP 200 |
 | 2026-08-27 | Root `.env` is the shared Compose configuration source | Remove undocumented `backend/.env` copies and ambient-host interpolation conflicts | Compose configuration and runtime settings validated |
+| 2026-08-28 | Email provider dispatch validates recipients and can fail over between configured Gmail and Outlook adapters | Keep validation and resilience at the external-provider boundary | Three email service boundary tests pass |
+| 2026-08-28 | API response interceptor behavior is exported as deterministic handlers | Make authentication expiry and friendly errors independently testable without changing Axios consumers | Four interceptor tests pass |
+| 2026-08-28 | Frontend tests produce V8 coverage reports in local Compose and CI | Establish a measurable cross-stack quality ratchet | 47 frontend tests pass with text, JSON, and HTML coverage reporters |
 
 Future entries must name affected boundaries, migration or compatibility impact,
 and the tests that demonstrate the change. Architecture work should prefer clear

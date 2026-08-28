@@ -42,6 +42,55 @@ const apiClient = axios.create({
   withCredentials: false,
 })
 
+export const getFriendlyApiError = (error) => {
+  const serverDetail = error.response?.data?.detail || error.response?.data?.message
+  if (serverDetail) return String(serverDetail)
+  if (error.code === 'ECONNABORTED') return 'The request timed out. Please try again.'
+  if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+    return 'Unable to reach the server. Check your connection and try again.'
+  }
+  if ((error.response?.status || 0) >= 500) return 'The server encountered a problem. Please try again shortly.'
+  return error.message || 'Something went wrong. Please try again.'
+}
+
+export const handleApiSuccess = (response) => response
+
+export const handleApiError = (error, scheduleRedirect = (callback) => setTimeout(callback, 1000)) => {
+  const status = error.response?.status
+  error.friendlyMessage = getFriendlyApiError(error)
+
+  if (status === 401) {
+    const currentToken = localStorage.getItem('auth_token')
+    if (currentToken) {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user')
+
+      if (typeof window !== 'undefined') {
+        const pathname = window.location.pathname || '/'
+        const publicPaths = [
+          '/',
+          '/landing',
+          '/register',
+          '/verify-email',
+          '/forgot-password',
+          '/reset-password',
+          '/oauth/callback',
+        ]
+        const isPublicPage =
+          publicPaths.some((path) => pathname === path || pathname.startsWith(path + '/')) ||
+          pathname.startsWith('/register') ||
+          pathname.startsWith('/login')
+
+        if (!isPublicPage && !pathname.includes('/login')) {
+          scheduleRedirect(() => window.location.assign('/login'))
+        }
+      }
+    }
+  }
+
+  return Promise.reject(error)
+}
+
 // Enhanced Request interceptor to add auth token with debugging
 apiClient.interceptors.request.use(
   (config) => {
@@ -78,7 +127,7 @@ apiClient.interceptors.response.use(
       method: response.config.method?.toUpperCase(),
       data: response.data ? 'Received' : 'No data',
     })
-    return response
+    return handleApiSuccess(response)
   },
   (error) => {
     const errorDetails = {
@@ -91,47 +140,10 @@ apiClient.interceptors.response.use(
 
     logger.error('❌ [API Response] Error:', errorDetails)
 
-    // Handle specific error cases
+    // Handle specific error cases for diagnostic logging. State cleanup and
+    // user-safe messaging are centralized in handleApiError for testability.
     if (error.response?.status === 401) {
       logger.debug('🔄 [API Response] 401 Unauthorized - Token expired or invalid')
-
-      // Clear auth data
-      const currentToken = localStorage.getItem('auth_token')
-      if (currentToken) {
-        logger.debug('🗑️ [API Response] Clearing invalid token from storage')
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user')
-
-        // Do NOT force a redirect to /login when the user is on public pages
-        // (landing, register, verify, password flows). Only redirect when the
-        // user is on a protected area of the app.
-        if (typeof window !== 'undefined') {
-          const pathname = window.location.pathname || '/'
-          const publicPaths = [
-            '/',
-            '/landing',
-            '/register',
-            '/verify-email',
-            '/forgot-password',
-            '/reset-password',
-            '/oauth/callback',
-          ]
-          const isPublicPage =
-            publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
-            pathname.startsWith('/register') ||
-            pathname.startsWith('/login')
-
-          // If we're already on login or a public page, do not perform automatic redirect.
-          if (!isPublicPage && !pathname.includes('/login')) {
-            logger.debug('🔄 [API Response] Redirecting to login page (protected area)')
-            setTimeout(() => {
-              window.location.href = '/login'
-            }, 1000)
-          } else {
-            logger.debug('ℹ️ [API Response] 401 received on public page — not redirecting to /login')
-          }
-        }
-      }
     } else if (error.response?.status === 403) {
       logger.debug('🚫 [API Response] 403 Forbidden - Insufficient permissions')
     } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
@@ -140,7 +152,7 @@ apiClient.interceptors.response.use(
       logger.error('⏱️ [API Response] Request timed out - AI generation may still be running')
     }
 
-    return Promise.reject(error)
+    return handleApiError(error)
   }
 )
 

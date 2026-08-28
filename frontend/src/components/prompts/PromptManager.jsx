@@ -473,6 +473,7 @@ const PromptManager = () => {
                     {!selectedPrompt.is_system && (
                       <button
                         onClick={() => handleDeletePrompt(selectedPrompt.id)}
+                        aria-label="Delete prompt"
                         disabled={loading}
                         className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50"
                       >

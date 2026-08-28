@@ -1,6 +1,7 @@
 import base64
 import logging
 import os
+import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -25,6 +26,16 @@ class EmailProviderService:
         "https://www.googleapis.com/auth/gmail.modify",
         "https://www.googleapis.com/auth/gmail.send",
     ]
+
+    EMAIL_ADDRESS_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+    @classmethod
+    def validate_email_address(cls, value: str) -> str:
+        """Return a normalized deliverable address or raise a clear validation error."""
+        normalized = (value or "").strip().lower()
+        if not cls.EMAIL_ADDRESS_PATTERN.fullmatch(normalized):
+            raise ValueError(f"Invalid recipient email address: {value}")
+        return normalized
 
     # Gmail Integration - OAuth Methods
     async def authenticate_gmail_with_token(self, access_token: str, refresh_token: str = None) -> bool:
@@ -310,11 +321,24 @@ class EmailProviderService:
             return None
 
     async def send_email_reply(self, provider: str, original_email_id: str, draft_content: Dict[str, str]) -> bool:
-        """Send email reply through the respective provider"""
+        """Send a validated reply, falling back to another configured provider."""
+        draft_content = dict(draft_content)
+        draft_content["recipient"] = self.validate_email_address(draft_content.get("recipient", ""))
+
         if provider == "gmail" and self.gmail_service:
-            return await self._send_gmail_reply(original_email_id, draft_content)
-        elif provider == "outlook" and hasattr(self, "outlook_access_token"):
-            return await self._send_outlook_reply(original_email_id, draft_content)
+            if await self._send_gmail_reply(original_email_id, draft_content):
+                return True
+            if hasattr(self, "outlook_access_token"):
+                logger.warning("Gmail delivery failed; attempting configured Outlook fallback")
+                return await self._send_outlook_reply(original_email_id, draft_content)
+            return False
+
+        if provider == "outlook" and hasattr(self, "outlook_access_token"):
+            if await self._send_outlook_reply(original_email_id, draft_content):
+                return True
+            if self.gmail_service:
+                logger.warning("Outlook delivery failed; attempting configured Gmail fallback")
+                return await self._send_gmail_reply(original_email_id, draft_content)
         return False
 
     async def _send_gmail_reply(self, original_email_id: str, draft_content: Dict[str, str]) -> bool:

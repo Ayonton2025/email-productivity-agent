@@ -6,6 +6,29 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react()],
 
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: 'coverage',
+      include: ['src/**/*.{js,jsx}'],
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/*.test.{js,jsx}',
+        'src/test/**',
+        'public/**',
+        '**/{vite,postcss,tailwind}.config.js',
+      ],
+      all: true,
+      thresholds: {
+        statements: 15,
+        branches: 45,
+        functions: 20,
+        lines: 15,
+      },
+    },
+  },
+
   // Development server configuration
   server: {
     port: 3000,
