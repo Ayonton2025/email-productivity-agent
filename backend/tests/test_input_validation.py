@@ -68,3 +68,15 @@ def test_agent_requests_reject_empty_or_missing_content():
         AgentChatRequest(message="")
     with pytest.raises(ValidationError):
         AgentProcessRequest(email_id="email-1", prompt_type="")
+
+
+def test_request_models_reject_unknown_fields_and_null_bytes():
+    with pytest.raises(ValidationError):
+        AgentChatRequest(message="hello", unexpected="value")
+    with pytest.raises(ValidationError):
+        AgentChatRequest(message="unsafe\x00content")
+
+
+def test_request_models_strip_surrounding_whitespace():
+    request = AgentChatRequest(message="  summarize this  ")
+    assert request.message == "summarize this"
