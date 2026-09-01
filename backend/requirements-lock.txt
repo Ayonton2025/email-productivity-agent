@@ -116,6 +116,7 @@ sortedcontainers==2.4.0
 SQLAlchemy==2.0.23
 starlette==1.6.0
 stevedore==5.9.1
+structlog==25.4.0
 stripe==13.1.2
 tokenizers==0.23.1
 toml==0.10.2

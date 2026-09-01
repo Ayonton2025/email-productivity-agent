@@ -1,3 +1,4 @@
+import structlog
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -15,3 +16,16 @@ def test_request_logging_generates_correlation_id():
         response = client.get("/health")
     assert response.status_code == 200
     assert len(response.headers["X-Request-ID"]) == 36
+
+
+def test_request_id_is_bound_during_request():
+    @app.get("/_test/request-log", include_in_schema=False)
+    async def request_log():
+        return structlog.contextvars.get_contextvars()
+
+    with TestClient(app) as client:
+        response = client.get("/_test/request-log", headers={"X-Request-ID": "bound-123"})
+
+    assert response.status_code == 200
+    assert response.headers["X-Request-ID"] == "bound-123"
+    assert response.json()["request_id"] == "bound-123"

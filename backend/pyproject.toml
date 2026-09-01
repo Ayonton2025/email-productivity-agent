@@ -45,6 +45,7 @@ dependencies = [
   "pytz==2023.3",
   "pydantic-extra-types==2.3.0",
   "sentry-sdk==2.35.1",
+  "structlog==25.4.0",
 ]
 
 [project.optional-dependencies]

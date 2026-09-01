@@ -53,3 +53,14 @@ def capture_exception(exc: BaseException, **context: Any) -> None:
         for key, value in context.items():
             scope.set_extra(key, value)
         sentry_sdk.capture_exception(exc)
+
+
+def register_debug_error_endpoint(app) -> None:
+    """Register a Sentry smoke-test route that is inaccessible outside debug mode."""
+    from fastapi import HTTPException
+
+    @app.get("/debug/error", include_in_schema=False)
+    async def trigger_debug_error():
+        if not settings.DEBUG:
+            raise HTTPException(status_code=404, detail="Not found")
+        raise RuntimeError("Intentional Sentry test exception")
