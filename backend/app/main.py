@@ -24,6 +24,7 @@ from app.core.exception_handlers import register_exception_handlers
 from app.core.monitoring import initialize_monitoring, register_debug_error_endpoint
 from app.core.request_logging import register_request_logging
 from app.core.router_loader import register_routers
+from app.core.security_middleware import register_security_middleware
 from app.models.database import AsyncSessionLocal, init_db
 from app.services.prompt_service import PromptService
 
@@ -204,35 +205,7 @@ startup_ready = False
 debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
 port = int(os.environ.get("PORT", 8000))
 
-# Allowed origins - UPDATED with Vercel frontend and wildcards
-allowed_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    # Vercel frontend URLs
-    "https://bylix.email",
-    "https://*.vercel.app",
-    # Railway URLs (your current backend)
-    "https://sunny-recreation-production.up.railway.app",
-    "https://*.railway.app",
-    # Render URLs (if you use it in future)
-    "https://*.render.com",
-    # Netlify URLs
-    "https://*.netlify.app",
-]
-
-# Also get allowed origins from environment variable for flexibility
-env_allowed_origins = os.environ.get("ALLOWED_ORIGINS", "")
-if env_allowed_origins:
-    additional_origins = [origin.strip() for origin in env_allowed_origins.split(",") if origin.strip()]
-    allowed_origins.extend(additional_origins)
-    logger.info(f"🔧 Additional origins from environment: {additional_origins}")
-
-# Remove duplicates
-allowed_origins = list(set(allowed_origins))
+allowed_origins = settings.get_allowed_origins()
 
 logger.info(f"🔧 Starting on port: {port}")
 logger.info(f"🔧 Debug mode: {debug_mode}")
@@ -249,24 +222,15 @@ app = FastAPI(
 )
 register_request_logging(app)
 register_debug_error_endpoint(app)
+register_security_middleware(app)
 # ENHANCED CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=[
-        "*",
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "X-CSRF-Token",
-        "Access-Control-Allow-Headers",
-        "Access-Control-Allow-Origin",
-    ],
-    expose_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID", "X-CSRF-Token"],
+    expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"],
     max_age=3600,  # Increase max age for better performance
 )
 

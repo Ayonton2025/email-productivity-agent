@@ -52,7 +52,9 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
 
     # CORS Settings
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,https://bylix.email"
+    TRUSTED_HOSTS: str = "localhost,127.0.0.1,testserver,sunny-recreation-production.up.railway.app,bylix.email"
+    RATE_LIMIT_DEFAULT: str = "100/minute"
 
     # Server Settings
     PORT: int = 8000
@@ -189,6 +191,10 @@ class Settings(BaseSettings):
         if not self.ALLOWED_ORIGINS:
             return []
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+
+    def get_trusted_hosts(self) -> List[str]:
+        """Parse the explicit host allowlist used by TrustedHostMiddleware."""
+        return [host.strip() for host in self.TRUSTED_HOSTS.split(",") if host.strip()]
 
     def is_google_configured(self) -> bool:
         """Check if Google Gemini is properly configured"""

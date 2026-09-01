@@ -7,9 +7,11 @@ Ensures data integrity and provides automatic OpenAPI documentation.
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.core.input_validation import ValidatedRequestModel
 
 
 def validate_password_complexity(value: str) -> str:
@@ -40,7 +42,7 @@ class EmailCategory(str, Enum):
 # ============================================================================
 
 
-class EmailBase(BaseModel):
+class EmailBase(ValidatedRequestModel):
     """Base email schema"""
 
     subject: str = Field(..., min_length=1, max_length=1000, description="Email subject")
@@ -75,14 +77,14 @@ class EmailResponse(EmailBase):
 # ============================================================================
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(ValidatedRequestModel):
     """Login request schema"""
 
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., min_length=1, max_length=72, description="User password")
 
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(ValidatedRequestModel):
     """User registration request schema"""
 
     email: EmailStr = Field(..., description="User email address")
@@ -100,11 +102,11 @@ class RegisterRequest(BaseModel):
         return validate_password_complexity(value)
 
 
-class ForgotPasswordRequest(BaseModel):
+class ForgotPasswordRequest(ValidatedRequestModel):
     email: EmailStr
 
 
-class ResetPasswordRequest(BaseModel):
+class ResetPasswordRequest(ValidatedRequestModel):
     token: str = Field(..., min_length=16, max_length=4096)
     new_password: str = Field(..., min_length=12, max_length=72)
 
@@ -114,7 +116,7 @@ class ResetPasswordRequest(BaseModel):
         return validate_password_complexity(value)
 
 
-class PromptCreateRequest(BaseModel):
+class PromptCreateRequest(ValidatedRequestModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(default=None, max_length=2000)
     template: str = Field(..., min_length=1, max_length=100000)
@@ -123,7 +125,7 @@ class PromptCreateRequest(BaseModel):
     metadata: dict = Field(default_factory=dict)
 
 
-class PromptUpdateRequest(BaseModel):
+class PromptUpdateRequest(ValidatedRequestModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     description: Optional[str] = Field(default=None, max_length=2000)
     template: Optional[str] = Field(default=None, min_length=1, max_length=100000)
@@ -132,7 +134,7 @@ class PromptUpdateRequest(BaseModel):
     metadata: Optional[dict] = None
 
 
-class DraftCreateRequest(BaseModel):
+class DraftCreateRequest(ValidatedRequestModel):
     subject: str = Field(..., min_length=1, max_length=1000)
     body: str = Field(default="", max_length=100000)
     recipient: Optional[EmailStr] = None
@@ -145,7 +147,7 @@ class DraftCreateRequest(BaseModel):
         return None if value == "" else value
 
 
-class DraftUpdateRequest(BaseModel):
+class DraftUpdateRequest(ValidatedRequestModel):
     subject: Optional[str] = Field(default=None, min_length=1, max_length=1000)
     body: Optional[str] = Field(default=None, max_length=100000)
     recipient: Optional[EmailStr] = None
@@ -158,14 +160,14 @@ class DraftUpdateRequest(BaseModel):
         return None if value == "" else value
 
 
-class AgentProcessRequest(BaseModel):
+class AgentProcessRequest(ValidatedRequestModel):
     email_id: str = Field(..., min_length=1, max_length=255)
     prompt_type: str = Field(..., min_length=1, max_length=100)
     custom_prompt: Optional[str] = Field(default=None, min_length=1, max_length=100000)
     system_prompt: Optional[str] = Field(default=None, min_length=1, max_length=255)
 
 
-class AgentChatRequest(BaseModel):
+class AgentChatRequest(ValidatedRequestModel):
     message: str = Field(..., min_length=1, max_length=100000)
 
 
@@ -182,15 +184,15 @@ class TokenResponse(BaseModel):
 # ============================================================================
 
 
-class EmailAccountRequest(BaseModel):
+class EmailAccountRequest(ValidatedRequestModel):
     """Email account connection request"""
 
-    provider: str = Field(..., description="Email provider (gmail, outlook, yahoo)")
-    access_token: str = Field(..., description="OAuth access token")
-    refresh_token: Optional[str] = Field(None, description="OAuth refresh token")
+    provider: Literal["gmail", "outlook", "yahoo"]
+    access_token: str = Field(..., min_length=1, max_length=8192)
+    refresh_token: Optional[str] = Field(None, max_length=8192)
 
 
-class GmailConnectionRequest(BaseModel):
+class GmailConnectionRequest(ValidatedRequestModel):
     """Request schema for connecting a Gmail account with OAuth tokens."""
 
     email: EmailStr
@@ -215,7 +217,7 @@ class EmailAccountResponse(BaseModel):
 # ============================================================================
 
 
-class BulkEmailActionRequest(BaseModel):
+class BulkEmailActionRequest(ValidatedRequestModel):
     """Request for bulk email operations"""
 
     email_ids: List[int] = Field(..., min_length=1, max_length=1000, description="Email IDs to operate on")
@@ -258,7 +260,7 @@ class BulkDeleteRequest(BulkEmailActionRequest):
 # ============================================================================
 
 
-class SearchRequest(BaseModel):
+class SearchRequest(ValidatedRequestModel):
     """Search request schema"""
 
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
@@ -269,12 +271,12 @@ class SearchRequest(BaseModel):
     is_flagged: Optional[bool] = Field(None, description="Filter by flag status")
 
 
-class AdvancedSearchRequest(BaseModel):
+class AdvancedSearchRequest(ValidatedRequestModel):
     """Advanced search request with multiple filters"""
 
-    keywords: str = Field(..., min_length=1, description="Search keywords")
-    search_fields: str = Field(default="all", description="Fields to search")
-    from_address: Optional[str] = Field(None, description="Filter by sender")
+    keywords: str = Field(..., min_length=1, max_length=1000, description="Search keywords")
+    search_fields: Literal["all", "subject", "sender", "body"] = "all"
+    from_address: Optional[EmailStr] = Field(None, description="Filter by sender")
     category: Optional[EmailCategory] = Field(None, description="Filter by category")
     date_from: Optional[datetime] = Field(None, description="Start date")
     date_to: Optional[datetime] = Field(None, description="End date")
