@@ -65,7 +65,6 @@ alembic==1.12.1
 # Task Queue and Scheduling
 celery==5.3.4
 redis==5.0.1
-python-dateutil==2.8.2
 
 # LLM: Add Anthropic client (keeps backwards compatibility)
 anthropic==0.7.4
@@ -80,7 +79,6 @@ pytz==2023.3
 # (If you need timezone support, add zoneinfo or python-dateutil as required)
 
 # Additional utilities
-python-dotenv==1.2.2
 pydantic-extra-types==2.3.0
 stripe==13.1.2
 sentry-sdk==2.35.1

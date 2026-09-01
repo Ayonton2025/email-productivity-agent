@@ -14,7 +14,7 @@ if (Test-Path "venv\Scripts\Activate.ps1") {
     python -m venv venv
     & .\venv\Scripts\Activate.ps1
     Write-Host "Installing dependencies..." -ForegroundColor Yellow
-    pip install -r requirements.txt
+    pip install -r requirements-lock.txt
 }
 
 Write-Host ""
