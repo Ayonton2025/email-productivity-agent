@@ -64,7 +64,7 @@ alembic==1.12.1
 
 # Task Queue and Scheduling
 celery==5.3.4
-redis==5.0.1
+redis==8.1.0
 
 # LLM: Add Anthropic client (keeps backwards compatibility)
 anthropic==0.7.4
