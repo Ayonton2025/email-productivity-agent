@@ -33,7 +33,7 @@ google-api-core==2.28.1
 msal==1.38.0
 
 # HTTP
-requests==2.33.0
+requests==2.34.2
 
 # JWT Auth
 PyJWT==2.13.0
