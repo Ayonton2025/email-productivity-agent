@@ -1,4 +1,3 @@
-import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -12,17 +11,17 @@ from sqlalchemy import text
 
 load_dotenv()
 
-from app.core.logging_config import configure_logging
+from app.core.logging import configure_logging, get_logger
 
 configure_logging()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 logger.info("🔧 Starting FastAPI application...")
 
 from app.api.system_endpoints import RuntimeContext, create_system_router
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
-from app.core.monitoring import initialize_monitoring
+from app.core.monitoring import initialize_monitoring, register_debug_error_endpoint
 from app.core.request_logging import register_request_logging
 from app.core.router_loader import register_routers
 from app.models.database import AsyncSessionLocal, init_db
@@ -249,6 +248,7 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 register_request_logging(app)
+register_debug_error_endpoint(app)
 # ENHANCED CORS configuration
 app.add_middleware(
     CORSMiddleware,
