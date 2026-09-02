@@ -115,7 +115,7 @@ jobs:
             org.opencontainers.image.description=React and Vite web client
 
       - name: Build and publish backend image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: backend
           file: backend/Dockerfile
@@ -128,7 +128,7 @@ jobs:
           provenance: mode=max
 
       - name: Build and publish frontend image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: frontend
           file: frontend/Dockerfile
