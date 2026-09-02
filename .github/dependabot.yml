@@ -4,6 +4,8 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+      day: monday
+      timezone: Africa/Nairobi
     open-pull-requests-limit: 10
     labels:
       - dependencies
@@ -13,7 +15,20 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+      day: monday
+      timezone: Africa/Nairobi
     open-pull-requests-limit: 10
     labels:
       - dependencies
       - frontend
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Africa/Nairobi
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - ci

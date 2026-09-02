@@ -189,7 +189,9 @@ async def get_user_email_accounts_simple(
 
 @router.post("/email-accounts/gmail")
 async def connect_gmail_simple(
-    auth_data: GmailConnectionRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    auth_data: GmailConnectionRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Connect Gmail account"""
     try:

@@ -1,10 +1,18 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
 COPY requirements.txt requirements-lock.txt ./
 RUN pip install --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir -r requirements-lock.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    set -eux; \
+    for attempt in 1 2 3; do \
+        pip install --retries 10 --timeout 120 -r requirements-lock.txt && exit 0; \
+        echo "Dependency installation attempt ${attempt} failed; retrying..."; \
+        sleep $((attempt * 5)); \
+    done; \
+    exit 1
 
 
 FROM python:3.11-slim AS runtime
