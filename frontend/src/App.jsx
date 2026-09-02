@@ -1,33 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import {
-  Mail,
-  Settings,
-  MessageSquare,
-  FileText,
-  Menu,
-  X,
-  User,
-  LogOut,
-  Zap,
-  BarChart3,
-  Users,
-  Workflow,
-  Bot,
-  Send,
-  CalendarClock,
-  Reply,
-  AtSign,
-  Inbox as InboxIcon,
-  Gauge,
-  Crown,
-  ChevronRight,
-  ShieldCheck,
-  Sparkles,
-  Briefcase,
-  FolderKanban,
-  SlidersHorizontal,
-} from 'lucide-react'
+import { BrowserRouter as Router, Navigate, useLocation } from 'react-router-dom'
+import { ChevronRight, LogOut, Mail, Menu, User, X } from 'lucide-react'
 
 // Context Providers
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -47,19 +20,6 @@ import Relationships from './components/relationships/Relationships'
 import Workflows from './components/workflows/Workflows'
 import Agents from './components/agents/Agents'
 import Campaigns from './components/campaigns/Campaigns'
-import ContactDetail from './components/details/ContactDetail'
-import CompanyDetail from './components/details/CompanyDetail'
-import RiskDetail from './components/details/RiskDetail'
-import OpportunityDetail from './components/details/OpportunityDetail'
-import Login from './components/auth/Login'
-import Register from './components/auth/Register'
-import VerifyEmail from './components/auth/VerifyEmail'
-import ForgotPassword from './components/auth/ForgotPassword'
-import ResetPassword from './components/auth/ResetPassword'
-import OAuthCallback from './components/auth/OAuthCallback'
-import LandingPage from './components/landing/LandingPage'
-import Home from './components/Home'
-import BillingUpgrade from './components/billing/BillingUpgrade'
 import SuperAdminDashboard from './components/admin/SuperAdminDashboard'
 import SuperAdminUserAccess from './components/admin/SuperAdminUserAccess'
 import SuperAdminFeatureRules from './components/admin/SuperAdminFeatureRules'
@@ -70,6 +30,9 @@ import WorkspaceAssistant from './components/assistant/WorkspaceAssistant'
 import SharedInboxCenter from './components/shared-inbox/SharedInboxCenter'
 import DeliverabilityCenter from './components/deliverability/DeliverabilityCenter'
 import ExecutiveCenter from './components/executive/ExecutiveCenter'
+import AuthLoadingScreen from './components/auth/AuthLoadingScreen'
+import { getNavigationGroups } from './navigation'
+import ApplicationRoutes from './routes'
 
 import './styles/globals.css'
 
@@ -78,16 +41,7 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-        <div className="loading-container">
-          <div className="logo-loader">✉️</div>
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Bylix Email</div>
-          <div className="loading-subtext">Loading your workspace...</div>
-        </div>
-      </div>
-    )
+    return <AuthLoadingScreen message="Loading your workspace..." />
   }
 
   return isAuthenticated ? children : <Navigate to="/login" replace />
@@ -98,109 +52,19 @@ const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-        <div className="loading-container">
-          <div className="logo-loader">✉️</div>
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Bylix Email</div>
-          <div className="loading-subtext">Loading...</div>
-        </div>
-      </div>
-    )
+    return <AuthLoadingScreen />
   }
 
   return !isAuthenticated ? children : <Navigate to="/" replace />
 }
 
-// Helper function to check if user is admin
 const isSuperAdminUser = (user) => Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
 
-// Main navigation structure with organized groups and dropdowns
-const getNavigationGroups = (isAdmin) => {
-  const groups = [
-    {
-      name: 'Inbox',
-      icon: InboxIcon,
-      expanded: false,
-      items: [{ id: 'inbox', name: 'Inbox', icon: Mail }],
-    },
-    {
-      name: 'Intelligence',
-      icon: Sparkles,
-      expanded: false,
-      items: [
-        { id: 'insights', name: 'Insights', icon: BarChart3 },
-        { id: 'relationships', name: 'Relationships', icon: Users },
-        { id: 'executive', name: 'Executive AI', icon: Crown },
-      ],
-    },
-    {
-      name: 'Automation',
-      icon: Workflow,
-      expanded: false,
-      items: [
-        { id: 'workflows', name: 'Workflows', icon: Workflow },
-        { id: 'agents', name: 'Agents', icon: Bot },
-        { id: 'campaigns', name: 'Campaigns', icon: Send },
-        { id: 'auto-reply', name: 'Auto-Reply', icon: Zap },
-        { id: 'followups', name: 'Follow-Ups', icon: Reply },
-      ],
-    },
-    {
-      name: 'Operations',
-      icon: Briefcase,
-      expanded: false,
-      items: [
-        { id: 'briefings', name: 'Daily Briefing', icon: CalendarClock },
-        { id: 'shared-inbox', name: 'Shared Inbox', icon: InboxIcon },
-        { id: 'deliverability', name: 'Deliverability', icon: Gauge },
-        { id: 'hosted-email', name: 'Hosted Email', icon: AtSign },
-      ],
-    },
-    {
-      name: 'Workspace',
-      icon: FolderKanban,
-      expanded: false,
-      items: [
-        { id: 'email-accounts', name: 'Email Accounts', icon: Mail },
-        { id: 'agent', name: 'Email Agent', icon: MessageSquare },
-        { id: 'drafts', name: 'Drafts', icon: FileText },
-        { id: 'prompts', name: 'Prompt Brain', icon: Settings },
-      ],
-    },
-  ]
-
-  if (isAdmin) {
-    groups.push({
-      name: 'Admin',
-      icon: ShieldCheck,
-      expanded: false,
-      items: [
-        { id: 'admin-dashboard', name: 'Dashboard', icon: BarChart3 },
-        { id: 'admin-llm', name: 'LLM Ops', icon: Settings },
-        { id: 'admin-user-access', name: 'User Access', icon: ShieldCheck },
-        { id: 'admin-feature-rules', name: 'Feature Rules', icon: SlidersHorizontal },
-      ],
-    })
-  }
-
-  return groups
-}
 const SuperAdminRoute = ({ children }) => {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-        <div className="loading-container">
-          <div className="logo-loader">✉️</div>
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Bylix Email</div>
-          <div className="loading-subtext">Checking access...</div>
-        </div>
-      </div>
-    )
+    return <AuthLoadingScreen message="Checking access..." />
   }
 
   return isSuperAdminUser(user) ? children : <Navigate to="/inbox" replace />
@@ -208,10 +72,8 @@ const SuperAdminRoute = ({ children }) => {
 
 // Wrapper for detail views that need sidebar
 const AppContentWrapper = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState({})
   const { user, logout } = useAuth()
-  const location = useLocation()
 
   const isAdmin = isSuperAdminUser(user)
   const navigationGroups = getNavigationGroups(isAdmin)
@@ -588,7 +450,22 @@ const SidebarContent = ({
   )
 }
 
-// Main App Component
+const LoadingScreen = () => (
+  <div className="app-container">
+    <div className="loading-container">
+      <div className="logo-loader">✉️</div>
+      <div className="loading-spinner"></div>
+      <div className="loading-text">Bylix Email</div>
+      <div className="loading-subtext">Your Email Intelligence Platform is loading...</div>
+      <div className="loading-features">
+        <div className="feature-pill">🤖 Smart Workplace</div>
+        <div className="feature-pill">⚡ Instant Processing</div>
+        <div className="feature-pill">🎯 Intelligent Organization</div>
+      </div>
+    </div>
+  </div>
+)
+
 function App() {
   const [isLoading, setIsLoading] = useState(true)
 
@@ -600,154 +477,20 @@ function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Loading screen
   if (isLoading) {
-    return (
-      <div className="app-container">
-        <div className="loading-container">
-          <div className="logo-loader">✉️</div>
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Bylix Email</div>
-          <div className="loading-subtext">Your Email Intelligence Platform is loading...</div>
-          <div className="loading-features">
-            <div className="feature-pill">🤖 Smart Workplace</div>
-            <div className="feature-pill">⚡ Instant Processing</div>
-            <div className="feature-pill">🎯 Intelligent Organization</div>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/landing"
-            element={
-              <PublicRoute>
-                <LandingPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/billing/upgrade"
-            element={
-              <ProtectedRoute>
-                <BillingUpgrade />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/super"
-            element={
-              <ProtectedRoute>
-                <SuperAdminRoute>
-                  <SuperAdminDashboard />
-                </SuperAdminRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/verify-email"
-            element={
-              <PublicRoute>
-                <VerifyEmail />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <PublicRoute>
-                <ForgotPassword />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={
-              <PublicRoute>
-                <ResetPassword />
-              </PublicRoute>
-            }
-          />
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
-
-          {/* Protected Routes */}
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/inbox"
-            element={
-              <ProtectedRoute>
-                <AppContent />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Detail Routes */}
-          <Route
-            path="/contacts/:contactId"
-            element={
-              <ProtectedRoute>
-                <AppContentWrapper>
-                  <ContactDetail />
-                </AppContentWrapper>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/companies/:companyId"
-            element={
-              <ProtectedRoute>
-                <AppContentWrapper>
-                  <CompanyDetail />
-                </AppContentWrapper>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/risks/:riskId"
-            element={
-              <ProtectedRoute>
-                <AppContentWrapper>
-                  <RiskDetail />
-                </AppContentWrapper>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/opportunities/:opportunityId"
-            element={
-              <ProtectedRoute>
-                <AppContentWrapper>
-                  <OpportunityDetail />
-                </AppContentWrapper>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <ApplicationRoutes
+          AppContent={AppContent}
+          AppContentWrapper={AppContentWrapper}
+          ProtectedRoute={ProtectedRoute}
+          PublicRoute={PublicRoute}
+          SuperAdminRoute={SuperAdminRoute}
+        />
       </Router>
     </AuthProvider>
   )
