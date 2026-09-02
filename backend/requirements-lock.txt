@@ -55,7 +55,7 @@ httptools==0.8.0
 httpx==0.25.2
 huggingface_hub==1.28.0
 idna==3.19
-IMAPClient==2.3.1
+IMAPClient==3.1.0
 iniconfig==2.3.0
 kombu==5.6.2
 limits==5.8.0
