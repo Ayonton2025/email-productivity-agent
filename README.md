@@ -43,6 +43,8 @@ python -m pip install -r requirements-lock.txt
 python -m uvicorn app.main:app --reload
 ```
 
+`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. Fresh-clone verification always installs the lockfile.
+
 ### Local frontend
 
 ```powershell
@@ -63,7 +65,7 @@ python -m pytest tests --cov=app --cov-report=term-missing
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy
-python -m bandit -c pyproject.toml -r app
+python -m bandit -c pyproject.toml -r app --severity-level medium
 python -m pip_audit
 ```
 

@@ -26,6 +26,15 @@ def test_backend_direct_dependencies_are_present_in_lockfile():
     assert direct <= locked
 
 
+def test_backend_development_dependencies_are_separate_and_locked():
+    runtime = _requirements(BACKEND_ROOT / "requirements.txt")
+    development = _requirements(BACKEND_ROOT / "requirements-dev.txt")
+    locked = _requirements(BACKEND_ROOT / "requirements-lock.txt")
+    assert {"pytest", "ruff", "mypy", "bandit", "pip-audit"} <= development
+    assert development.isdisjoint(runtime)
+    assert development <= locked
+
+
 def test_pyproject_dependencies_are_present_in_lockfile():
     project = tomllib.loads((BACKEND_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     declared = {
