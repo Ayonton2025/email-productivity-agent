@@ -84,14 +84,3 @@ stripe==13.1.2
 sentry-sdk==2.35.1
 slowapi==0.1.9
 structlog==25.4.0
-
-# Testing (dev)
-pytest==9.0.3
-pytest-asyncio==1.4.0
-pytest-cov==4.1.0
-
-# Quality (development/CI)
-ruff==0.8.6
-mypy==1.13.0
-bandit==1.8.6
-pip-audit==2.9.0
