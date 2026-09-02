@@ -64,7 +64,9 @@ build/
 *.egg-info/
 .coverage
 coverage.json
+coverage-audit.json
 htmlcov/
+celerybeat-schedule
 
 # Railway
 .railway/

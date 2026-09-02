@@ -121,8 +121,14 @@ Backend domains live under `backend/app/api`, `backend/app/services`, `backend/a
 
 ## Project documents
 
-- [Development guide](docs/DEVELOPMENT.md): reproducible local setup and mock-mode contract
-- [API reference](docs/API.md): endpoint details
+- [Architecture](docs/ARCHITECTURE.md): topology, runtime boundaries and extensibility
+- [Database](docs/DATABASE.md): data domains, relationships and recovery expectations
+- [Security](docs/SECURITY.md): implemented controls and production checklist
+- [Deployment](docs/DEPLOYMENT.md): releases, GHCR images, rollout and rollback
+- [Testing](docs/TESTING.md): local, CI, security and container verification
+- [Troubleshooting](docs/TROUBLESHOOTING.md): startup, request, Sentry and clean-install diagnosis
+- [API reference](docs/API.md): authentication, resources and conventions
+- [Development guide](docs/DEVELOPMENT.md): reproducible setup and mock-mode contract
 - [Contributing guide](CONTRIBUTING.md): branch, commit, and testing rules
 - [Changelog](CHANGELOG.md): release notes
 
