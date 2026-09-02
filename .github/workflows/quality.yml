@@ -21,7 +21,7 @@ jobs:
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m mypy
-      - run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=30 -q
+      - run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
       - name: Enforce critical validation coverage
         run: >-
           python -m pytest

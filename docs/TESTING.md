@@ -19,10 +19,10 @@ python -m mypy
 CI enforces coverage:
 
 ```bash
-python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=30 -q
+python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
 ```
 
-The repository currently has a 30% whole-application ratchet and a 90% gate for the request-schema and input-validation security boundary. The narrower gate protects the highest-risk code while the broad ratchet prevents regressions across the large integration surface. Raise the broad threshold only alongside tests that make it pass; never exclude production modules to manufacture a percentage.
+The repository currently has a 31% whole-application ratchet and a 90% gate for the request-schema and input-validation security boundary. The narrower gate protects the highest-risk code while the broad ratchet prevents regressions across the large integration surface. Raise the broad threshold only alongside tests that make it pass; never exclude production modules to manufacture a percentage.
 
 Local formatting is enforced through `.pre-commit-config.yaml`. After installing `pre-commit`, enable it once with `pre-commit install`; the hooks run Ruff, ESLint and Prettier using the committed configuration.
 
