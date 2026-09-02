@@ -90,7 +90,7 @@ jobs:
 
       - name: Backend image metadata
         id: backend_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ steps.registry.outputs.namespace }}/email-productivity-agent-backend
           tags: |
@@ -103,7 +103,7 @@ jobs:
 
       - name: Frontend image metadata
         id: frontend_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ steps.registry.outputs.namespace }}/email-productivity-agent-frontend
           tags: |
