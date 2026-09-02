@@ -20,6 +20,8 @@ from app.core.security import logger
 from app.models.billing_models import UsageLog
 from app.models.database import AsyncSessionLocal
 from app.services.llm_provider_config_service import LLMProviderConfigService, RuntimeProviderConfig
+from app.services.model_registry import ModelRegistry
+from app.services.prompt_registry import PromptRegistry
 
 try:
     import redis.asyncio as redis_async
@@ -29,77 +31,6 @@ except Exception:  # pragma: no cover
 
 if settings.GOOGLE_API_KEY:
     genai.configure(api_key=settings.GOOGLE_API_KEY)
-
-
-class ModelRegistry:
-    MODELS = {
-        "gemini-1.5-flash": {
-            "name": "Gemini 1.5 Flash",
-            "provider": "google",
-            "description": "Fast general-purpose Gemini model",
-            "input_cost_per_1k": 0.000075,
-            "output_cost_per_1k": 0.0003,
-        },
-        "gemini-1.5-pro": {
-            "name": "Gemini 1.5 Pro",
-            "provider": "google",
-            "description": "Higher-quality Gemini model",
-            "input_cost_per_1k": 0.0035,
-            "output_cost_per_1k": 0.0105,
-        },
-    }
-
-    @classmethod
-    def get_model(cls, model_id: str) -> Optional[Dict[str, Any]]:
-        return cls.MODELS.get(model_id)
-
-    @classmethod
-    def list_models(cls) -> Dict[str, Dict[str, Any]]:
-        return cls.MODELS
-
-    @classmethod
-    def calculate_cost(cls, model_id: str, input_tokens: int, output_tokens: int) -> float:
-        model = cls.get_model(model_id)
-        if not model:
-            return 0.0
-        return (input_tokens / 1000) * model["input_cost_per_1k"] + (output_tokens / 1000) * model["output_cost_per_1k"]
-
-
-class PromptRegistry:
-    PROMPTS = {
-        "email_classifier": {
-            "id": "email_classifier",
-            "system_prompt": 'Return JSON {"category":"...","confidence":0.0,"reasoning":"..."}',
-        },
-        "action_extractor": {
-            "id": "action_extractor",
-            "system_prompt": 'Return JSON {"actions":[{"action":"...","deadline":"YYYY-MM-DD","priority":"High/Medium/Low","assigned_to":"name"}]}',
-        },
-        "sentiment_analyzer": {
-            "id": "sentiment_analyzer",
-            "system_prompt": 'Return JSON {"sentiment":"positive/neutral/negative","tone":"professional/casual/urgent/friendly","confidence":0.0}',
-        },
-        "email_summarizer": {
-            "id": "email_summarizer",
-            "system_prompt": 'Return JSON {"summary":"...","key_points":["..."]}',
-        },
-        "reply_generator": {
-            "id": "reply_generator",
-            "system_prompt": 'Return JSON {"reply":"...","tone":"professional/casual"}',
-        },
-        "relationship_scorer": {
-            "id": "relationship_scorer",
-            "system_prompt": 'Return JSON {"relationship_score":0.0,"relationship_type":"...","engagement_level":"..."}',
-        },
-    }
-
-    @classmethod
-    def get_prompt(cls, prompt_id: str) -> Dict[str, Any]:
-        return cls.PROMPTS.get(prompt_id, {})
-
-    @classmethod
-    def list_prompts(cls) -> List[str]:
-        return list(cls.PROMPTS.keys())
 
 
 class UsageTracker:
