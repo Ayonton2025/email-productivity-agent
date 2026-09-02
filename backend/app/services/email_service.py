@@ -1,7 +1,7 @@
 # backend/app/services/email_service.py
 import asyncio
+import hashlib
 import json
-import logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -9,11 +9,12 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.core.logging import get_logger
 from app.models.database import Email, EmailDraft
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EmailService:
@@ -25,12 +26,18 @@ class EmailService:
     async def load_mock_emails(self, user_id: str) -> List[Dict[str, Any]]:
         """Load mock emails from JSON file into database for a specific user"""
         try:
-            logger.info(f"📧 [EmailService] Loading mock emails for user: {user_id}")
+            logger.info("mock_email_load_started", user_id=user_id, operation="load_mock_emails")
 
             # First, check if user already has emails to avoid duplicates - MORE ROBUST CHECK
             existing_emails = await self.get_user_emails(user_id)
             if existing_emails and len(existing_emails) >= 5:  # Changed from 0 to 5 to be more conservative
-                logger.info(f"📧 [EmailService] User already has {len(existing_emails)} emails, skipping mock load")
+                logger.info(
+                    "mock_email_load_skipped",
+                    user_id=user_id,
+                    operation="load_mock_emails",
+                    reason="existing_email_threshold",
+                    existing_count=len(existing_emails),
+                )
                 return existing_emails
 
             # Try multiple possible paths for the mock data file
@@ -48,22 +55,27 @@ class EmailService:
 
             for file_path in possible_paths:
                 if os.path.exists(file_path):
-                    logger.info(f"✅ [EmailService] Found mock data file: {file_path}")
+                    logger.info("mock_email_file_found", user_id=user_id, path=file_path)
                     try:
                         with open(file_path, "r", encoding="utf-8") as f:
                             mock_emails = json.load(f)
                         file_found = True
                         break
-                    except Exception as e:
-                        logger.error(f"❌ [EmailService] Error reading {file_path}: {e}")
+                    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                        logger.warning(
+                            "mock_email_file_read_failed",
+                            user_id=user_id,
+                            path=file_path,
+                            error=str(exc),
+                        )
                         continue
 
             if not file_found:
-                logger.error(f"❌ [EmailService] Mock data file not found in any location. Tried: {possible_paths}")
+                logger.warning("mock_email_file_missing", user_id=user_id, attempted_paths=possible_paths)
                 # Use hardcoded mock data as fallback - WITH ALL 20 EMAILS
                 mock_emails = self._get_hardcoded_mock_emails()
 
-            logger.info(f"📧 [EmailService] Found {len(mock_emails)} mock emails to load")
+            logger.info("mock_emails_discovered", user_id=user_id, email_count=len(mock_emails))
 
             # CRITICAL FIX: Check for duplicates by email content before loading
             processed_emails = []
@@ -75,7 +87,11 @@ class EmailService:
 
                 if existing_similar:
                     duplicate_count += 1
-                    logger.info(f"⚠️ [EmailService] Skipping duplicate email: {email_data.get('subject', 'No Subject')}")
+                    logger.info(
+                        "mock_email_duplicate_skipped",
+                        user_id=user_id,
+                        subject=email_data.get("subject", "No Subject"),
+                    )
                     processed_emails.append(existing_similar)
                     continue
 
@@ -99,17 +115,14 @@ class EmailService:
                 processed_emails.append(processed_email)
 
             if duplicate_count > 0:
-                logger.info(f"⚠️ [EmailService] Skipped {duplicate_count} duplicate emails")
+                logger.info("mock_email_duplicates_skipped", user_id=user_id, duplicate_count=duplicate_count)
 
-            logger.info(f"✅ [EmailService] Successfully loaded {len(processed_emails)} mock emails")
+            logger.info("mock_email_load_completed", user_id=user_id, email_count=len(processed_emails))
             return processed_emails
 
-        except Exception as e:
-            logger.error(f"❌ [EmailService] Error loading mock emails: {e}")
-            import traceback
-
-            logger.info(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
-            return []
+        except Exception as exc:
+            logger.exception("mock_email_load_failed", user_id=user_id, operation="load_mock_emails", error=str(exc))
+            raise
 
     async def _check_duplicate_email(self, user_id: str, email_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Check if a similar email already exists for this user"""
@@ -482,7 +495,12 @@ class EmailService:
     async def process_single_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Process a single email and save to database"""
         try:
-            logger.info(f"📧 [EmailService] Processing email: {email_data.get('subject', 'No Subject')}")
+            logger.info(
+                "email_processing_started",
+                user_id=user_id,
+                operation="process_single_email",
+                subject=email_data.get("subject", "No Subject"),
+            )
 
             # Handle timestamp conversion
             raw_ts = email_data.get("timestamp", datetime.utcnow().isoformat())
@@ -519,43 +537,60 @@ class EmailService:
                             action_items = json.loads(action_items_raw)
                         else:
                             action_items = [{"task": action_items_raw, "deadline": None}]
-                    except:
+                    except (TypeError, ValueError, json.JSONDecodeError):
                         action_items = [{"task": action_items_raw, "deadline": None}]
 
-                except Exception as e:
-                    logger.error(f"⚠️ [EmailService] AI processing failed, using provided data: {e}")
+                except Exception as exc:
+                    logger.warning(
+                        "email_ai_processing_failed",
+                        user_id=user_id,
+                        operation="process_single_email",
+                        error=str(exc),
+                    )
 
             # Create email record
+            source_id = str(email_data.get("id") or email_data.get("message_id") or "")
+            stable_key = source_id or f"{email_data.get('sender', '')}|{email_data.get('subject', '')}|{raw_ts}"
+            uid = email_data.get("uid")
+            if uid is None:
+                uid = int(hashlib.sha256(stable_key.encode("utf-8")).hexdigest()[:15], 16)
+
             email = Email(
+                account_id=str(email_data.get("account_id") or f"mock-{user_id}"),
                 user_id=user_id,
+                message_id=str(email_data.get("message_id") or f"<mock-{stable_key}@local>"),
+                uid=int(uid),
                 sender=email_data.get("sender", ""),
+                recipients=email_data.get("recipients", []),
                 subject=email_data.get("subject", ""),
-                body=email_data.get("body", ""),
-                timestamp=timestamp,
-                category=category,
+                body_text=email_data.get("body_text", email_data.get("body", "")),
+                body_html=email_data.get("body_html"),
+                received_at=timestamp,
+                ai_category=category,
                 priority=email_data.get("priority", "medium"),
                 is_read=email_data.get("is_read", False),
                 is_archived=email_data.get("is_archived", False),
-                is_starred=email_data.get("is_starred", False),
+                is_flagged=email_data.get("is_flagged", email_data.get("is_starred", False)),
                 action_items=action_items,
-                summary=summary,
-                email_metadata=email_data.get("metadata", {}),
+                ai_summary=summary,
             )
 
             self.db.add(email)
             await self.db.commit()
             await self.db.refresh(email)
 
-            logger.info(f"✅ [EmailService] Email saved with ID: {email.id}")
+            logger.info("email_processing_completed", user_id=user_id, email_id=email.id)
             return email.to_dict()
 
-        except Exception as e:
-            logger.error(f"❌ [EmailService] Error processing single email: {e}")
-            import traceback
-
-            logger.info(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
-            # Return the original data as fallback
-            return email_data
+        except Exception as exc:
+            logger.exception(
+                "email_processing_failed",
+                user_id=user_id,
+                operation="process_single_email",
+                email_id=email_data.get("id"),
+                error=str(exc),
+            )
+            return {**email_data, "processing_error": str(exc)}
 
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""
