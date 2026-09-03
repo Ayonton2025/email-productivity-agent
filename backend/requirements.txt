@@ -81,6 +81,6 @@ pytz==2023.3
 # Additional utilities
 pydantic-extra-types==2.3.0
 stripe==13.1.2
-sentry-sdk==2.35.1
+sentry-sdk[fastapi]==2.35.1
 slowapi==0.1.9
 structlog==25.4.0

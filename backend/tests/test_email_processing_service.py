@@ -38,12 +38,9 @@ async def test_process_single_email_persists_and_returns_email(db_session):
 
 
 @pytest.mark.asyncio
-async def test_process_single_email_returns_explicit_error_result(db_session):
+async def test_process_single_email_reraises_invalid_timestamp(db_session):
     service = EmailService(db_session)
     payload = {"id": "external-1", "subject": "Bad timestamp", "timestamp": "not-a-date"}
 
-    result = await service.process_single_email(payload, "user-1")
-
-    assert result["id"] == "external-1"
-    assert "processing_error" in result
-    assert "Invalid isoformat" in result["processing_error"]
+    with pytest.raises(ValueError, match="Invalid isoformat"):
+        await service.process_single_email(payload, "user-1")

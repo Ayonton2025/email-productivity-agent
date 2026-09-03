@@ -6,15 +6,27 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+import structlog
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.core.logging import get_logger
+from app.core.monitoring import capture_exception
 from app.models.database import Email, EmailDraft
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
+
+EMAIL_SERVICE_ERRORS = (
+    SQLAlchemyError,
+    AttributeError,
+    KeyError,
+    OSError,
+    RuntimeError,
+    TypeError,
+    ValueError,
+)
 
 
 class EmailService:
@@ -120,7 +132,7 @@ class EmailService:
             logger.info("mock_email_load_completed", user_id=user_id, email_count=len(processed_emails))
             return processed_emails
 
-        except Exception as exc:
+        except EMAIL_SERVICE_ERRORS as exc:
             logger.exception("mock_email_load_failed", user_id=user_id, operation="load_mock_emails", error=str(exc))
             raise
 
@@ -153,8 +165,14 @@ class EmailService:
 
             return None
 
-        except Exception as e:
-            logger.error(f"⚠️ [EmailService] Error checking duplicate: {e}")
+        except EMAIL_SERVICE_ERRORS as exc:
+            logger.warning(
+                "duplicate_email_check_failed",
+                user_id=user_id,
+                operation="check_duplicate_email",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             return None
 
     def _get_hardcoded_mock_emails(self) -> List[Dict[str, Any]]:
@@ -540,12 +558,13 @@ class EmailService:
                     except (TypeError, ValueError, json.JSONDecodeError):
                         action_items = [{"task": action_items_raw, "deadline": None}]
 
-                except Exception as exc:
+                except EMAIL_SERVICE_ERRORS as exc:
                     logger.warning(
                         "email_ai_processing_failed",
                         user_id=user_id,
                         operation="process_single_email",
                         error=str(exc),
+                        error_type=type(exc).__name__,
                     )
 
             # Create email record
@@ -582,15 +601,29 @@ class EmailService:
             logger.info("email_processing_completed", user_id=user_id, email_id=email.id)
             return email.to_dict()
 
-        except Exception as exc:
+        except (ValueError, TypeError, KeyError) as exc:
             logger.exception(
                 "email_processing_failed",
                 user_id=user_id,
                 operation="process_single_email",
                 email_id=email_data.get("id"),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
-            return {**email_data, "processing_error": str(exc)}
+            capture_exception(exc, user_id=user_id, operation="process_single_email")
+            raise
+        except SQLAlchemyError as exc:
+            await self.db.rollback()
+            logger.exception(
+                "email_processing_failed",
+                user_id=user_id,
+                operation="process_single_email",
+                email_id=email_data.get("id"),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            capture_exception(exc, user_id=user_id, operation="process_single_email")
+            raise
 
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""
@@ -598,7 +631,7 @@ class EmailService:
             result = await self.db.execute(select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset))
             emails = result.scalars().all()
             return [email.to_dict() for email in emails]
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in get_all_emails: {e}")
             return []
 
@@ -623,7 +656,7 @@ class EmailService:
                 try:
                     email_dict = email.to_dict()
                     email_list.append(email_dict)
-                except Exception as e:
+                except EMAIL_SERVICE_ERRORS as e:
                     logger.error(f"⚠️ [EmailService] Error converting email {email.id}: {e}")
                     email_list.append(
                         {
@@ -639,7 +672,7 @@ class EmailService:
 
             return email_list
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in get_user_emails: {e}")
             import traceback
 
@@ -663,7 +696,7 @@ class EmailService:
                 logger.error(f"❌ [EmailService] Email not found: {email_id} for user: {user_id}")
                 return None
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error getting email by ID: {e}")
             return None
 
@@ -722,14 +755,14 @@ Best regards,
                     "mock": True,
                 }
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error generating reply draft: {e}")
             sender_hint = "there"
             try:
                 if user_id:
                     email = await self.get_email_by_id(email_id, user_id)
                     sender_hint = (email or {}).get("sender", "there").split("@")[0]
-            except Exception:
+            except EMAIL_SERVICE_ERRORS:
                 pass
             return {
                 "subject": "Re: Your email",
@@ -760,7 +793,7 @@ Best regards,
                 await self.db.commit()
                 return True
             return False
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error updating email category: {e}")
             return False
 
@@ -778,7 +811,7 @@ Best regards,
             await self.db.commit()
             await self.db.refresh(draft)
             return draft.to_dict()
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error creating draft: {e}")
             raise
 
@@ -788,7 +821,7 @@ Best regards,
             result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error getting drafts: {e}")
             return []
 
@@ -800,7 +833,7 @@ Best regards,
             )
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error getting user drafts: {e}")
             return []
 
@@ -819,7 +852,7 @@ Best regards,
                 await self.db.refresh(draft)
                 return draft.to_dict()
             return None
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error updating draft: {e}")
             return None
 
@@ -834,7 +867,7 @@ Best regards,
                 await self.db.commit()
                 return True
             return False
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error deleting draft: {e}")
             return False
 
@@ -855,7 +888,7 @@ Best regards,
                 await self.load_mock_emails(user_id)
                 return True
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error ensuring user has emails: {e}")
             return False
 
@@ -875,7 +908,7 @@ Best regards,
             )
             accounts = result.scalars().all()
             return accounts
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in get_active_email_accounts: {e}")
             return []
 
@@ -888,7 +921,7 @@ Best regards,
             )
             emails = result.scalars().all()
             return emails
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in get_pending_emails: {e}")
             return []
 
@@ -913,7 +946,7 @@ Best regards,
                         prompt.template, email.body_text or email.body_html or ""
                     )
                     summary = resp if isinstance(resp, str) else (resp.get("text") if isinstance(resp, dict) else None)
-            except Exception:
+            except SQLAlchemyError:
                 summary = None
 
             if summary:
@@ -923,11 +956,11 @@ Best regards,
             await db.commit()
             return {"success": True}
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in process_email_intelligence: {e}")
             try:
                 await db.rollback()
-            except Exception:
+            except SQLAlchemyError:
                 pass
             return {"success": False, "error": str(e)}
 
@@ -949,10 +982,10 @@ Best regards,
             await db.commit()
             return {"success": True}
 
-        except Exception as e:
+        except EMAIL_SERVICE_ERRORS as e:
             logger.error(f"❌ [EmailService] Error in sync_account: {e}")
             try:
                 await db.rollback()
-            except Exception:
+            except SQLAlchemyError:
                 pass
             return {"success": False, "error": str(e)}

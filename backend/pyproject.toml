@@ -44,7 +44,7 @@ dependencies = [
   "python-dateutil==2.8.2",
   "pytz==2023.3",
   "pydantic-extra-types==2.3.0",
-  "sentry-sdk==2.35.1",
+  "sentry-sdk[fastapi]==2.35.1",
   "slowapi==0.1.9",
   "structlog==25.4.0",
 ]
