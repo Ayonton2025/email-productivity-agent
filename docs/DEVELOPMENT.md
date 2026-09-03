@@ -8,7 +8,7 @@ or API key is needed.
 
 - Git
 - Python 3.11
-- Node.js 20 and npm
+- Node.js 24 and npm
 - Docker with Compose v2 (recommended for the one-command path)
 
 ## One-command isolated environment

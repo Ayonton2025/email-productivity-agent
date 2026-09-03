@@ -70,3 +70,15 @@ def test_lint_and_format_configuration_is_committed_and_runnable():
 
     scripts = json.loads((frontend / "package.json").read_text(encoding="utf-8"))["scripts"]
     assert {"lint", "lint:fix", "format", "format:check"} <= scripts.keys()
+
+
+def test_ci_actions_and_node_runtime_are_on_supported_versions():
+    workflows = "\n".join(
+        path.read_text(encoding="utf-8") for path in (REPOSITORY_ROOT / ".github" / "workflows").glob("*.yml")
+    )
+    for current_action in ("actions/checkout@v7", "actions/setup-python@v7", "actions/setup-node@v7"):
+        assert current_action in workflows
+    for deprecated_action in ("actions/checkout@v4", "actions/setup-python@v5", "actions/setup-node@v4"):
+        assert deprecated_action not in workflows
+    assert "node-version: 20" not in workflows
+    assert (REPOSITORY_ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8").startswith("FROM node:24-alpine")

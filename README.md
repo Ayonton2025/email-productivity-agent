@@ -34,7 +34,7 @@ cd frontend && npm install && npm run build && npm run test
 
 - Git
 - Python 3.11
-- Node.js 20 and npm
+- Node.js 24 and npm
 - Docker Desktop with Compose v2 for the isolated stack
 
 ### Offline development
