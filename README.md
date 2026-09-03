@@ -2,6 +2,25 @@
 
 A full-stack email productivity platform with AI assistance, multi-provider email, billing, automation, and team workflows.
 
+## Installation & Testing
+
+### Backend
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt
+pip install -r backend/requirements-lock.txt
+cd backend && python -m pytest tests --cov=app --cov-report=term-missing
+```
+
+### Frontend
+
+```bash
+cd frontend && npm install && npm run build && npm run test
+```
+
 ## Stack
 
 - Backend: FastAPI, async SQLAlchemy, Alembic, Celery, Redis
