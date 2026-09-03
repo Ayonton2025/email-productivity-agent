@@ -1,9 +1,11 @@
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
 from app.core.config import settings
 from app.services import smtp_service as smtp_module
+from app.services.email_service import EmailService
 from app.services.smtp_service import SMTPService
 
 
@@ -185,3 +187,46 @@ async def test_hosted_abuse_rejection_prevents_delivery(monkeypatch):
     success, message = await service.send_email(hosted, None, "to@example.test", "Subject", "Body")
     assert success is False
     assert "daily limit" in message
+
+
+@pytest.mark.asyncio
+async def test_load_mock_emails_processes_unique_fallback_dataset(db_session, monkeypatch):
+    service = EmailService(db_session)
+    monkeypatch.setattr(service, "get_user_emails", AsyncMock(return_value=[]))
+    monkeypatch.setattr(service, "_check_duplicate_email", AsyncMock(return_value=None))
+
+    async def preserve_email(email_data, user_id):
+        return {**email_data, "user_id": user_id}
+
+    monkeypatch.setattr(service, "process_single_email", preserve_email)
+    monkeypatch.setattr("app.services.email_service.os.path.exists", lambda _path: False)
+
+    emails = await service.load_mock_emails("user_1")
+
+    assert len(emails) == 20
+    assert all(email["user_id"] == "user_1" for email in emails)
+    identities = {(email["sender"], email["subject"]) for email in emails}
+    assert len(identities) == len(emails)
+
+
+@pytest.mark.asyncio
+async def test_load_mock_emails_skips_detected_duplicate(db_session, monkeypatch):
+    service = EmailService(db_session)
+    duplicate = {"id": "stored-1", "sender": "sender@example.test", "subject": "Existing"}
+    monkeypatch.setattr(service, "get_user_emails", AsyncMock(return_value=[]))
+    monkeypatch.setattr(service, "_get_hardcoded_mock_emails", lambda: [duplicate])
+    monkeypatch.setattr(service, "_check_duplicate_email", AsyncMock(return_value=duplicate))
+    process = AsyncMock()
+    monkeypatch.setattr(service, "process_single_email", process)
+    monkeypatch.setattr("app.services.email_service.os.path.exists", lambda _path: False)
+
+    assert await service.load_mock_emails("user_1") == [duplicate]
+    process.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_process_single_email_rejects_non_mapping_input(db_session):
+    service = EmailService(db_session)
+
+    with pytest.raises(ValueError, match="email_data must be a dictionary"):
+        await service.process_single_email(None, user_id="user_1")

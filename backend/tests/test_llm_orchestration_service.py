@@ -62,3 +62,35 @@ async def test_call_llm_returns_explicit_error_when_every_provider_fails(monkeyp
     result = await service.call_llm("Classify this message")
 
     assert result == {"success": False, "error": "provider timed out"}
+
+
+@pytest.mark.asyncio
+async def test_call_llm_returns_cached_response_without_provider_call(monkeypatch):
+    monkeypatch.setattr(settings, "ENABLE_MOCK_MODE", False)
+    service = LLMOrchestrationService()
+    monkeypatch.setattr(service, "_runtime_configs", AsyncMock(return_value=[provider("google", 1)]))
+    monkeypatch.setattr(
+        service,
+        "_cache_get",
+        AsyncMock(return_value={"success": True, "response": "cached summary", "cached": False}),
+    )
+    provider_call = AsyncMock()
+    monkeypatch.setattr(service, "_call_with_retry", provider_call)
+
+    result = await service.call_llm("Summarize this message")
+
+    assert result["response"] == "cached summary"
+    assert result["cached"] is True
+    provider_call.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_call_llm_reports_missing_provider_configuration(monkeypatch):
+    monkeypatch.setattr(settings, "ENABLE_MOCK_MODE", False)
+    service = LLMOrchestrationService()
+    monkeypatch.setattr(service, "_runtime_configs", AsyncMock(return_value=[]))
+
+    result = await service.call_llm("Summarize this message")
+
+    assert result["success"] is False
+    assert "No LLM providers configured" in result["error"]

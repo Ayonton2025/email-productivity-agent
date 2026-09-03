@@ -512,6 +512,9 @@ class EmailService:
 
     async def process_single_email(self, email_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Process a single email and save to database"""
+        if not isinstance(email_data, dict):
+            raise ValueError("email_data must be a dictionary")
+
         try:
             logger.info(
                 "email_processing_started",
