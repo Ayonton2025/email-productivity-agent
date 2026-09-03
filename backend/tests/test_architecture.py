@@ -3,6 +3,7 @@ from pathlib import Path
 from app.main import app
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = BACKEND_ROOT.parent
 
 
 def test_main_stays_below_phase_four_limit():
@@ -14,6 +15,26 @@ def test_billing_modules_stay_focused():
     oversized = {
         path.name: len(path.read_text(encoding="utf-8").splitlines())
         for path in billing_dir.glob("*.py")
+        if len(path.read_text(encoding="utf-8").splitlines()) >= 500
+    }
+    assert oversized == {}
+
+
+def test_phase_three_service_and_frontend_modules_stay_focused():
+    paths = [
+        BACKEND_ROOT / "app" / "services" / "llm_orchestration_service.py",
+        BACKEND_ROOT / "app" / "services" / "model_registry.py",
+        BACKEND_ROOT / "app" / "services" / "prompt_registry.py",
+        BACKEND_ROOT / "app" / "services" / "llm_provider_mixin.py",
+        BACKEND_ROOT / "app" / "services" / "llm_feature_mixin.py",
+        REPOSITORY_ROOT / "frontend" / "src" / "App.jsx",
+        REPOSITORY_ROOT / "frontend" / "src" / "routes.jsx",
+        REPOSITORY_ROOT / "frontend" / "src" / "navigation.js",
+        REPOSITORY_ROOT / "frontend" / "src" / "components" / "layout" / "SidebarContent.jsx",
+    ]
+    oversized = {
+        str(path.relative_to(REPOSITORY_ROOT)): len(path.read_text(encoding="utf-8").splitlines())
+        for path in paths
         if len(path.read_text(encoding="utf-8").splitlines()) >= 500
     }
     assert oversized == {}
