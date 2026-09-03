@@ -1,3 +1,5 @@
+import json
+import tomllib
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -44,3 +46,27 @@ def test_local_quality_hooks_and_critical_coverage_gate_are_committed():
     for marker in ("ruff check", "ruff format --check", "npm --prefix frontend run lint", "format:check"):
         assert marker in hooks
     assert "--cov-fail-under=90" in workflow
+
+
+def test_lint_and_format_configuration_is_committed_and_runnable():
+    backend_config = tomllib.loads((REPOSITORY_ROOT / "backend" / "pyproject.toml").read_text(encoding="utf-8"))
+    ruff = backend_config["tool"]["ruff"]
+    assert ruff["target-version"] == "py311"
+    assert ruff["line-length"] > 0
+    assert {"F63", "F7", "F82", "I"} <= set(ruff["lint"]["select"])
+    assert "per-file-ignores" in ruff["lint"]
+    assert "format" in ruff
+
+    frontend = REPOSITORY_ROOT / "frontend"
+    eslint = (frontend / ".eslintrc.cjs").read_text(encoding="utf-8")
+    for marker in ("eslint:recommended", "plugin:react/recommended", "plugin:react-hooks/recommended"):
+        assert marker in eslint
+    assert "'react/react-in-jsx-scope': 'off'" in eslint
+
+    prettier = json.loads((frontend / ".prettierrc").read_text(encoding="utf-8"))
+    assert prettier["singleQuote"] is True
+    assert prettier["tabWidth"] == 2
+    assert prettier["trailingComma"] == "es5"
+
+    scripts = json.loads((frontend / "package.json").read_text(encoding="utf-8"))["scripts"]
+    assert {"lint", "lint:fix", "format", "format:check"} <= scripts.keys()
