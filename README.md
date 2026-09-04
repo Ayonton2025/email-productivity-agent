@@ -81,6 +81,7 @@ Run backend checks from `backend/`:
 
 ```powershell
 python -m pytest tests --cov=app --cov-report=term-missing
+python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy
@@ -101,6 +102,8 @@ npm audit --audit-level=high
 ```
 
 The GitHub Actions workflow runs these checks on every push and pull request. Dependabot checks both Python and npm dependencies weekly.
+
+Coverage uses two complementary measurements. The whole-application 31% ratchet reports every API, task, and external-provider integration so legacy coverage cannot regress. A separate 50% maintained-domain gate covers core infrastructure, models, utilities, email processing, LLM orchestration, and the model and prompt registries. The security-critical validation boundary retains its stricter 90% gate. Tests use deterministic mocks and in-memory SQLite; they do not contact customer mailboxes, payment processors, or AI providers.
 
 ## Connected deployment
 

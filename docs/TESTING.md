@@ -20,9 +20,18 @@ CI enforces coverage:
 
 ```bash
 python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
+python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50 -q
 ```
 
-The repository currently has a 31% whole-application ratchet and a 90% gate for the request-schema and input-validation security boundary. The narrower gate protects the highest-risk code while the broad ratchet prevents regressions across the large integration surface. Raise the broad threshold only alongside tests that make it pass; never exclude production modules to manufacture a percentage.
+The repository has three explicit coverage layers:
+
+- A 31% whole-application ratchet measures every API, background task, and external-provider adapter.
+- A 50% maintained-domain gate covers `app.core`, `app.models`, `app.utils`, email processing, LLM orchestration, and the model and prompt registries.
+- A 90% gate protects request schemas and input-validation security boundaries.
+
+The maintained-domain scope identifies code expected to be deterministic in local and CI environments. External email, payment, and AI adapters remain visible in the whole-application report and are tested through mocks and contracts rather than live credentials. Raise either threshold only alongside tests that make it pass; never exclude production modules merely to manufacture a percentage.
+
+Utility tests cover safe parsing, email/header validation, active-content sanitization, URL allowlists, nested JSON contracts, priority scoring, formatting boundaries, and asynchronous retry behavior. Email and LLM tests use in-memory SQLite and mocked providers to verify duplicate detection, typed failures, cache hits, provider fallback, and missing-provider responses.
 
 Local formatting is enforced through `.pre-commit-config.yaml`. After installing `pre-commit`, enable it once with `pre-commit install`; the hooks run Ruff, ESLint and Prettier using the committed configuration.
 

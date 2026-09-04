@@ -22,6 +22,19 @@ jobs:
       - run: python -m ruff format --check .
       - run: python -m mypy
       - run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
+      - name: Enforce maintained domain coverage
+        run: >-
+          python -m pytest tests
+          --cov=app.core
+          --cov=app.models
+          --cov=app.utils
+          --cov=app.services.email_service
+          --cov=app.services.llm_orchestration_service
+          --cov=app.services.model_registry
+          --cov=app.services.prompt_registry
+          --cov-report=term-missing
+          --cov-fail-under=50
+          -q
       - name: Enforce critical validation coverage
         run: >-
           python -m pytest
