@@ -47,15 +47,12 @@ def clean_email_body(body: str) -> str:
     if not body:
         return ""
 
-    # Remove excessive whitespace
-    cleaned = re.sub(r"\s+", " ", body.strip())
-
     # Remove common email signatures and forward headers
-    lines = cleaned.split("\n")
+    lines = body.strip().splitlines()
     filtered_lines = []
 
     for line in lines:
-        line = line.strip()
+        line = re.sub(r"\s+", " ", line.strip())
         # Skip common signature markers
         if any(marker in line.lower() for marker in ["sent from", "regards,", "best,", "thanks,", "cheers,"]):
             break
@@ -107,6 +104,9 @@ def format_priority(score: int) -> str:
 
 async def async_retry(operation, max_retries: int = 3, delay: float = 1.0):
     """Retry an async operation with exponential backoff"""
+    if max_retries < 1:
+        raise ValueError("max_retries must be at least 1")
+
     last_exception = None
 
     for attempt in range(max_retries):

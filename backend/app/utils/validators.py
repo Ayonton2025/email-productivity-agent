@@ -31,7 +31,9 @@ class EmailValidator:
         # Validate From header
         if "From" in headers:
             try:
-                email.utils.parseaddr(headers["From"])
+                _, address = email.utils.parseaddr(headers["From"])
+                if not EmailValidator.validate_email_format(address):
+                    issues.append("Invalid From header format")
             except (ValueError, AttributeError):
                 issues.append("Invalid From header format")
 
@@ -118,11 +120,22 @@ class JSONValidator:
         """Validate JSON data against a simple schema"""
         errors = []
 
-        if not isinstance(data, type(schema.get("type", type(None)))):
-            errors.append(f"Expected type {schema.get('type')}, got {type(data)}")
+        declared_type = schema.get("type", type(None))
+        json_types = {
+            "object": dict,
+            "array": list,
+            "string": str,
+            "number": (int, float),
+            "integer": int,
+            "boolean": bool,
+            "null": type(None),
+        }
+        expected_type = json_types.get(declared_type, declared_type)
+        if not isinstance(data, expected_type):
+            errors.append(f"Expected type {expected_type}, got {type(data)}")
             return False, errors
 
-        if schema.get("type") == "object":
+        if expected_type is dict:
             required_fields = schema.get("required", [])
             for field in required_fields:
                 if field not in data:
@@ -136,7 +149,7 @@ class JSONValidator:
                     if not is_valid:
                         errors.extend([f"{field}.{error}" for error in field_errors])
 
-        elif schema.get("type") == "array":
+        elif expected_type is list:
             items_schema = schema.get("items", {})
             for i, item in enumerate(data):
                 is_valid, item_errors = JSONValidator.validate_json_structure(item, items_schema)
@@ -169,8 +182,8 @@ class URLValidator:
         """Validate URL format"""
         try:
             result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except Exception:
+            return result.scheme.lower() in {"http", "https"} and bool(result.netloc)
+        except (AttributeError, TypeError, ValueError):
             return False
 
     @staticmethod
@@ -182,15 +195,10 @@ class URLValidator:
         try:
             result = urlparse(url)
 
-            # Check for dangerous protocols
-            dangerous_schemes = ["javascript", "vbscript", "data"]
-            if result.scheme.lower() in dangerous_schemes:
-                return False
-
             # Check against allowed domains if provided
             if allowed_domains and result.netloc not in allowed_domains:
                 return False
 
             return True
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             return False
