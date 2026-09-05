@@ -11,9 +11,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.core.exceptions import EmailDataLoadError, EmailPersistenceError
 from app.core.monitoring import capture_exception
 from app.models.database import Email, EmailDraft
 from app.services.llm_service import LLMService
+from app.services.mock_email_loader import MockEmailLoader
 from app.services.prompt_service import PromptService
 
 logger = structlog.get_logger(__name__)
@@ -34,6 +36,7 @@ class EmailService:
         self.db = db
         self.llm_service = LLMService()
         self.prompt_service = PromptService(db)
+        self.mock_email_loader = MockEmailLoader()
 
     async def load_mock_emails(self, user_id: str) -> List[Dict[str, Any]]:
         """Load mock emails from JSON file into database for a specific user"""
@@ -52,40 +55,7 @@ class EmailService:
                 )
                 return existing_emails
 
-            # Try multiple possible paths for the mock data file
-            possible_paths = [
-                "data/mock_inbox.json",
-                "./data/mock_inbox.json",
-                "backend/data/mock_inbox.json",
-                "./backend/data/mock_inbox.json",
-                "../data/mock_inbox.json",
-                "./../data/mock_inbox.json",
-            ]
-
-            mock_emails = []
-            file_found = False
-
-            for file_path in possible_paths:
-                if os.path.exists(file_path):
-                    logger.info("mock_email_file_found", user_id=user_id, path=file_path)
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            mock_emails = json.load(f)
-                        file_found = True
-                        break
-                    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-                        logger.warning(
-                            "mock_email_file_read_failed",
-                            user_id=user_id,
-                            path=file_path,
-                            error=str(exc),
-                        )
-                        continue
-
-            if not file_found:
-                logger.warning("mock_email_file_missing", user_id=user_id, attempted_paths=possible_paths)
-                # Use hardcoded mock data as fallback - WITH ALL 20 EMAILS
-                mock_emails = self._get_hardcoded_mock_emails()
+            mock_emails = self.mock_email_loader.load(fallback=self._get_hardcoded_mock_emails)
 
             logger.info("mock_emails_discovered", user_id=user_id, email_count=len(mock_emails))
 
@@ -132,9 +102,12 @@ class EmailService:
             logger.info("mock_email_load_completed", user_id=user_id, email_count=len(processed_emails))
             return processed_emails
 
-        except EMAIL_SERVICE_ERRORS as exc:
+        except SQLAlchemyError as exc:
+            logger.exception("mock_email_persistence_failed", user_id=user_id, operation="load_mock_emails")
+            raise EmailPersistenceError("Unable to load mock emails from the database") from exc
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             logger.exception("mock_email_load_failed", user_id=user_id, operation="load_mock_emails", error=str(exc))
-            raise
+            raise EmailDataLoadError("Unable to load mock email data") from exc
 
     async def _check_duplicate_email(self, user_id: str, email_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Check if a similar email already exists for this user"""
@@ -165,7 +138,7 @@ class EmailService:
 
             return None
 
-        except EMAIL_SERVICE_ERRORS as exc:
+        except SQLAlchemyError as exc:
             logger.warning(
                 "duplicate_email_check_failed",
                 user_id=user_id,
@@ -173,7 +146,7 @@ class EmailService:
                 error=str(exc),
                 error_type=type(exc).__name__,
             )
-            return None
+            raise EmailPersistenceError("Unable to check for duplicate emails") from exc
 
     def _get_hardcoded_mock_emails(self) -> List[Dict[str, Any]]:
         """Fallback hardcoded mock emails if JSON file is missing - ALL 20 EMAILS"""
@@ -626,7 +599,7 @@ class EmailService:
                 error_type=type(exc).__name__,
             )
             capture_exception(exc, user_id=user_id, operation="process_single_email")
-            raise
+            raise EmailPersistenceError("Unable to persist email") from exc
 
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""

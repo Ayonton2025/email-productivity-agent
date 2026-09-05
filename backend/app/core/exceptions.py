@@ -28,3 +28,13 @@ class SubscriptionError(ApplicationError, ValueError):
 class EmailDeliveryError(ApplicationError):
     status_code = 502
     code = "email_delivery_error"
+
+
+class EmailPersistenceError(ApplicationError):
+    status_code = 500
+    code = "email_persistence_error"
+
+
+class EmailDataLoadError(ApplicationError):
+    status_code = 500
+    code = "email_data_load_error"

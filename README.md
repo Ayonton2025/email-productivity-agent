@@ -2,25 +2,6 @@
 
 A full-stack email productivity platform with AI assistance, multi-provider email, billing, automation, and team workflows.
 
-## Installation & Testing
-
-### Backend
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r backend/requirements.txt
-pip install -r backend/requirements-dev.txt
-pip install -r backend/requirements-lock.txt
-cd backend && python -m pytest tests --cov=app --cov-report=term-missing
-```
-
-### Frontend
-
-```bash
-cd frontend && npm install && npm run build && npm run test
-```
-
 ## Stack
 
 - Backend: FastAPI, async SQLAlchemy, Alembic, Celery, Redis
@@ -52,24 +33,40 @@ Open `http://localhost:3000` for the frontend and `http://localhost:8000/health`
 docker compose -f docker-compose.test.yml down
 ```
 
-### Local backend
+### Local backend installation
 
 ```powershell
 Set-Location backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-lock.txt
+```
+
+Use `source .venv/bin/activate` instead on macOS or Linux. The lockfile is the
+single supported install input for a clean checkout; do not install the runtime
+and development manifests in addition to it.
+
+### Local backend
+
+```powershell
+Set-Location backend
 python -m uvicorn app.main:app --reload
 ```
 
 `requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. Fresh-clone verification always installs the lockfile.
 
-### Local frontend
+### Local frontend installation
 
 ```powershell
 Set-Location frontend
 Copy-Item .env.example .env
 npm ci
+```
+
+### Local frontend
+
+```powershell
+Set-Location frontend
 npm run dev
 ```
 
