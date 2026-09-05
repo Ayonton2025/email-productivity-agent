@@ -20,7 +20,18 @@ def test_loader_reads_json_file(monkeypatch, tmp_path):
     data_file.write_text(json.dumps([{"id": "one"}]), encoding="utf-8")
     monkeypatch.setattr(MockEmailLoader, "paths", (str(data_file),))
 
-    assert MockEmailLoader().load() == [{"id": "one"}]
+    assert MockEmailLoader().load() == [
+        {
+            "id": "one",
+            "category": "Uncategorized",
+            "priority": "medium",
+            "is_read": False,
+            "is_archived": False,
+            "is_starred": False,
+            "action_items": [],
+            "summary": "",
+        }
+    ]
 
 
 def test_loader_wraps_invalid_json(monkeypatch, tmp_path):

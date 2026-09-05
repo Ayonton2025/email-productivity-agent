@@ -199,7 +199,7 @@ async def test_load_mock_emails_processes_unique_fallback_dataset(db_session, mo
         return {**email_data, "user_id": user_id}
 
     monkeypatch.setattr(service, "process_single_email", preserve_email)
-    monkeypatch.setattr("app.services.email_service.os.path.exists", lambda _path: False)
+    monkeypatch.setattr("app.services.mock_email_loader.os.path.exists", lambda _path: False)
 
     emails = await service.load_mock_emails("user_1")
 
@@ -214,11 +214,10 @@ async def test_load_mock_emails_skips_detected_duplicate(db_session, monkeypatch
     service = EmailService(db_session)
     duplicate = {"id": "stored-1", "sender": "sender@example.test", "subject": "Existing"}
     monkeypatch.setattr(service, "get_user_emails", AsyncMock(return_value=[]))
-    monkeypatch.setattr(service, "_get_hardcoded_mock_emails", lambda: [duplicate])
+    monkeypatch.setattr(service.mock_email_loader, "load", lambda: [duplicate])
     monkeypatch.setattr(service, "_check_duplicate_email", AsyncMock(return_value=duplicate))
     process = AsyncMock()
     monkeypatch.setattr(service, "process_single_email", process)
-    monkeypatch.setattr("app.services.email_service.os.path.exists", lambda _path: False)
 
     assert await service.load_mock_emails("user_1") == [duplicate]
     process.assert_not_awaited()
