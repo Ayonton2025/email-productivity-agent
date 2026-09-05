@@ -70,6 +70,14 @@ npm test -- --run
 npm run build
 ```
 
+## Fresh-clone verification
+
+From the repository root, run `scripts/verify-fresh-clone.ps1` on Windows or
+`bash scripts/verify-fresh-clone.sh` on macOS/Linux. The script creates a
+temporary Python 3.11 environment, installs both committed lockfiles, runs
+backend and frontend tests, lint, formatting, typecheck, and the frontend
+production build, then removes the temporary backend environment.
+
 ## Dependency policy
 
 - `backend/pyproject.toml` documents package metadata, Python compatibility,

@@ -5,6 +5,19 @@ on:
   pull_request:
 
 jobs:
+  fresh-clone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Verify clean checkout
+        run: bash scripts/verify-fresh-clone.sh
+
   backend:
     runs-on: ubuntu-latest
     defaults:

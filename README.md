@@ -74,6 +74,29 @@ The frontend runs at `http://localhost:3000`.
 
 ## Verification
 
+### Fresh-clone verification
+
+From the repository root, run the platform-specific verification script. It
+creates a temporary Python 3.11 environment, installs the committed backend
+lockfile, runs the backend suite and quality checks, performs `npm ci`, and
+then runs the frontend suite, lint, formatting, typecheck, and production
+build. The temporary backend environment is removed when the script finishes.
+
+PowerShell:
+
+```powershell
+.\scripts\verify-fresh-clone.ps1
+```
+
+macOS/Linux:
+
+```bash
+bash scripts/verify-fresh-clone.sh
+```
+
+This is the canonical clean-checkout verification command. It requires Python
+3.11, Node.js 24, and npm; it does not require Docker or provider credentials.
+
 Run backend checks from `backend/`:
 
 ```powershell
