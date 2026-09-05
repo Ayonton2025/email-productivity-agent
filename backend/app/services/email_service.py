@@ -20,16 +20,6 @@ from app.services.prompt_service import PromptService
 
 logger = structlog.get_logger(__name__)
 
-EMAIL_SERVICE_ERRORS = (
-    SQLAlchemyError,
-    AttributeError,
-    KeyError,
-    OSError,
-    RuntimeError,
-    TypeError,
-    ValueError,
-)
-
 
 class EmailService:
     def __init__(self, db: AsyncSession):
@@ -534,7 +524,7 @@ class EmailService:
                     except (TypeError, ValueError, json.JSONDecodeError):
                         action_items = [{"task": action_items_raw, "deadline": None}]
 
-                except EMAIL_SERVICE_ERRORS as exc:
+                except SQLAlchemyError as exc:
                     logger.warning(
                         "email_ai_processing_failed",
                         user_id=user_id,
@@ -604,12 +594,12 @@ class EmailService:
     async def get_all_emails(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get all emails with pagination"""
         try:
-            result = await self.db.execute(select(Email).order_by(Email.timestamp.desc()).limit(limit).offset(offset))
+            result = await self.db.execute(select(Email).order_by(Email.received_at.desc()).limit(limit).offset(offset))
             emails = result.scalars().all()
             return [email.to_dict() for email in emails]
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in get_all_emails: {e}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("email_list_query_failed", operation="get_all_emails")
+            raise EmailPersistenceError("Unable to retrieve emails") from exc
 
     async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get emails for a specific user"""
@@ -632,7 +622,7 @@ class EmailService:
                 try:
                     email_dict = email.to_dict()
                     email_list.append(email_dict)
-                except EMAIL_SERVICE_ERRORS as e:
+                except (AttributeError, KeyError, TypeError, ValueError) as e:
                     logger.error(f"⚠️ [EmailService] Error converting email {email.id}: {e}")
                     email_list.append(
                         {
@@ -648,12 +638,9 @@ class EmailService:
 
             return email_list
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in get_user_emails: {e}")
-            import traceback
-
-            logger.info(f"❌ [EmailService] Stack trace: {traceback.format_exc()}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("email_list_query_failed", operation="get_user_emails", user_id=user_id)
+            raise EmailPersistenceError("Unable to retrieve user emails") from exc
 
     async def get_email_by_id(self, email_id: str, user_id: str = None) -> Optional[Dict[str, Any]]:
         """Get a specific email by ID, optionally filtered by user"""
@@ -672,9 +659,9 @@ class EmailService:
                 logger.error(f"❌ [EmailService] Email not found: {email_id} for user: {user_id}")
                 return None
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error getting email by ID: {e}")
-            return None
+        except SQLAlchemyError as exc:
+            logger.exception("email_query_failed", operation="get_email_by_id", email_id=email_id, user_id=user_id)
+            raise EmailPersistenceError("Unable to retrieve email") from exc
 
     async def generate_reply_draft(
         self,
@@ -731,28 +718,9 @@ Best regards,
                     "mock": True,
                 }
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error generating reply draft: {e}")
-            sender_hint = "there"
-            try:
-                if user_id:
-                    email = await self.get_email_by_id(email_id, user_id)
-                    sender_hint = (email or {}).get("sender", "there").split("@")[0]
-            except EMAIL_SERVICE_ERRORS:
-                pass
-            return {
-                "subject": "Re: Your email",
-                "body": f"""Dear {sender_hint},
-
-Thank you for your email. I received your message and will respond shortly.
-
-Best regards,
-{(user_name or "Team")}""",
-                "ai_generated": False,
-                "mock": True,
-                "mock_warning": "AI service is temporarily unavailable. A safe template reply was generated instead.",
-                "error": str(e),
-            }
+        except SQLAlchemyError as exc:
+            logger.exception("reply_draft_persistence_failed", email_id=email_id, user_id=user_id)
+            raise EmailPersistenceError("Unable to load the email for reply drafting") from exc
 
     async def update_email_category(self, email_id: str, category: str, user_id: str = None) -> bool:
         """Update email category"""
@@ -769,9 +737,9 @@ Best regards,
                 await self.db.commit()
                 return True
             return False
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error updating email category: {e}")
-            return False
+        except SQLAlchemyError as exc:
+            logger.exception("email_category_update_failed", email_id=email_id, user_id=user_id)
+            raise EmailPersistenceError("Unable to update email category") from exc
 
     async def create_draft(self, draft_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """Create a new email draft"""
@@ -787,9 +755,9 @@ Best regards,
             await self.db.commit()
             await self.db.refresh(draft)
             return draft.to_dict()
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error creating draft: {e}")
-            raise
+        except SQLAlchemyError as exc:
+            logger.exception("draft_create_failed", user_id=user_id)
+            raise EmailPersistenceError("Unable to create draft") from exc
 
     async def get_drafts(self) -> List[Dict[str, Any]]:
         """Get all email drafts"""
@@ -797,9 +765,9 @@ Best regards,
             result = await self.db.execute(select(EmailDraft).order_by(EmailDraft.updated_at.desc()))
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error getting drafts: {e}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("draft_list_query_failed", operation="get_drafts")
+            raise EmailPersistenceError("Unable to retrieve drafts") from exc
 
     async def get_user_drafts(self, user_id: str) -> List[Dict[str, Any]]:
         """Get drafts for a specific user"""
@@ -809,9 +777,9 @@ Best regards,
             )
             drafts = result.scalars().all()
             return [draft.to_dict() for draft in drafts]
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error getting user drafts: {e}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("draft_list_query_failed", operation="get_user_drafts", user_id=user_id)
+            raise EmailPersistenceError("Unable to retrieve user drafts") from exc
 
     async def update_draft(self, draft_id: str, draft_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update a draft"""
@@ -828,9 +796,9 @@ Best regards,
                 await self.db.refresh(draft)
                 return draft.to_dict()
             return None
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error updating draft: {e}")
-            return None
+        except SQLAlchemyError as exc:
+            logger.exception("draft_update_failed", draft_id=draft_id)
+            raise EmailPersistenceError("Unable to update draft") from exc
 
     async def delete_draft(self, draft_id: str) -> bool:
         """Delete a draft"""
@@ -843,9 +811,9 @@ Best regards,
                 await self.db.commit()
                 return True
             return False
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error deleting draft: {e}")
-            return False
+        except SQLAlchemyError as exc:
+            logger.exception("draft_delete_failed", draft_id=draft_id)
+            raise EmailPersistenceError("Unable to delete draft") from exc
 
     async def ensure_user_has_emails(self, user_id: str) -> bool:
         """Ensure a user has emails (load mock data if empty)"""
@@ -864,9 +832,9 @@ Best regards,
                 await self.load_mock_emails(user_id)
                 return True
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error ensuring user has emails: {e}")
-            return False
+        except SQLAlchemyError as exc:
+            logger.exception("ensure_user_emails_failed", user_id=user_id)
+            raise EmailPersistenceError("Unable to ensure user emails") from exc
 
     async def get_active_email_accounts(self, session: AsyncSession = None):
         """Return active, sync-enabled `UserEmailAccount` rows."""
@@ -884,9 +852,9 @@ Best regards,
             )
             accounts = result.scalars().all()
             return accounts
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in get_active_email_accounts: {e}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("email_account_query_failed", operation="get_active_email_accounts")
+            raise EmailPersistenceError("Unable to retrieve active email accounts") from exc
 
     async def get_pending_emails(self, session: AsyncSession = None, limit: int = 100):
         """Return pending emails to be processed by background tasks."""
@@ -897,9 +865,9 @@ Best regards,
             )
             emails = result.scalars().all()
             return emails
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in get_pending_emails: {e}")
-            return []
+        except SQLAlchemyError as exc:
+            logger.exception("pending_email_query_failed")
+            raise EmailPersistenceError("Unable to retrieve pending emails") from exc
 
     async def process_email_intelligence(self, email_id: str, session: AsyncSession = None) -> dict:
         """Lightweight processing for an email: mark processing, optionally call LLM, then complete."""
@@ -932,13 +900,13 @@ Best regards,
             await db.commit()
             return {"success": True}
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in process_email_intelligence: {e}")
+        except SQLAlchemyError as exc:
+            logger.exception("email_intelligence_persistence_failed", email_id=email_id)
             try:
                 await db.rollback()
             except SQLAlchemyError:
                 pass
-            return {"success": False, "error": str(e)}
+            raise EmailPersistenceError("Unable to process email intelligence") from exc
 
     async def sync_account(self, account_id: str, session: AsyncSession = None) -> dict:
         """Perform a minimal sync operation for a user email account (updates last_sync)."""
@@ -958,10 +926,10 @@ Best regards,
             await db.commit()
             return {"success": True}
 
-        except EMAIL_SERVICE_ERRORS as e:
-            logger.error(f"❌ [EmailService] Error in sync_account: {e}")
+        except SQLAlchemyError as exc:
+            logger.exception("email_account_sync_failed", account_id=account_id)
             try:
                 await db.rollback()
             except SQLAlchemyError:
                 pass
-            return {"success": False, "error": str(e)}
+            raise EmailPersistenceError("Unable to sync email account") from exc
