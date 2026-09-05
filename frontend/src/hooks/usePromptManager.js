@@ -12,6 +12,12 @@ const initialPrompt = {
   is_active: true,
 }
 
+const openPromptModal = () => {
+  const modal = document.getElementById('create-prompt-modal')
+  if (typeof modal?.showModal === 'function') modal.showModal()
+  else modal?.setAttribute('open', '')
+}
+
 export function usePromptManager() {
   const { prompts, createPrompt, updatePrompt, deletePrompt, testPrompt, loading } = useContext(PromptContext)
   const [selectedPrompt, setSelectedPrompt] = useState(null)
@@ -134,7 +140,7 @@ export function usePromptManager() {
       setAiMeta({ provider: response.data?.provider, model: response.data?.model })
       if (Object.keys(draft).length > 0) {
         setNewPrompt((previous) => ({ ...previous, ...draft }))
-        document.getElementById('create-prompt-modal').showModal()
+        openPromptModal()
       }
     } catch (aiError) {
       setError(
