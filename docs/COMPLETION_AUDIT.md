@@ -22,7 +22,7 @@ This audit records the implementation against the supplied amendment plan. It do
 - Billing compatibility regressions: 2 passed.
 - Ruff checks/format, mypy, Bandit medium-or-higher checks and Python dependency audit passed in the installed verification environment.
 - Frontend: 111 tests passed; lines/statements 43.11%, functions 38.37%, branches 54.32%. Production build passed.
-- Final canonical Docker workflow passed: image builds, backend/frontend readiness, all three HTTP checks, backend container (195 tests), frontend container (111 tests; 43.11% lines/statements, 38.37% functions, 54.35% branches), and container/network teardown. Local ports were 18000 and 13000 to preserve an unrelated service on port 3000.
+- Final canonical Docker workflow passed: image builds, backend/frontend readiness, all four HTTP checks (including `/ready` with `startup_ready=true`), backend container (195 tests), frontend container (111 tests; 43.11% lines/statements, 38.37% functions, 54.35% branches), and container/network teardown. Local ports were 18000 and 13000 to preserve an unrelated service on port 3000.
 - The first Windows clean-install run exposed vulnerable pip/setuptools versions bundled with Python 3.11. Verification now bootstraps patched versions from `backend/requirements-tooling.txt`, shared with Docker. The complete Windows rerun passed: clean dependency installation, all backend gates, Python dependency audit, fresh frontend installation, formatting, zero-warning lint, type checking, 111 tests with coverage, production build, and npm audit (zero vulnerabilities).
 
 ## External limitations
