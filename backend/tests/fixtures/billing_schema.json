@@ -1,0 +1,1467 @@
+{
+  "subscriptions": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "plan_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "plan_name": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_cycle": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "price_usd": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "price_per_seat": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "started_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "current_period_start": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "current_period_end": {
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_cycle_start": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_cycle_end": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "auto_renew": {
+        "type": "BOOLEAN",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "renewal_date": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_method": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_method_id": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_provider": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "seats_included": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "seats_current": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "seats_max": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "features": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_monthly_allocation": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_monthly_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "credits_total": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "credits_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_reset_date": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "outbound_emails_monthly_allocation": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "outbound_emails_monthly_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "trial_ends_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "trial_cancelled_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "plan_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "idx_subscription_renewal",
+        false,
+        [
+          "renewal_date"
+        ]
+      ],
+      [
+        "idx_subscription_status",
+        false,
+        [
+          "status"
+        ]
+      ],
+      [
+        "ix_subscriptions_plan_id",
+        false,
+        [
+          "plan_id"
+        ]
+      ],
+      [
+        "ix_subscriptions_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_subscriptions_user_id",
+        true,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "ai_usage_units": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "feature": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "action": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "units_consumed": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "units_actual": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "usd_cost": {
+        "type": "DECIMAL(10, 4)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "model": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "usage_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_ai_usage_units_created_at",
+        false,
+        [
+          "created_at"
+        ]
+      ],
+      [
+        "ix_ai_usage_units_feature",
+        false,
+        [
+          "feature"
+        ]
+      ],
+      [
+        "ix_ai_usage_units_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_ai_usage_units_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "ai_credits": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "balance": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "monthly_allocation": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "monthly_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "classification_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "extraction_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "summarization_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "sentiment_analysis_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "other_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_ai_credits_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_ai_credits_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "outbound_credits": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "balance": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "monthly_allocation": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "monthly_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_outbound_credits_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_outbound_credits_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "outbound_addons": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "package_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "package_name": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "price_usd": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_cycle": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "sends_monthly_allocation": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "sends_monthly_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "started_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "period_start": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "period_end": {
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "auto_renew": {
+        "type": "BOOLEAN",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "features": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "addon_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_outbound_addons_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_outbound_addons_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "enterprise_addons": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "module_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "module_name": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "price_usd": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_cycle": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_type": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "quantity": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "started_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "expires_at": {
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "auto_renew": {
+        "type": "BOOLEAN",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "config": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "module_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_enterprise_addons_module_id",
+        false,
+        [
+          "module_id"
+        ]
+      ],
+      [
+        "ix_enterprise_addons_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_enterprise_addons_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "payment_transactions": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "charge_type": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "reference_id": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "amount_usd": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "currency": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_method": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_reference": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "failure_reason": {
+        "type": "TEXT",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "attempted_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "completed_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "refunded_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "payment_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_payment_transactions_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_payment_transactions_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "payments": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "provider": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "amount": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "currency": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "reference": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_payments_provider",
+        false,
+        [
+          "provider"
+        ]
+      ],
+      [
+        "ix_payments_reference",
+        true,
+        [
+          "reference"
+        ]
+      ],
+      [
+        "ix_payments_status",
+        false,
+        [
+          "status"
+        ]
+      ],
+      [
+        "ix_payments_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "credit_transactions": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "credits_added": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "credits_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "source": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "timestamp": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_credit_transactions_source",
+        false,
+        [
+          "source"
+        ]
+      ],
+      [
+        "ix_credit_transactions_timestamp",
+        false,
+        [
+          "timestamp"
+        ]
+      ],
+      [
+        "ix_credit_transactions_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "usage_logs": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "metric": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "quantity": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "action": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "tokens_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "credits_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "timestamp": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "breakdown": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "idx_tenant_metric_date",
+        false,
+        [
+          "tenant_id",
+          "metric",
+          "created_at"
+        ]
+      ],
+      [
+        "idx_user_metric_date",
+        false,
+        [
+          "user_id",
+          "metric",
+          "created_at"
+        ]
+      ],
+      [
+        "ix_usage_logs_action",
+        false,
+        [
+          "action"
+        ]
+      ],
+      [
+        "ix_usage_logs_created_at",
+        false,
+        [
+          "created_at"
+        ]
+      ],
+      [
+        "ix_usage_logs_metric",
+        false,
+        [
+          "metric"
+        ]
+      ],
+      [
+        "ix_usage_logs_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_usage_logs_timestamp",
+        false,
+        [
+          "timestamp"
+        ]
+      ],
+      [
+        "ix_usage_logs_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "monthly_billing_snapshots": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "year": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "month": {
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_allocated": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_used": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "ai_credits_overages": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "outbound_emails_allocated": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "outbound_emails_sent": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "outbound_emails_overages": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "subscription_cost": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "addon_cost": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "overage_cost": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "total_cost": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "billing_metadata": {
+        "type": "JSON",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "idx_tenant_year_month",
+        false,
+        [
+          "tenant_id",
+          "year",
+          "month"
+        ]
+      ],
+      [
+        "idx_user_year_month",
+        true,
+        [
+          "user_id",
+          "year",
+          "month"
+        ]
+      ],
+      [
+        "ix_monthly_billing_snapshots_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_monthly_billing_snapshots_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  },
+  "account_credits": {
+    "columns": {
+      "id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": true,
+        "foreign_keys": []
+      },
+      "user_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": [
+          "users.id"
+        ]
+      },
+      "tenant_id": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "credit_type": {
+        "type": "VARCHAR",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "amount_usd": {
+        "type": "DECIMAL(10, 2)",
+        "nullable": false,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "amount_ai_units": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "amount_email_sends": {
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "expires_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "used_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "reason": {
+        "type": "TEXT",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "issued_by": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "status": {
+        "type": "VARCHAR",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "created_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      },
+      "updated_at": {
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false,
+        "foreign_keys": []
+      }
+    },
+    "indexes": [
+      [
+        "ix_account_credits_tenant_id",
+        false,
+        [
+          "tenant_id"
+        ]
+      ],
+      [
+        "ix_account_credits_user_id",
+        false,
+        [
+          "user_id"
+        ]
+      ]
+    ],
+    "unique_constraints": []
+  }
+}
