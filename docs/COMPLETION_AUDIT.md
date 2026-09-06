@@ -27,8 +27,10 @@ This audit records the implementation against the supplied amendment plan. It do
 
 ## External limitations
 
-Credential revocation/rotation is not verified. Removing example values does not remove them from historical commits. No deployed credentials or encrypted data were changed. Linux/Windows hosted CI results must be checked on the published commit; local checks alone do not establish hosted CI success.
+Credential revocation/rotation is not verified. Removing example values does not remove them from historical commits. No deployed credentials or encrypted data were changed. Windows and Linux hosted clean-install checks, secret scanning, and isolated Docker verification all passed for commit `d6393cc` in [Quality run 34042245276](https://github.com/Ayonton2025/email-productivity-agent/actions/runs/34042245276). Local results and hosted results are distinguished above.
 
 ## Hosted verification corrections
 
-The first published check run passed secret scanning and Docker, but exposed Windows checkout line endings and a Linux test import that attempted to create `/app`. Git attributes now enforce LF for formatted frontend source. Attachment storage is configurable, defaults to the working directory, and tests allocate and clean up a unique temporary directory. Hosted checks are being rerun after these corrections.
+The first published check run passed secret scanning and Docker, but exposed Windows checkout line endings and a Linux test import that attempted to create `/app`. Git attributes now enforce LF for formatted frontend source. Attachment storage is configurable, defaults to the working directory, and tests allocate and clean up a unique temporary directory. The storage regression and exception-contract tests passed, as did Ruff and mypy. A simulated Windows checkout with CRLF conversion enabled preserved LF in all 167 formatted frontend files. Hosted results are linked from the repository Actions page.
+
+The final documentation and attachment-data ignore change is also subject to the full Quality workflow. Current commit checks are available from [GitHub Actions](https://github.com/Ayonton2025/email-productivity-agent/actions/workflows/quality.yml).

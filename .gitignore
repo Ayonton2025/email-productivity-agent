@@ -87,3 +87,6 @@ node_modules/
 
 # Generated test reports
 coverage/
+
+# Local mailbox attachment data
+**/storage/attachments/

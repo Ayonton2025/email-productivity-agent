@@ -194,3 +194,5 @@ The browser uses relative API paths during development. Docker sets `VITE_PROXY_
 Use `TEST_BACKEND_PORT` and `TEST_FRONTEND_PORT` to select alternate ports for isolated verification when the defaults are in use. For example, on Bash: `TEST_BACKEND_PORT=18000 TEST_FRONTEND_PORT=13000 bash scripts/verify-compose.sh`.
 
 The example files intentionally leave `ENCRYPTION_KEY` and payment-provider credentials empty. Generate a unique encryption key for each environment and obtain payment credentials from the provider. Never reuse values from repository history. See [the completion audit](docs/COMPLETION_AUDIT.md) for the historical credential findings and remediation status.
+
+Attachment files use `ATTACHMENT_STORAGE_PATH` (default `storage/attachments` relative to the backend working directory). Docker keeps its existing `/app/storage/attachments` volume. Local attachment data is ignored by Git; tests use disposable temporary directories.
