@@ -830,7 +830,7 @@ Shows:
 - ✅ Auto-documentation: OpenAPI generated from schemas
 - ✅ Clear error messages: Clients know exactly what was invalid
 - ✅ Prevents data corruption: Invalid data never reaches database
-- ✅ Prevents API abuse: Size/complexity limits enforced
+- ✅ Prevents Abuse prevention: Size/complexity limits enforced
 - ✅ Developer experience: Schemas serve as API contract
 
 ---

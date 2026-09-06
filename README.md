@@ -101,7 +101,7 @@ Run backend checks from `backend/`:
 
 ```powershell
 python -m pytest tests --cov=app --cov-report=term-missing
-python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50
+python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.email --cov=app.services.mock_email_loader --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy
@@ -113,7 +113,7 @@ Run frontend checks from `frontend/`:
 
 ```powershell
 npm ci
-npm test -- --run
+npm run test:coverage
 npm run lint
 npm run format:check
 npm run typecheck
@@ -178,4 +178,18 @@ Backend domains live under `backend/app/api`, `backend/app/services`, `backend/a
 
 ## License
 
-No license has been declared for this repository.
+Licensed under [Apache License 2.0](LICENSE). See the [code of conduct](CODE_OF_CONDUCT.md) and [security policy](docs/SECURITY.md). Third-party dependencies retain their respective licenses.
+
+## Verification contract
+
+Both fresh-clone entry points invoke `scripts/verify.py` with Python 3.11 and Node 24. The runner creates an isolated backend environment, installs the backend lockfile and runs `npm ci`, then enforces backend tests and all three coverage gates, Ruff, mypy, Bandit, dependency audits, frontend coverage, zero-warning lint, formatting, type checking, and the production build. The environment is removed on success or failure. GitHub runs this contract on Windows and Linux.
+
+Frontend coverage includes all application JS/JSX, including files that tests do not import. Minimums are 40% lines/statements, 35% functions, and 30% branches. Test files are excluded. Reports are written under `frontend/coverage/`.
+
+Run `bash scripts/verify-compose.sh` to build and test the isolated Docker deployment. It verifies application health, the frontend and its API proxy, and both test-container exit codes, then shuts down its own Compose project. Failure logs are printed before cleanup. Docker must be running and ports 8000 and 3000 must be available. Initial builds may take several minutes depending on download speed.
+
+The browser uses relative API paths during development. Docker sets `VITE_PROXY_TARGET=http://backend:8000` and `VITE_WS_PROXY_TARGET=ws://backend:8000` for traffic forwarded by the frontend container; browser-facing URLs remain host-accessible.
+
+Use `TEST_BACKEND_PORT` and `TEST_FRONTEND_PORT` to select alternate ports for isolated verification when the defaults are in use. For example, on Bash: `TEST_BACKEND_PORT=18000 TEST_FRONTEND_PORT=13000 bash scripts/verify-compose.sh`.
+
+The example files intentionally leave `ENCRYPTION_KEY` and payment-provider credentials empty. Generate a unique encryption key for each environment and obtain payment credentials from the provider. Never reuse values from repository history. See [the completion audit](docs/COMPLETION_AUDIT.md) for the historical credential findings and remediation status.

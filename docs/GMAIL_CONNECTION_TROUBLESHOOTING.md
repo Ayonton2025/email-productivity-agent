@@ -192,7 +192,7 @@ The backend will now output detailed logs:
 ```json
 {
   "email": "user@gmail.com",
-  "access_token": "ya29.a0AfH6SMBx...",
+  "access_token": "<ACCESS_TOKEN>",
   "refresh_token": "1//0gF...",
   "token_expiry": "2026-01-19T21:30:00"
 }

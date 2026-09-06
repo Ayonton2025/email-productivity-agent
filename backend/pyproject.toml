@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "email-productivity-agent-backend"
 version = "1.0.0"
+license = {text = "Apache-2.0"}
 description = "FastAPI backend for the Bylix email productivity agent"
 requires-python = ">=3.11,<3.13"
 dependencies = [
