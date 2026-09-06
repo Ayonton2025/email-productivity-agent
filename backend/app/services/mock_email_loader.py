@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 from app.core.exceptions import EmailDataLoadError
+from app.services.email.mock_records import fallback_records
 
 
 class MockEmailLoader:
@@ -42,6 +43,8 @@ class MockEmailLoader:
 
     @staticmethod
     def _normalize(emails: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not isinstance(emails, list) or any(not isinstance(email, dict) for email in emails):
+            raise EmailDataLoadError("Mock email data must be an array of record objects")
         return [
             {
                 **email,
@@ -58,22 +61,4 @@ class MockEmailLoader:
 
     @staticmethod
     def _fallback() -> list[dict[str, Any]]:
-        return MockEmailLoader._normalize(
-            [
-                {
-                    "id": str(index),
-                    "sender": f"sender{index}@example.test",
-                    "subject": f"Mock email {index}",
-                    "body": f"This is deterministic mock email number {index}.",
-                    "timestamp": "2024-01-08T10:30:00Z",
-                    "category": "Updates",
-                    "priority": "medium",
-                    "is_read": index % 2 == 0,
-                    "is_archived": False,
-                    "is_starred": False,
-                    "action_items": [],
-                    "summary": f"Summary for mock email {index}.",
-                }
-                for index in range(1, 21)
-            ]
-        )
+        return MockEmailLoader._normalize(fallback_records())

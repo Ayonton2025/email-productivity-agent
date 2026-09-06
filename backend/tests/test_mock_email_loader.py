@@ -41,3 +41,23 @@ def test_loader_wraps_invalid_json(monkeypatch, tmp_path):
 
     with pytest.raises(EmailDataLoadError):
         MockEmailLoader().load()
+
+
+@pytest.mark.parametrize("payload", [{}, None, "inbox", [None], [1], ["email"]])
+def test_loader_rejects_invalid_record_shapes(monkeypatch, tmp_path, payload):
+    data_file = tmp_path / "mock.json"
+    data_file.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(MockEmailLoader, "paths", (str(data_file),))
+    with pytest.raises(EmailDataLoadError, match="array of record objects"):
+        MockEmailLoader().load()
+
+
+def test_original_demonstration_content_is_preserved(monkeypatch):
+    monkeypatch.setattr(MockEmailLoader, "paths", ())
+    records = MockEmailLoader().load()
+    assert records[0]["subject"] == "Q4 Project Review Meeting"
+    assert records[0]["sender"] == "project.manager@company.com"
+    assert len({record["category"] for record in records}) > 1
+    assert len({record["priority"] for record in records}) > 1
+    records[0]["subject"] = "Changed"
+    assert MockEmailLoader().load()[0]["subject"] == "Q4 Project Review Meeting"
