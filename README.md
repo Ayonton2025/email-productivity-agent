@@ -39,6 +39,7 @@ docker compose -f docker-compose.test.yml down
 Set-Location backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 ```
 
@@ -53,7 +54,7 @@ Set-Location backend
 python -m uvicorn app.main:app --reload
 ```
 
-`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. Fresh-clone verification always installs the lockfile.
+`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. `requirements-tooling.txt` pins patched packaging tools. Fresh-clone verification installs the tooling pins before the application lockfile.
 
 ### Local frontend installation
 

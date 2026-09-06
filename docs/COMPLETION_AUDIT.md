@@ -17,13 +17,13 @@ This audit records the implementation against the supplied amendment plan. It do
 
 ## Validation evidence
 
-- Backend full suite before the final two schema regressions: 193 passed; application coverage 34.38% (31% gate), maintained-domain coverage 80.41% (50% gate).
+- Final backend suite: 195 passed on Windows and Linux Docker; application coverage 34.30% (31% gate), maintained-domain coverage 80.41% (50% gate).
 - Critical input/schema validation: 24 passed, 97.72% coverage (90% gate).
 - Billing compatibility regressions: 2 passed.
 - Ruff checks/format, mypy, Bandit medium-or-higher checks and Python dependency audit passed in the installed verification environment.
 - Frontend: 111 tests passed; lines/statements 43.11%, functions 38.37%, branches 54.32%. Production build passed.
-- Backend health, frontend root and frontend proxy endpoint each returned HTTP 200 in the isolated local Compose project.
-- Final canonical clean-install and rebuilt-container runs are in progress; their outcome will be appended before publication.
+- Final canonical Docker workflow passed: image builds, backend/frontend readiness, all three HTTP checks, backend container (195 tests), frontend container (111 tests; 43.11% lines/statements, 38.37% functions, 54.35% branches), and container/network teardown. Local ports were 18000 and 13000 to preserve an unrelated service on port 3000.
+- The first Windows clean-install run exposed vulnerable pip/setuptools versions bundled with Python 3.11. Verification now bootstraps patched versions from `backend/requirements-tooling.txt`, shared with Docker. The complete Windows rerun passed: clean dependency installation, all backend gates, Python dependency audit, fresh frontend installation, formatting, zero-warning lint, type checking, 111 tests with coverage, production build, and npm audit (zero vulnerabilities).
 
 ## External limitations
 

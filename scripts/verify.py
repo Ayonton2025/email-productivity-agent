@@ -27,6 +27,7 @@ def main():
         run([sys.executable, "-m", "venv", str(env)], ROOT)
         python = str(env / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python"))
         backend = ROOT / "backend"
+        run([python, "-m", "pip", "install", "--upgrade", "--disable-pip-version-check", "--no-input", "-r", "requirements-tooling.txt"], backend)
         run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "-r", "requirements-lock.txt"], backend)
         checks = [
             ["ruff", "check", "."], ["ruff", "format", "--check", "."], ["mypy"],

@@ -14,6 +14,7 @@ Run `./scripts/verify-fresh-clone.ps1` on Windows or `bash scripts/verify-fresh-
 cd backend
 python3.11 -m venv .venv
 source .venv/bin/activate  # Windows PowerShell: ./.venv/Scripts/Activate.ps1
+python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 python -m pytest -q
 python -m ruff check .

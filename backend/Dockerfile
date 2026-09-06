@@ -3,8 +3,8 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-COPY requirements.txt requirements-lock.txt ./
-RUN pip install --upgrade pip setuptools wheel
+COPY requirements.txt requirements-lock.txt requirements-tooling.txt ./
+RUN pip install --upgrade -r requirements-tooling.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     set -eux; \
     for attempt in 1 2 3; do \

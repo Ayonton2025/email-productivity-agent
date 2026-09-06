@@ -4,7 +4,7 @@ Start with `docker compose ps`, the API `/health` and `/ready` endpoints, and th
 
 ## A clean checkout does not install
 
-- Use Python 3.11 and Node 20.
+- Use Python 3.11 and Node 24.
 - Run `python -m pip install -r backend/requirements-lock.txt` from the repository root.
 - Run `npm ci` in `frontend`; do not use `npm install` in CI or release verification.
 - If a registry times out, retry before changing a lockfile. A network timeout is not evidence that a pinned package is invalid.

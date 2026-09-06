@@ -18,6 +18,7 @@ trap cleanup EXIT
 "${compose[@]}" config --quiet
 "${compose[@]}" build
 "${compose[@]}" up -d --wait --wait-timeout 180 backend frontend
+curl --fail --retry 10 --retry-delay 2 --retry-all-errors "http://localhost:${TEST_BACKEND_PORT:-8000}/ready"
 curl --fail --retry 10 --retry-delay 2 --retry-all-errors "http://localhost:${TEST_BACKEND_PORT:-8000}/health"
 curl --fail --retry 10 --retry-delay 2 --retry-all-errors "http://localhost:${TEST_FRONTEND_PORT:-3000}/"
 # Prove that the browser's relative API URL reaches the backend through Vite.
