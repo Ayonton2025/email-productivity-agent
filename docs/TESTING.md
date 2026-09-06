@@ -2,13 +2,18 @@
 
 ## Quality strategy
 
-Tests cover request contracts, authentication, billing, email services, architecture boundaries, security middleware, exceptions, health/readiness, manifest drift and frontend user flows. CI repeats tests, formatting, lint, typing, security audits and Docker builds on pushes and pull requests.
+Tests cover request contracts, authentication, billing, email services, architecture boundaries, security middleware, exceptions, health/readiness, manifest drift and frontend user flows. CI repeats tests, formatting, lint, typing, security audits and isolated Docker startup, HTTP, test-container and teardown checks on pushes and pull requests.
+
+## Canonical clean-install checks
+
+Run `./scripts/verify-fresh-clone.ps1` on Windows or `bash scripts/verify-fresh-clone.sh` on Linux from the repository root. Both require Python 3.11 and Node 24 and run the same checks with a temporary backend environment and `npm ci`.
 
 ## Backend
 
 ```bash
 cd backend
-python -m venv .venv
+python3.11 -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: ./.venv/Scripts/Activate.ps1
 python -m pip install -r requirements-lock.txt
 python -m pytest -q
 python -m ruff check .
@@ -20,7 +25,7 @@ CI enforces coverage:
 
 ```bash
 python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
-python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50 -q
+python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils --cov=app.services.email_service --cov=app.services.email --cov=app.services.mock_email_loader --cov=app.services.llm_orchestration_service --cov=app.services.model_registry --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50 -q
 ```
 
 The repository has three explicit coverage layers:
@@ -37,7 +42,7 @@ Local formatting is enforced through `.pre-commit-config.yaml`. After installing
 
 ## Frontend
 
-Use Node 20 and always use `npm ci`, not `npm install`, for verification:
+Use Node 24 and always use `npm ci`, not `npm install`, for verification:
 
 ```bash
 cd frontend
@@ -45,9 +50,11 @@ npm ci
 npm run format:check
 npm run lint
 npm run typecheck
-npm test
+npm run test:coverage
 npm run build
 ```
+
+Frontend coverage includes all application source, including untested files, with minimums of 40% lines/statements, 35% functions and 30% branches. Lint permits zero warnings.
 
 ## Security and dependencies
 
@@ -65,9 +72,7 @@ Dependabot checks pip, npm and GitHub Actions weekly. Contract tests ensure dire
 ## Containers
 
 ```bash
-docker compose -f docker-compose.test.yml build
-docker compose -f docker-compose.test.yml run --rm backend-tests
-docker compose -f docker-compose.test.yml run --rm frontend-tests
+bash scripts/verify-compose.sh
 ```
 
 Tests use mock mode and isolated SQLite where practical. Never use production credentials, customer mailboxes or live payment keys.

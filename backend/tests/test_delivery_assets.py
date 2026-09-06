@@ -45,7 +45,9 @@ def test_local_quality_hooks_and_critical_coverage_gate_are_committed():
     workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "quality.yml").read_text(encoding="utf-8")
     for marker in ("ruff check", "ruff format --check", "npm --prefix frontend run lint", "format:check"):
         assert marker in hooks
-    assert "--cov-fail-under=90" in workflow
+    assert "scripts/verify-fresh-clone.sh" in workflow
+    runner = (REPOSITORY_ROOT / "scripts" / "verify.py").read_text(encoding="utf-8")
+    assert "--cov-fail-under=90" in runner
 
 
 def test_lint_and_format_configuration_is_committed_and_runnable():
