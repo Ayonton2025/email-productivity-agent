@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import pytest
@@ -9,6 +10,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+_attachment_storage = TemporaryDirectory(prefix="email-agent-test-attachments-")
+os.environ["ATTACHMENT_STORAGE_PATH"] = _attachment_storage.name
 os.environ["ENABLE_MOCK_MODE"] = "true"
 os.environ["SKIP_DB_INIT"] = "false"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
@@ -83,3 +86,7 @@ def unauthenticated_client():
     yield test_client
     test_client.close()
     app.dependency_overrides.clear()
+
+
+def pytest_unconfigure(config):
+    _attachment_storage.cleanup()

@@ -28,3 +28,7 @@ This audit records the implementation against the supplied amendment plan. It do
 ## External limitations
 
 Credential revocation/rotation is not verified. Removing example values does not remove them from historical commits. No deployed credentials or encrypted data were changed. Linux/Windows hosted CI results must be checked on the published commit; local checks alone do not establish hosted CI success.
+
+## Hosted verification corrections
+
+The first published check run passed secret scanning and Docker, but exposed Windows checkout line endings and a Linux test import that attempted to create `/app`. Git attributes now enforce LF for formatted frontend source. Attachment storage is configurable, defaults to the working directory, and tests allocate and clean up a unique temporary directory. Hosted checks are being rerun after these corrections.

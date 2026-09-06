@@ -83,7 +83,7 @@ class AttachmentService:
     }
 
     def __init__(self):
-        self.storage_root = Path(getattr(settings, "ATTACHMENT_STORAGE_PATH", "/app/storage/attachments"))
+        self.storage_root = Path(settings.ATTACHMENT_STORAGE_PATH)
         self.storage_root.mkdir(parents=True, exist_ok=True)
         logger.info(f"📎 Attachment storage initialized at: {self.storage_root}")
 

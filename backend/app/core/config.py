@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # Email Settings
     MOCK_DATA_PATH: str = "data/mock_inbox.json"
+    ATTACHMENT_STORAGE_PATH: str = "storage/attachments"
 
     # Email Sync Settings
     ENABLE_IMAP_IDLE: bool = True  # Use IMAP IDLE for real-time notifications
