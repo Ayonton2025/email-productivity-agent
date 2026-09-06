@@ -1,3 +1,49 @@
+const fallbackPlans = [
+  {
+    id: 'personal',
+    name: 'Free',
+    price: 0,
+    period: '/day',
+    features: ['50 AI credits/day', '1 email account'],
+    cta: 'Current Plan',
+    highlighted: false,
+    disabled: false,
+    perks: [],
+  },
+  {
+    id: 'plus',
+    name: 'Plus',
+    price: 12,
+    period: '/month',
+    features: ['1,500 AI credits/month', '3 email accounts'],
+    cta: 'Upgrade to Plus',
+    highlighted: true,
+    disabled: false,
+    perks: [],
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    price: 29,
+    period: '/month',
+    features: ['5,000 AI credits/month', 'Unlimited accounts'],
+    cta: 'Upgrade to Professional',
+    highlighted: false,
+    disabled: false,
+    perks: [],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: null,
+    period: 'Custom',
+    features: ['Enterprise features'],
+    cta: 'Contact Sales',
+    highlighted: false,
+    disabled: false,
+    perks: [],
+  },
+]
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -17,11 +63,10 @@ const BillingUpgrade = () => {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const { userPlan } = useSubscription()
-  const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'plus')
+  const [selectedPlan] = useState(searchParams.get('plan') || 'plus')
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
-  const [couponCode, setCouponCode] = useState('')
-  const [discount, setDiscount] = useState(0)
+
   const [showDebugInfo, setShowDebugInfo] = useState(false)
   const [backendStatus, setBackendStatus] = useState('checking')
   const [plans, setPlans] = useState([])
@@ -100,53 +145,6 @@ const BillingUpgrade = () => {
     }
     setCountryCode(inferCountryCode())
   }, [])
-
-  const fallbackPlans = [
-    {
-      id: 'personal',
-      name: 'Free',
-      price: 0,
-      period: '/day',
-      features: ['50 AI credits/day', '1 email account'],
-      cta: 'Current Plan',
-      highlighted: false,
-      disabled: false,
-      perks: [],
-    },
-    {
-      id: 'plus',
-      name: 'Plus',
-      price: 12,
-      period: '/month',
-      features: ['1,500 AI credits/month', '3 email accounts'],
-      cta: 'Upgrade to Plus',
-      highlighted: true,
-      disabled: false,
-      perks: [],
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      price: 29,
-      period: '/month',
-      features: ['5,000 AI credits/month', 'Unlimited accounts'],
-      cta: 'Upgrade to Professional',
-      highlighted: false,
-      disabled: false,
-      perks: [],
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: null,
-      period: 'Custom',
-      features: ['Enterprise features'],
-      cta: 'Contact Sales',
-      highlighted: false,
-      disabled: false,
-      perks: [],
-    },
-  ]
 
   const handleUpgrade = async (planId) => {
     logger.debug(`🔄 [Billing] Attempting upgrade to plan: ${planId}`)
@@ -229,27 +227,7 @@ const BillingUpgrade = () => {
     }
   }
 
-  const handleApplyCoupon = async (e) => {
-    e.preventDefault()
-    if (!couponCode.trim()) return
-
-    setIsProcessing(true)
-    try {
-      // Mock coupon validation - replace with actual API call
-      if (couponCode === 'SAVE10') {
-        setDiscount(10)
-      } else if (couponCode === 'SAVE20') {
-        setDiscount(20)
-      } else {
-        setError('Invalid coupon code')
-        setDiscount(0)
-      }
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const currentPlan = plans.find((p) => p.id === selectedPlan)
+  plans.find((p) => p.id === selectedPlan)
 
   return (
     <div className="billing-upgrade-container">
@@ -394,7 +372,7 @@ Response (one of):
 
       {/* Plans Grid */}
       <div className="plans-grid">
-        {plans.map((plan, idx) => (
+        {plans.map((plan, _idx) => (
           <div
             key={plan.id}
             className={`plan-card ${plan.highlighted ? 'highlighted' : ''} ${selectedPlan === plan.id ? 'selected' : ''}`}

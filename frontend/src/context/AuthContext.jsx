@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { logger } from '../utils/logger.js'
 import React, { createContext, useState, useContext, useEffect } from 'react'
 import { authApi, hostedEmailApi } from '../services/api'
@@ -18,40 +19,14 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null)
 
   // Check authentication on app start
-  useEffect(() => {
-    let completed = false
-    const watchdog = setTimeout(() => {
-      if (!completed) {
-        logger.warn('⚠️ [AuthContext] Auth bootstrap watchdog triggered; forcing loading=false')
-        setLoading(false)
-      }
-    }, 10000)
 
-    ;(async () => {
-      try {
-        await checkAuth()
-      } finally {
-        completed = true
-        clearTimeout(watchdog)
-      }
-    })()
-
-    return () => {
-      completed = true
-      clearTimeout(watchdog)
-    }
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const storedToken = localStorage.getItem('auth_token')
       const storedUser = localStorage.getItem('user')
 
       logger.debug('🔍 [AuthContext] Checking authentication:')
-      logger.debug(
-        '   - Token in localStorage:',
-        storedToken ? `Present (${storedToken.substring(0, 20)}...)` : 'Not found'
-      )
+      logger.debug('   - Token in localStorage:', storedToken ? 'Present' : 'Not found')
       logger.debug('   - User in localStorage:', storedUser ? 'Present' : 'Not found')
 
       if (storedToken && storedUser) {
@@ -116,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const clearAuthData = () => {
     localStorage.removeItem('auth_token')
@@ -322,5 +297,28 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user && !!token,
   }
 
+  useEffect(() => {
+    let completed = false
+    const watchdog = setTimeout(() => {
+      if (!completed) {
+        logger.warn('⚠️ [AuthContext] Auth bootstrap watchdog triggered; forcing loading=false')
+        setLoading(false)
+      }
+    }, 10000)
+
+    ;(async () => {
+      try {
+        await checkAuth()
+      } finally {
+        completed = true
+        clearTimeout(watchdog)
+      }
+    })()
+
+    return () => {
+      completed = true
+      clearTimeout(watchdog)
+    }
+  }, [checkAuth])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

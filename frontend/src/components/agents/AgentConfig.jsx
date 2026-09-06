@@ -1,3 +1,4 @@
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
 import { X, Sparkles } from 'lucide-react'
@@ -28,7 +29,7 @@ const DEFAULT_SYSTEM_PROMPTS = {
 }
 
 const AgentConfig = ({ agent, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     name: agent?.name || '',
     agent_type: agent?.agent_type || 'sales',
     description: agent?.description || '',
@@ -43,7 +44,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
     memory_enabled: agent?.memory_enabled ?? true,
     context_window: agent?.context_window || 10,
     tags: agent?.tags || [],
-  })
+  }))
 
   const [saving, setSaving] = useState(false)
   const [newCategory, setNewCategory] = useState('')
@@ -52,7 +53,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
   const [aiGoal, setAiGoal] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
-  const [aiMeta, setAiMeta] = useState({ provider: null, model: null })
+  const [aiMeta, setAiMeta] = useState(() => ({ provider: null, model: null }))
 
   const aiQuickPrompts = [
     'Create a billing support agent with strict approval rules',
@@ -119,7 +120,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
 
   const handleSave = async () => {
     if (!formData.name || !formData.system_prompt) {
-      alert('Please fill in required fields (Name and System Prompt)')
+      notify('Please fill in required fields (Name and System Prompt)')
       return
     }
 
@@ -134,7 +135,7 @@ const AgentConfig = ({ agent, onClose, onSave }) => {
       onClose()
     } catch (error) {
       logger.error('Failed to save agent:', error)
-      alert('Failed to save agent')
+      notify('Failed to save agent', 'error')
     } finally {
       setSaving(false)
     }

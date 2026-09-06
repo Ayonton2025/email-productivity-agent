@@ -1,7 +1,8 @@
+import { useCallback } from 'react'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mail, Calendar, TrendingUp, TrendingDown, User, Building2, RefreshCw } from 'lucide-react'
+import { ArrowLeft, TrendingUp, TrendingDown, User, Building2, RefreshCw } from 'lucide-react'
 import { insightsApi } from '../../services/api'
 
 const ContactDetail = () => {
@@ -11,11 +12,7 @@ const ContactDetail = () => {
   const [interactions, setInteractions] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadContactDetails()
-  }, [contactId])
-
-  const loadContactDetails = async () => {
+  const loadContactDetails = useCallback(async () => {
     setLoading(true)
     try {
       const res = await insightsApi.getContactDetails(contactId)
@@ -26,7 +23,7 @@ const ContactDetail = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [contactId])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never'
@@ -50,6 +47,9 @@ const ContactDetail = () => {
     }
   }
 
+  useEffect(() => {
+    loadContactDetails()
+  }, [contactId, loadContactDetails])
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

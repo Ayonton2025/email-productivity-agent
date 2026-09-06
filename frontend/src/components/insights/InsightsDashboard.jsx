@@ -8,7 +8,6 @@ import {
   Users,
   BarChart3,
   RefreshCw,
-  ChevronRight,
   Clock,
   DollarSign,
   Target,

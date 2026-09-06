@@ -1,10 +1,9 @@
-import { logger } from '../../utils/logger.js'
-import React, { useState } from 'react'
+import EmailActions from './EmailActions'
+
+import React from 'react'
 import AttachmentsSection from './AttachmentsSection'
 
 const EmailDetail = ({ email = null, onClose = () => {} }) => {
-  const [showFull, setShowFull] = useState(false)
-
   if (!email) return null
 
   // Determine which body to show (prefer HTML)
@@ -35,7 +34,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
     return match ? match[1] : str
   }
 
-  const senderEmail = extractEmail(email.sender)
+  extractEmail(email.sender)
   const recipients = (email.recipients || []).map(extractEmail)
   const ccRecipients = (email.cc || []).map(extractEmail)
 
@@ -118,36 +117,7 @@ const EmailDetail = ({ email = null, onClose = () => {} }) => {
       {hasAttachments && <AttachmentsSection emailId={email.id} attachments={attachments} />}
 
       {/* Footer with Actions */}
-      <div className="border-t px-6 py-3 bg-gray-50 flex items-center justify-between">
-        <div className="text-xs text-gray-500">
-          {email.is_read ? '✓ Read' : 'Unread'}
-          {email.is_flagged && ' • Flagged'}
-        </div>
-        <div className="space-x-2">
-          <button
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
-            onClick={() => {
-              // Mark as read/unread
-              logger.debug('Toggle read status')
-            }}
-          >
-            {email.is_read ? 'Mark Unread' : 'Mark Read'}
-          </button>
-          <button
-            className={`px-3 py-1 text-sm font-medium rounded transition ${
-              email.is_flagged
-                ? 'bg-yellow-50 text-yellow-700 border border-yellow-300'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-            onClick={() => {
-              // Toggle flag
-              logger.debug('Toggle flag')
-            }}
-          >
-            {email.is_flagged ? '★ Flagged' : '☆ Flag'}
-          </button>
-        </div>
-      </div>
+      <EmailActions email={email} />
     </div>
   )
 }

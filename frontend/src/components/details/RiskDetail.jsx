@@ -1,7 +1,8 @@
+import { useCallback } from 'react'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, AlertTriangle, Calendar, TrendingDown, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { insightsApi } from '../../services/api'
 
 const RiskDetail = () => {
@@ -10,11 +11,7 @@ const RiskDetail = () => {
   const [risk, setRisk] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadRisk()
-  }, [riskId])
-
-  const loadRisk = async () => {
+  const loadRisk = useCallback(async () => {
     setLoading(true)
     try {
       const res = await insightsApi.getRisks()
@@ -25,7 +22,7 @@ const RiskDetail = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [riskId])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never'
@@ -53,6 +50,9 @@ const RiskDetail = () => {
     }
   }
 
+  useEffect(() => {
+    loadRisk()
+  }, [loadRisk, riskId])
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

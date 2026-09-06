@@ -1,9 +1,8 @@
 import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
-import { Mail, ExternalLink, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 
 const ProviderConnection = () => {
-  const [activeTab, setActiveTab] = useState('gmail')
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState({})
 

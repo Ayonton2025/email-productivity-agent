@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { X, Zap, Lock, ArrowRight, Star, Check, AlertTriangle, Mail, Users, Workflow } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -13,7 +13,7 @@ export const PremiumPrompt = ({
 }) => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [selectedPlan] = useState('plus')
+
   const isSuperAdmin = Boolean(user?.is_super_admin || user?.is_admin || user?.is_superuser)
 
   if (!isOpen || isSuperAdmin) return null

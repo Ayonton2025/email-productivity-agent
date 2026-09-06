@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Loader2, AlertCircle, FileIcon } from 'lucide-react'
@@ -15,13 +16,8 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
   const [analyzingAll, setAnalyzingAll] = useState(false)
 
   // Fetch attachments with analysis status
-  useEffect(() => {
-    if (emailId) {
-      fetchAttachments()
-    }
-  }, [emailId])
 
-  const fetchAttachments = async () => {
+  const fetchAttachments = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -37,7 +33,7 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
     } finally {
       setLoading(false)
     }
-  }
+  }, [emailId])
 
   const handleAnalyzeAll = async () => {
     setAnalyzingAll(true)
@@ -63,6 +59,11 @@ const AttachmentsSection = ({ emailId, attachments: initialAttachments = [] }) =
     await fetchAttachments()
   }
 
+  useEffect(() => {
+    if (emailId) {
+      fetchAttachments()
+    }
+  }, [emailId, fetchAttachments])
   if (!emailId) return null
 
   // Empty state

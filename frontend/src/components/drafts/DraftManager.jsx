@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { Plus, Save, Edit, Trash2, Send, Copy, Eye, EyeOff, Search, Clock, User, Mail, FileText } from 'lucide-react'
@@ -30,7 +32,7 @@ const DraftManager = () => {
     }
   }
 
-  const loadDrafts = async () => {
+  const loadDrafts = useCallback(async () => {
     setLoading(true)
     try {
       const res = await draftApi.getDrafts()
@@ -48,10 +50,6 @@ const DraftManager = () => {
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    loadDrafts()
   }, [])
 
   const filteredDrafts = drafts.filter((draft) => {
@@ -89,7 +87,7 @@ const DraftManager = () => {
       setIsEditing(true)
     } catch (error) {
       logger.error('Failed to create draft:', error)
-      alert('Failed to create draft')
+      notify('Failed to create draft', 'error')
     }
   }
 
@@ -118,7 +116,7 @@ const DraftManager = () => {
       setIsEditing(false)
     } catch (error) {
       logger.error('Failed to save draft:', error)
-      alert('Failed to save draft')
+      notify('Failed to save draft', 'error')
     }
   }
 
@@ -134,7 +132,7 @@ const DraftManager = () => {
       })
     } catch (error) {
       logger.error('Failed to delete draft:', error)
-      alert('Failed to delete draft')
+      notify('Failed to delete draft', 'error')
     }
   }
 
@@ -189,6 +187,9 @@ const DraftManager = () => {
     })
   }
 
+  useEffect(() => {
+    loadDrafts()
+  }, [loadDrafts])
   return (
     <div className="h-full flex flex-col space-y-6">
       {/* Header */}

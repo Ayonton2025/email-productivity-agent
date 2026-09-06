@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
-import { X, Mail, Lock, AlertCircle, CheckCircle, Loader, LogIn, Key } from 'lucide-react'
+import { X, Mail, AlertCircle, CheckCircle, Loader, Key } from 'lucide-react'
 import { emailApi } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getUpgradeSuggestion, canAccessFeature, getPlanLimits } from '../utils/subscriptionUtils'
+import { getUpgradeSuggestion } from '../utils/subscriptionUtils'
 import { getDismissalResetInfo } from '../services/adminService'
 
 /**
@@ -25,29 +25,6 @@ export const useSubscription = () => {
   })
 
   // On mount, check server-side dismissal reset timestamp and clear session dismissals if needed
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const res = await getDismissalResetInfo()
-        const serverReset = res?.reset_at || null
-        if (!serverReset) return
-
-        const localSeen = sessionStorage.getItem('dismissedPremiumPromptsResetAt') || null
-        if (!localSeen || new Date(serverReset) > new Date(localSeen)) {
-          // Clear local dismissals
-          sessionStorage.removeItem('dismissedPremiumPrompts')
-          sessionStorage.setItem('dismissedPremiumPromptsResetAt', serverReset)
-          if (mounted) setDismissedPrompts(new Set())
-        }
-      } catch (e) {
-        // ignore network/errors
-      }
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   // Get user's current plan and limits
   const userPlan = useMemo(() => {
@@ -226,6 +203,33 @@ export const useSubscription = () => {
   }, [])
 
   // If usage falls back below limit, clear dismissal so it can reappear later
+
+  const isPremiumUser = isSuperAdmin || userPlan !== 'personal'
+  const isEnterprise = isSuperAdmin || userPlan === 'enterprise'
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await getDismissalResetInfo()
+        const serverReset = res?.reset_at || null
+        if (!serverReset) return
+
+        const localSeen = sessionStorage.getItem('dismissedPremiumPromptsResetAt') || null
+        if (!localSeen || new Date(serverReset) > new Date(localSeen)) {
+          // Clear local dismissals
+          sessionStorage.removeItem('dismissedPremiumPrompts')
+          sessionStorage.setItem('dismissedPremiumPromptsResetAt', serverReset)
+          if (mounted) setDismissedPrompts(new Set())
+        }
+      } catch (e) {
+        // ignore network/errors
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
   useEffect(() => {
     try {
       if (planLimits.aiCredits && dismissedPrompts.has('credits')) {
@@ -235,10 +239,6 @@ export const useSubscription = () => {
       // ignore
     }
   }, [planLimits.aiCredits, dismissedPrompts])
-
-  const isPremiumUser = isSuperAdmin || userPlan !== 'personal'
-  const isEnterprise = isSuperAdmin || userPlan === 'enterprise'
-
   return {
     // State
     userPlan,

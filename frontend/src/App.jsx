@@ -1,4 +1,28 @@
-import { useEffect, useState } from 'react'
+const TAB_COMPONENTS = {
+  inbox: () => <Inbox />,
+  insights: () => <InsightsDashboard />,
+  relationships: () => <Relationships />,
+  workflows: () => <Workflows />,
+  agents: () => <Agents />,
+  campaigns: () => <Campaigns />,
+  briefings: () => <DailyBriefing />,
+  followups: () => <FollowUpCenter />,
+  'hosted-email': () => <HostedEmailCenter />,
+  'shared-inbox': () => <SharedInboxCenter />,
+  deliverability: () => <DeliverabilityCenter />,
+  executive: () => <ExecutiveCenter />,
+  agent: () => <EmailAgent />,
+  drafts: () => <DraftManager />,
+  'auto-reply': () => <AutoReplyRules />,
+  'email-accounts': () => <EmailAccounts />,
+  prompts: () => <PromptManager />,
+  'admin-dashboard': () => <SuperAdminDashboard view="dashboard" />,
+  'admin-llm': () => <SuperAdminDashboard view="llm" />,
+  'admin-user-access': () => <SuperAdminUserAccess />,
+  'admin-feature-rules': () => <SuperAdminFeatureRules />,
+  'super-admin': () => <SuperAdminDashboard />,
+}
+import { useEffect, useState, useMemo } from 'react'
 import { BrowserRouter as Router, Navigate, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 
@@ -77,7 +101,7 @@ const AppContentWrapper = ({ children }) => {
   const { user, logout } = useAuth()
 
   const isAdmin = isSuperAdminUser(user)
-  const navigationGroups = getNavigationGroups(isAdmin)
+  const navigationGroups = useMemo(() => getNavigationGroups(isAdmin), [isAdmin])
 
   return (
     <EmailProvider>
@@ -122,57 +146,11 @@ const AppContent = () => {
   const location = useLocation()
 
   const isAdmin = isSuperAdminUser(user)
-  const navigationGroups = getNavigationGroups(isAdmin)
+  const navigationGroups = useMemo(() => getNavigationGroups(isAdmin), [isAdmin])
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'inbox':
-        return <Inbox />
-      case 'insights':
-        return <InsightsDashboard />
-      case 'relationships':
-        return <Relationships />
-      case 'workflows':
-        return <Workflows />
-      case 'agents':
-        return <Agents />
-      case 'campaigns':
-        return <Campaigns />
-      case 'briefings':
-        return <DailyBriefing />
-      case 'followups':
-        return <FollowUpCenter />
-      case 'hosted-email':
-        return <HostedEmailCenter />
-      case 'shared-inbox':
-        return <SharedInboxCenter />
-      case 'deliverability':
-        return <DeliverabilityCenter />
-      case 'executive':
-        return <ExecutiveCenter />
-      case 'agent':
-        return <EmailAgent />
-      case 'drafts':
-        return <DraftManager />
-      case 'auto-reply':
-        return <AutoReplyRules />
-      case 'email-accounts':
-        return <EmailAccounts />
-      case 'prompts':
-        return <PromptManager />
-      case 'admin-dashboard':
-        return <SuperAdminDashboard view="dashboard" />
-      case 'admin-llm':
-        return <SuperAdminDashboard view="llm" />
-      case 'admin-user-access':
-        return <SuperAdminUserAccess />
-      case 'admin-feature-rules':
-        return <SuperAdminFeatureRules />
-      case 'super-admin':
-        return <SuperAdminDashboard />
-      default:
-        return <Inbox />
-    }
+    const Content = TAB_COMPONENTS[activeTab] || Inbox
+    return <Content />
   }
 
   // Close sidebar when route changes
@@ -193,7 +171,7 @@ const AppContent = () => {
     // IMPORTANT: only react to hash changes.
     // If we also depend on `activeTab`, a stale hash (e.g. #email-accounts)
     // will force the UI back to that tab when the user clicks other tabs.
-  }, [location.hash])
+  }, [location.hash, navigationGroups])
 
   useEffect(() => {
     const allNavItems = navigationGroups.flatMap((g) => g.items || [])

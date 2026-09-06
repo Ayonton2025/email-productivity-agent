@@ -84,3 +84,6 @@ build2.logs
 *.logs
 backend/.env*
 node_modules/
+
+# Generated test reports
+coverage/

@@ -120,7 +120,7 @@ const Register = () => {
       return
     }
 
-    const { confirmPassword, ...submitData } = formData
+    const { ...submitData } = formData
 
     logger.debug('🚀 [Register] Calling register function...')
     const result = await register(submitData)

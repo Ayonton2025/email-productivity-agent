@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import React, { useEffect, useState } from 'react'
 import { CheckCircle2, Clock3, RefreshCw, Save, AlertCircle, PlayCircle } from 'lucide-react'
 import { followupsApi } from '../../services/api'
@@ -19,23 +20,22 @@ const FollowUpCenter = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const load = async (status = queueStatus) => {
-    setLoading(true)
-    setError('')
-    try {
-      const [policyRes, queueRes] = await Promise.all([followupsApi.getPolicy(), followupsApi.getQueue(status, 100)])
-      setPolicy(policyRes.data?.policy || policy)
-      setQueue(queueRes.data?.items || [])
-    } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load follow-up center')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    load(queueStatus)
-  }, [queueStatus])
+  const load = useCallback(
+    async (status = queueStatus) => {
+      setLoading(true)
+      setError('')
+      try {
+        const [policyRes, queueRes] = await Promise.all([followupsApi.getPolicy(), followupsApi.getQueue(status, 100)])
+        setPolicy(policyRes.data?.policy || policy)
+        setQueue(queueRes.data?.items || [])
+      } catch (e) {
+        setError(e?.response?.data?.detail || 'Failed to load follow-up center')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [policy, queueStatus]
+  )
 
   const savePolicy = async () => {
     setPolicySaving(true)
@@ -103,6 +103,9 @@ const FollowUpCenter = () => {
     }
   }
 
+  useEffect(() => {
+    load(queueStatus)
+  }, [load, queueStatus])
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center gap-3">

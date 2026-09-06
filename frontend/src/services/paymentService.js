@@ -6,8 +6,6 @@ import { logger } from '../utils/logger.js'
 
 import api from './api'
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
-
 /**
  * Initiate premium subscription upgrade
  * @param {string} planId - Plan to upgrade to (plus, professional, enterprise)

@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { logger } from '../utils/logger.js'
 import React, { createContext, useState, useContext, useEffect } from 'react'
 import { emailApi } from '../services/api'
@@ -20,7 +21,7 @@ export const EmailAccountsProvider = ({ children }) => {
   const [error, setError] = useState(null)
   const { isAuthenticated } = useAuth()
 
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     if (!isAuthenticated) return
     setLoading(true)
     setError(null)
@@ -35,16 +36,9 @@ export const EmailAccountsProvider = ({ children }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   // Load accounts on auth change
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadAccounts()
-    } else {
-      setAccounts([])
-    }
-  }, [isAuthenticated])
 
   const testConnection = async (credentials) => {
     try {
@@ -112,6 +106,13 @@ export const EmailAccountsProvider = ({ children }) => {
     syncAccount,
   }
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadAccounts()
+    } else {
+      setAccounts([])
+    }
+  }, [isAuthenticated, loadAccounts])
   return <EmailAccountsContext.Provider value={value}>{children}</EmailAccountsContext.Provider>
 }
 

@@ -1,29 +1,15 @@
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect, useRef, useContext } from 'react'
-import {
-  Send,
-  Bot,
-  User,
-  RefreshCw,
-  Zap,
-  FileText,
-  Mail,
-  Clock,
-  Star,
-  ThumbsUp,
-  ThumbsDown,
-  Copy,
-  Download,
-} from 'lucide-react'
+import { Send, Bot, User, Zap, FileText, Mail, ThumbsUp, ThumbsDown, Copy } from 'lucide-react'
 import { EmailContext } from '../../context/EmailContext'
 import { agentApi } from '../../services/api'
 
 const EmailAgent = () => {
-  const { emails, selectedEmail, setSelectedEmail } = useContext(EmailContext)
+  const { emails, selectedEmail } = useContext(EmailContext)
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [conversationHistory, setConversationHistory] = useState([])
+
   const messagesEndRef = useRef(null)
 
   // Sample conversation starters

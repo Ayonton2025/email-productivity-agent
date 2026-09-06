@@ -1,9 +1,8 @@
 import React from 'react'
-import { Brain, Filter, Search, Settings } from 'lucide-react'
+import { Brain, Search, Settings } from 'lucide-react'
 import PromptCard from './PromptCard'
 
 const PromptList = ({
-  prompts,
   filteredPrompts,
   categories,
   loading,

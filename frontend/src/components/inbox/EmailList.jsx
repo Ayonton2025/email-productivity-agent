@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Mail, Star, Archive, Clock, AlertCircle, Calendar, ChevronLeft, ChevronRight, Paperclip } from 'lucide-react'
+import { Mail, ChevronLeft, ChevronRight, Paperclip } from 'lucide-react'
 
 const EmailList = ({ emails, loading, selectedEmail, onSelectEmail }) => {
   const [currentPage, setCurrentPage] = useState(0)

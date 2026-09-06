@@ -1,7 +1,8 @@
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Workflow, Plus, Play, Pause, Trash2, Edit, ChevronRight, Zap, RefreshCw } from 'lucide-react'
+import { Workflow, Plus, Play, Pause, Trash2, Edit, Zap, RefreshCw } from 'lucide-react'
 import { workflowsApi } from '../../services/api'
 import { FeatureLockBanner } from '../premium/PremiumPrompt'
 import { useSubscription } from '../../hooks/useSubscription'
@@ -41,7 +42,7 @@ const Workflows = () => {
       await loadWorkflows()
     } catch (error) {
       logger.error('Failed to delete workflow:', error)
-      alert('Failed to delete workflow')
+      notify('Failed to delete workflow', 'error')
     }
   }
 

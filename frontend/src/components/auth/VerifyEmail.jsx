@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const VerifyEmail = () => {

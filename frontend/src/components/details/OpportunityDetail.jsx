@@ -1,7 +1,8 @@
+import { useCallback } from 'react'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, TrendingUp, Calendar, DollarSign, Target, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Target, RefreshCw } from 'lucide-react'
 import { insightsApi } from '../../services/api'
 
 const OpportunityDetail = () => {
@@ -10,11 +11,7 @@ const OpportunityDetail = () => {
   const [opportunity, setOpportunity] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadOpportunity()
-  }, [opportunityId])
-
-  const loadOpportunity = async () => {
+  const loadOpportunity = useCallback(async () => {
     setLoading(true)
     try {
       const res = await insightsApi.getOpportunities()
@@ -25,7 +22,7 @@ const OpportunityDetail = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [opportunityId])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set'
@@ -53,6 +50,9 @@ const OpportunityDetail = () => {
     }
   }
 
+  useEffect(() => {
+    loadOpportunity()
+  }, [loadOpportunity, opportunityId])
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

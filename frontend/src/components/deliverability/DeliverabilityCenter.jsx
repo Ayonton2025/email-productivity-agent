@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import React, { useEffect, useState } from 'react'
 import { Gauge, RefreshCw, AlertCircle } from 'lucide-react'
 import { deliverabilityApi } from '../../services/api'
@@ -8,23 +9,25 @@ const DeliverabilityCenter = () => {
   const [days, setDays] = useState(30)
   const [data, setData] = useState(null)
 
-  const load = async (windowDays = days) => {
-    setLoading(true)
-    setError('')
-    try {
-      const res = await deliverabilityApi.getScore(windowDays)
-      setData(res.data || null)
-    } catch (e) {
-      setError(e?.response?.data?.detail || 'Failed to load deliverability score')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const load = useCallback(
+    async (windowDays = days) => {
+      setLoading(true)
+      setError('')
+      try {
+        const res = await deliverabilityApi.getScore(windowDays)
+        setData(res.data || null)
+      } catch (e) {
+        setError(e?.response?.data?.detail || 'Failed to load deliverability score')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [days]
+  )
 
   useEffect(() => {
     load(30)
-  }, [])
-
+  }, [load])
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

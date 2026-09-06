@@ -24,7 +24,7 @@ const DailyBriefing = () => {
       try {
         const [briefingRes, prefsRes] = await Promise.all([briefingsApi.getToday(), briefingsApi.getPreferences()])
         setBriefing(briefingRes.data?.briefing || null)
-        setPrefs(prefsRes.data?.preferences || prefs)
+        setPrefs((previous) => prefsRes.data?.preferences || previous)
       } catch (e) {
         setError(e?.response?.data?.detail || 'Failed to load daily briefing')
       } finally {

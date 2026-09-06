@@ -1,3 +1,4 @@
+import { notify } from '../utils/notifications'
 import { useContext, useEffect, useState } from 'react'
 import { logger } from '../utils/logger.js'
 import { Brain, FileText, Filter, MessageSquare, Settings, Zap } from 'lucide-react'
@@ -61,7 +62,7 @@ export function usePromptManager() {
 
   const handleCreatePrompt = async () => {
     if (!newPrompt.name || !newPrompt.template) {
-      alert('Please fill in all required fields')
+      notify('Please fill in all required fields')
       return
     }
     setError('')
@@ -122,8 +123,14 @@ export function usePromptManager() {
     categories.find((category) => category.id === categoryId)?.color || 'bg-gray-100 text-gray-800'
   const formatTemplatePreview = (template) =>
     !template ? 'No template defined' : template.length > 100 ? `${template.substring(0, 100)}...` : template
-  const copyToClipboard = (text) =>
-    navigator.clipboard.writeText(text).then(() => alert('Prompt template copied to clipboard!'))
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      notify('Prompt template copied to clipboard!', 'success')
+    } catch {
+      notify('Could not copy the prompt. Please copy it manually.', 'error')
+    }
+  }
 
   const handleGeneratePromptDraft = async (goal) => {
     if (!goal?.trim()) return

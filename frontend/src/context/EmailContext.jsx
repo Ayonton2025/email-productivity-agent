@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger.js'
-import React, { createContext, useState, useContext, useEffect } from 'react'
+import React, { createContext, useState, useContext } from 'react'
 import { useAuth } from './AuthContext'
 
 const EmailContext = createContext()
@@ -15,8 +15,8 @@ export const useEmail = () => {
 export const EmailProvider = ({ children }) => {
   const [emails, setEmails] = useState([])
   const [selectedEmail, setSelectedEmail] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [loading] = useState(false)
+  const [error] = useState(null)
   const [filters, setFilters] = useState({
     category: 'all',
     search: '',

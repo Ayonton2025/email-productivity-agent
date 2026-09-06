@@ -1,6 +1,7 @@
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
-import { Bot, Plus, Play, Pause, Trash2, Edit, Settings, Activity, RefreshCw } from 'lucide-react'
+import { Bot, Plus, Play, Pause, Trash2, Edit, Activity, RefreshCw } from 'lucide-react'
 import { agentsApi } from '../../services/api'
 import AgentConfig from './AgentConfig'
 
@@ -33,7 +34,7 @@ const Agents = () => {
       await loadAgents()
     } catch (error) {
       logger.error('Failed to delete agent:', error)
-      alert('Failed to delete agent')
+      notify('Failed to delete agent', 'error')
     }
   }
 

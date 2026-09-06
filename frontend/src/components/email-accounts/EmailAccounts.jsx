@@ -1,5 +1,6 @@
+import { notify } from '../../utils/notifications'
 import React, { useState, useEffect } from 'react'
-import { Mail, Plus, RefreshCw, Trash2, CheckCircle, XCircle, Clock, ExternalLink, AlertCircle } from 'lucide-react'
+import { Mail, Plus, RefreshCw, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useEmailAccounts } from '../../context/EmailAccountsContext'
 import ConnectEmailModal from './ConnectEmailModal'
 
@@ -10,13 +11,13 @@ const EmailAccounts = () => {
 
   useEffect(() => {
     loadEmailAccounts()
-  }, [])
+  }, [loadEmailAccounts])
 
   const handleDisconnect = async (accountId) => {
     if (window.confirm('Are you sure you want to disconnect this email account?')) {
       const result = await disconnectAccount(accountId)
       if (!result.success) {
-        alert(result.error)
+        notify(result.error, 'error')
       }
     }
   }
@@ -24,7 +25,7 @@ const EmailAccounts = () => {
   const handleSync = async (accountId) => {
     const result = await syncAccount(accountId)
     if (!result.success) {
-      alert(result.error)
+      notify(result.error, 'error')
     }
   }
 

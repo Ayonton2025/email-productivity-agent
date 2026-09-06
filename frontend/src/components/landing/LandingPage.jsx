@@ -16,7 +16,6 @@ import {
   ChevronDown,
   Play,
   Shield,
-  Unlock,
   Smartphone,
   MessageSquare,
   PlayCircle,

@@ -1,7 +1,7 @@
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Building2, Search, Filter, Mail, Calendar, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
+import { Users, Building2, Search, Mail, Calendar, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
 import { insightsApi } from '../../services/api'
 
 const Relationships = () => {

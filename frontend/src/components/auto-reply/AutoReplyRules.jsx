@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Save, X, Zap, Clock, CheckCircle, XCircle, Mail, Filter, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, Save, X, Clock, CheckCircle, XCircle, Mail, Filter, AlertCircle } from 'lucide-react'
 import { autoReplyApi } from '../../services/api'
 
 const AutoReplyRules = () => {
@@ -8,7 +8,7 @@ const AutoReplyRules = () => {
   const [queue, setQueue] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [editingId, setEditingId] = useState(null)
+  const [, setEditingId] = useState(null)
   const [form, setForm] = useState({
     name: '',
     match_category: '',
@@ -90,16 +90,6 @@ const AutoReplyRules = () => {
       load()
     } catch (e) {
       setError(e.response?.data?.detail || e.message || 'Failed to create rule')
-    }
-  }
-
-  const handleUpdateRule = async (ruleId, patch) => {
-    try {
-      await autoReplyApi.updateRule(ruleId, patch)
-      setEditingId(null)
-      load()
-    } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Failed to update rule')
     }
   }
 

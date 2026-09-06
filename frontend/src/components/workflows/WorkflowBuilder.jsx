@@ -1,10 +1,12 @@
+import WorkflowDraftPanel from './WorkflowDraftPanel'
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState } from 'react'
-import { X, Plus, Trash2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { X, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { workflowsApi, aiApi } from '../../services/api'
 
 const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     name: workflow?.name || '',
     description: workflow?.description || '',
     trigger_type: workflow?.trigger_type || 'email_received',
@@ -17,10 +19,10 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
     run_on_match: workflow?.run_on_match ?? true,
     require_approval: workflow?.require_approval ?? false,
     tags: workflow?.tags || [],
-  })
+  }))
 
   const [steps, setSteps] = useState(workflow?.steps || [])
-  const [newStep, setNewStep] = useState({
+  const [newStep, setNewStep] = useState(() => ({
     step_type: 'action',
     name: '',
     action_type: 'send_email',
@@ -28,14 +30,14 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
     condition_type: 'field_match',
     condition_config: {},
     delay_seconds: 0,
-  })
+  }))
 
   const [showAddStep, setShowAddStep] = useState(false)
   const [saving, setSaving] = useState(false)
   const [aiGoal, setAiGoal] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
-  const [aiMeta, setAiMeta] = useState({ provider: null, model: null })
+  const [aiMeta, setAiMeta] = useState(() => ({ provider: null, model: null }))
 
   const aiQuickPrompts = [
     'Create a workflow to tag invoice emails and draft a reply',
@@ -55,7 +57,7 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
 
   const addStep = () => {
     if (!newStep.name) {
-      alert('Please enter a step name')
+      notify('Please enter a step name')
       return
     }
 
@@ -95,7 +97,7 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
 
   const handleSave = async () => {
     if (!formData.name) {
-      alert('Please enter a workflow name')
+      notify('Please enter a workflow name')
       return
     }
 
@@ -128,7 +130,7 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
       onClose()
     } catch (error) {
       logger.error('Failed to save workflow:', error)
-      alert('Failed to save workflow')
+      notify('Failed to save workflow', 'error')
     } finally {
       setSaving(false)
     }
@@ -181,57 +183,15 @@ const WorkflowBuilder = ({ workflow, onClose, onSave }) => {
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-600" />
-              <p className="text-sm font-semibold text-indigo-900">AI Workflow Builder</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {aiQuickPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => {
-                    setAiGoal(prompt)
-                    handleGenerateAIDraft(prompt)
-                  }}
-                  className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-100"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={aiGoal}
-                onChange={(e) => setAiGoal(e.target.value)}
-                placeholder="Describe the workflow you want..."
-                className="flex-1 rounded-lg border border-indigo-200 px-3 py-2 text-sm"
-              />
-              <button
-                onClick={() => handleGenerateAIDraft(aiGoal)}
-                disabled={aiLoading || !aiGoal.trim()}
-                className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {aiLoading ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
-            {aiError && (
-              <div className="text-xs text-red-600 space-y-1">
-                <p>{aiError}</p>
-                {String(aiError).includes('No LLM providers configured') && (
-                  <a href="/admin/super" className="underline">
-                    Configure LLM Providers
-                  </a>
-                )}
-              </div>
-            )}
-            {(aiMeta.provider || aiMeta.model) && (
-              <p className="text-[11px] text-slate-500">
-                Provider: {aiMeta.provider || 'n/a'} | Model: {aiMeta.model || 'n/a'}
-              </p>
-            )}
-          </div>
+          <WorkflowDraftPanel
+            aiQuickPrompts={aiQuickPrompts}
+            setAiGoal={setAiGoal}
+            handleGenerateAIDraft={handleGenerateAIDraft}
+            aiGoal={aiGoal}
+            aiLoading={aiLoading}
+            aiError={aiError}
+            aiMeta={aiMeta}
+          />
 
           {/* Basic Info */}
           <div className="space-y-4">

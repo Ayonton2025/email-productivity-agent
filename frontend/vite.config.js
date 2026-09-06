@@ -16,8 +16,8 @@ export default defineConfig({
         // Default to localhost during local development so the dev server proxies to a local backend.
         // If VITE_API_URL is provided and does not point to localhost, use it instead (useful for Docker/dev containers).
         target:
-          process.env.VITE_API_URL && !process.env.VITE_API_URL.includes('localhost')
-            ? process.env.VITE_API_URL
+          process.env.VITE_PROXY_TARGET || (process.env.VITE_API_URL && !process.env.VITE_API_URL.includes('localhost'))
+            ? process.env.VITE_PROXY_TARGET || process.env.VITE_API_URL
             : 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
@@ -26,8 +26,9 @@ export default defineConfig({
       },
       '/ws': {
         target:
-          process.env.VITE_WS_URL && !process.env.VITE_WS_URL.includes('localhost')
-            ? process.env.VITE_WS_URL
+          process.env.VITE_WS_PROXY_TARGET ||
+          (process.env.VITE_WS_URL && !process.env.VITE_WS_URL.includes('localhost'))
+            ? process.env.VITE_WS_PROXY_TARGET || process.env.VITE_WS_URL
             : 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,

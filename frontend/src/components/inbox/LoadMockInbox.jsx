@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { useEmail } from '../../context/EmailContext'
 import { Download } from 'lucide-react'
 

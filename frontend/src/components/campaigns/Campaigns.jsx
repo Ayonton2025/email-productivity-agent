@@ -1,3 +1,4 @@
+import { notify } from '../../utils/notifications'
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -41,7 +42,7 @@ const Campaigns = () => {
       await loadCampaigns()
     } catch (error) {
       logger.error('Failed to delete campaign:', error)
-      alert('Failed to delete campaign')
+      notify('Failed to delete campaign', 'error')
     }
   }
 

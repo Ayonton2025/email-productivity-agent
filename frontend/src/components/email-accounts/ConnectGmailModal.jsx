@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Mail, Key, FileText, AlertCircle, CheckCircle, LogIn } from 'lucide-react'
+import { X, Mail, Key, AlertCircle, CheckCircle, LogIn } from 'lucide-react'
 import { useEmailAccounts } from '../../context/EmailAccountsContext'
 import { useAuth } from '../../context/AuthContext'
 

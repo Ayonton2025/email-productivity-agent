@@ -1,3 +1,4 @@
+import ToastProvider from './components/shared/ToastProvider'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
@@ -17,6 +18,9 @@ const withPerformanceMonitoring = (WrappedComponent) => {
       networkRequests: [],
       authOperations: [],
     })
+
+    const performanceMetricsRef = React.useRef(performanceMetrics)
+    performanceMetricsRef.current = performanceMetrics
 
     React.useEffect(() => {
       // Measure initial app load time
@@ -88,8 +92,8 @@ const withPerformanceMonitoring = (WrappedComponent) => {
           logger.debug(`🚀 Bylix Email mounted in ${mountTime.toFixed(2)}ms`)
 
           // Performance insights
-          const aiOps = performanceMetrics.aiOperationTimes.length
-          const authOps = performanceMetrics.authOperations.length
+          const aiOps = performanceMetricsRef.current.aiOperationTimes.length
+          const authOps = performanceMetricsRef.current.authOperations.length
 
           logger.debug(`📊 Performance Summary:`)
           logger.debug(`   - AI Operations: ${aiOps}`)
@@ -105,8 +109,8 @@ const withPerformanceMonitoring = (WrappedComponent) => {
           if (window.gtag) {
             window.gtag('event', 'app_load', {
               load_time: Math.round(mountTime),
-              ai_operations: performanceMetrics.aiOperationTimes.length,
-              auth_operations: performanceMetrics.authOperations.length,
+              ai_operations: performanceMetricsRef.current.aiOperationTimes.length,
+              auth_operations: performanceMetricsRef.current.authOperations.length,
             })
           }
         }
@@ -283,7 +287,9 @@ const renderApp = () => {
     root.render(
       <StrictModeWrapper>
         <ErrorBoundary>
-          <EnhancedApp />
+          <ToastProvider>
+            <EnhancedApp />
+          </ToastProvider>
         </ErrorBoundary>
       </StrictModeWrapper>
     )

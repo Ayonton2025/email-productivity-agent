@@ -8,13 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "serve": "vite preview --port 3000 --host",
-    "lint": "eslint src --ext .js,.jsx --max-warnings 108",
+    "lint": "eslint src --ext .js,.jsx --max-warnings 0",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,cjs}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"*.{js,cjs}\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -31,6 +32,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/coverage-v8": "3.2.7",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
@@ -56,5 +58,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "license": "Apache-2.0"
 }

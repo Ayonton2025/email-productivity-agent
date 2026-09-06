@@ -14,3 +14,5 @@ dist
 .cache
 build
 .next
+
+coverage
