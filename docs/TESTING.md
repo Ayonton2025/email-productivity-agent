@@ -4,6 +4,12 @@
 
 Tests cover request contracts, authentication, billing, email services, architecture boundaries, security middleware, exceptions, health/readiness, manifest drift and frontend user flows. CI repeats tests, formatting, lint, typing, security audits and isolated Docker startup, HTTP, test-container and teardown checks on pushes and pull requests.
 
+The Quality workflow exposes backend tests, all three coverage gates, Ruff,
+mypy, Bandit and pip-audit as named steps in **Backend Quality**. **Frontend
+Quality** exposes npm installation, tests with coverage, lint, formatting,
+typecheck, build and audit. The separate **fresh-clone** matrix continues to run
+the full verification scripts on Windows and Linux. A failed gate fails its job.
+
 ## Canonical clean-install checks
 
 Run `./scripts/verify-fresh-clone.ps1` on Windows or `bash scripts/verify-fresh-clone.sh` on Linux from the repository root. Both require Python 3.11 and Node 24 and run the same checks with a temporary backend environment and `npm ci`.

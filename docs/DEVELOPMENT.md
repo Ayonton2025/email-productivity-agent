@@ -34,14 +34,14 @@ docker compose -f docker-compose.test.yml down
 Run these commands from `backend/`:
 
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv  # Windows: py -3.11 -m venv .venv
 ```
 
 Activate the environment (`.venv/Scripts/activate` on Windows or
 `source .venv/bin/activate` on macOS/Linux), then run:
 
 ```bash
-python -m pip install --upgrade pip
+python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 python -m uvicorn app.main:app --reload
 ```
@@ -54,8 +54,9 @@ Run backend checks:
 
 ```bash
 python -m pytest tests --cov=app --cov-report=term-missing
-python -m ruff check app tests
-python -m mypy app
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy
 ```
 
 ## Local frontend
