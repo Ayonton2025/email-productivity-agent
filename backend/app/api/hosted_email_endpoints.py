@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import create_access_token, get_current_user, logger
-from app.models.database import UserEmailAccount, get_db
+from app.models.database import get_db
+from app.models.email_models import UserEmailAccount
 from app.models.hosted_email_models import HostedEmailSendLog
 from app.models.user_models import User
 from app.services.hosted_email_provider_service import HostedEmailProviderService

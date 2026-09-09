@@ -7,8 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user, logger
-from app.models.database import Email, get_db
+from app.models.database import get_db
 from app.models.document_models import DocumentAnalysis, EmailAttachment
+from app.models.email_models import Email
 from app.models.user_models import User
 from app.services.attachment_service import AttachmentService, DocumentAnalysisService
 from app.tasks.document_analysis_task import task_handler

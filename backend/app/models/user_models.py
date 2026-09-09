@@ -1,15 +1,18 @@
+"""Canonical user model, shared by authentication, billing and email services."""
+
 import logging
 import uuid
 from datetime import datetime, timedelta
 
 import jwt
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Boolean, Column, DateTime, String
 
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app.models.base import Base
+from app.models.email_models import UserEmailAccount
 
-Base = declarative_base()
+__all__ = ["Base", "User", "UserEmailAccount"]
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +27,9 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     verification_token = Column(String, nullable=True)
     reset_token = Column(String, nullable=True)
-    preferred_language = Column(String, default="en")
+    plan = Column(String, default="personal", index=True)
+    subscription_status = Column(String, default="free", index=True)
+    preferred_language = Column(String, default="en", index=True)
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -50,6 +55,8 @@ class User(Base):
 
     def generate_verification_token(self) -> str:
         """Generate email verification token"""
+        if self.id is None:
+            self.id = str(uuid.uuid4())
         token_data = {"user_id": self.id, "email": self.email, "exp": datetime.utcnow() + timedelta(days=1)}
         token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.verification_token = token
@@ -58,76 +65,23 @@ class User(Base):
 
     def generate_reset_token(self) -> str:
         """Generate password reset token"""
+        if self.id is None:
+            self.id = str(uuid.uuid4())
         token_data = {"user_id": self.id, "email": self.email, "exp": datetime.utcnow() + timedelta(hours=1)}
         token = jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
         self.reset_token = token
         return token
 
     def to_dict(self):
-        """Convert user to dictionary"""
         return {
             "id": self.id,
             "email": self.email,
             "full_name": self.full_name,
+            "plan": self.plan,
+            "subscription_status": self.subscription_status,
+            "preferred_language": self.preferred_language,
             "is_verified": self.is_verified,
             "is_active": self.is_active,
-            "preferred_language": self.preferred_language,
             "last_login": self.last_login.isoformat() if self.last_login else None,
-            "created_at": self.created_at.isoformat(),
-        }
-
-
-class UserEmailAccount(Base):
-    __tablename__ = "user_email_accounts"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=False, index=True)
-    provider = Column(String, nullable=False)  # gmail, yahoo, outlook, etc
-    email = Column(String, nullable=False, index=True)
-    display_name = Column(String, nullable=True)
-
-    # IMAP/SMTP Configuration
-    imap_host = Column(String, nullable=False)
-    imap_port = Column(Integer, default=993)
-    smtp_host = Column(String, nullable=False)
-    smtp_port = Column(Integer, default=587)
-    use_tls = Column(Boolean, default=True)
-
-    # ENCRYPTED Credentials
-    encrypted_password = Column(Text, nullable=False)  # AES-256 encrypted IMAP/SMTP password
-
-    # Connection Status
-    is_active = Column(Boolean, default=True)
-    is_primary = Column(Boolean, default=False)
-    last_sync = Column(DateTime, nullable=True)
-    sync_enabled = Column(Boolean, default=True)
-    last_sync_status = Column(String, nullable=True)  # "success", "failed", etc
-    sync_error = Column(Text, nullable=True)  # Last sync error message
-
-    # Metadata
-    total_emails = Column(Integer, default=0)
-    unread_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "provider": self.provider,
-            "email": self.email,
-            "display_name": self.display_name,
-            "imap_host": self.imap_host,
-            "imap_port": self.imap_port,
-            "smtp_host": self.smtp_host,
-            "smtp_port": self.smtp_port,
-            "use_tls": self.use_tls,
-            "is_active": self.is_active,
-            "is_primary": self.is_primary,
-            "last_sync": self.last_sync.isoformat() if self.last_sync else None,
-            "last_sync_status": self.last_sync_status,
-            "sync_enabled": self.sync_enabled,
-            "total_emails": self.total_emails,
-            "unread_count": self.unread_count,
             "created_at": self.created_at.isoformat(),
         }

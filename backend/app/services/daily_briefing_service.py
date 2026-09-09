@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import logger
 from app.models.commitment_models import Commitment
-from app.models.database import Email
+from app.models.email_models import Email
 from app.models.phase1_models import DailyBriefing, UserDigestPreference
 from app.services.llm_orchestration_service import llm_service
 

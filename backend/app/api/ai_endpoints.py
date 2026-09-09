@@ -27,7 +27,9 @@ from app.core.security import get_current_user, logger
 from app.models.agent_models import Agent
 from app.models.billing_models import UsageLog
 from app.models.campaign_models import Campaign, CampaignSequence, Lead
-from app.models.database import PromptTemplate, User, get_db
+from app.models.database import get_db
+from app.models.prompt_models import PromptTemplate
+from app.models.user_models import User
 from app.models.workflow_models import Workflow, WorkflowStep
 from app.services.llm_orchestration_service import llm_service
 

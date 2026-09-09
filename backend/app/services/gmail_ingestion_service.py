@@ -22,7 +22,8 @@ from googleapiclient.discovery import build
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import Email, User, UserEmailAccount
+from app.models.email_models import Email, UserEmailAccount
+from app.models.user_models import User
 from app.services.email_attachment_integration import email_attachment_integration
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService

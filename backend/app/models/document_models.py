@@ -8,7 +8,7 @@ from datetime import datetime
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class EmailAttachment(Base):

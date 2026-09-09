@@ -180,7 +180,7 @@ async def create_default_admin():
     try:
         from sqlalchemy import select
 
-        from app.models.database import User
+        from app.models.user_models import User
 
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(User))

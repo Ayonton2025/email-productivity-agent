@@ -14,7 +14,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import UserEmailAccount, get_db
+from app.models.database import get_db
+from app.models.email_models import UserEmailAccount
 from app.services.gmail_ingestion_service import GmailIngestionService
 
 logger = logging.getLogger(__name__)

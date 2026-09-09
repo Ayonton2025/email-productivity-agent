@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import and_, select
 
 from app.core.security import logger
-from app.models.database import AsyncSessionLocal, Email
+from app.models.database import AsyncSessionLocal
+from app.models.email_models import Email
 from app.tasks.async_runner import run_async
 from app.tasks.celery_app import celery_app as celery
 

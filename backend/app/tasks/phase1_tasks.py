@@ -10,8 +10,9 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import select
 
 from app.core.security import logger
-from app.models.database import AsyncSessionLocal, User
+from app.models.database import AsyncSessionLocal
 from app.models.phase1_models import UserDigestPreference
+from app.models.user_models import User
 from app.services.daily_briefing_service import DailyBriefingService
 from app.services.follow_up_service import FollowUpService
 from app.tasks.async_runner import run_async

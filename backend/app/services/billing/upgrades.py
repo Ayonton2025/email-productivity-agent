@@ -20,7 +20,8 @@ from app.models.billing_models import (
     Subscription,
     UsageLog,
 )
-from app.models.database import SystemSetting, User
+from app.models.system_models import SystemSetting
+from app.models.user_models import User
 
 
 class UpgradeSessionMixin:

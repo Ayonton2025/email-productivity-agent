@@ -13,7 +13,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import SyncHistory
+from app.models.provider_models import SyncHistory
 
 logger = logging.getLogger(__name__)
 

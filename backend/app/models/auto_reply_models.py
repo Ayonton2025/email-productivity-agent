@@ -13,7 +13,7 @@ from typing import Any, Dict
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class AutoReplyRule(Base):

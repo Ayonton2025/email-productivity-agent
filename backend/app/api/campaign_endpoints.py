@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
 from app.models.campaign_models import Campaign, CampaignSequence, Lead
-from app.models.database import UserEmailAccount, get_db
+from app.models.database import get_db
+from app.models.email_models import UserEmailAccount
 from app.models.user_models import User
 from app.services.billing_service import FeatureGatingService
 

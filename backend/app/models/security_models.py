@@ -9,7 +9,7 @@ from datetime import datetime
 
 from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Index, String, Text
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class EmailSecurityScan(Base):

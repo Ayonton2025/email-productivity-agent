@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import EmailDeliveryError
 from app.core.security import decrypt_credential
-from app.models.database import Email, UserEmailAccount
+from app.models.email_models import Email, UserEmailAccount
 from app.services.hosted_email_abuse_service import HostedEmailAbuseService
 
 logger = logging.getLogger(__name__)

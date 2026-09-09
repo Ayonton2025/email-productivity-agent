@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
 from app.models.auto_reply_models import AutoReplyRule, AwayModeSetting
-from app.models.database import Email, EmailDraft, UserEmailAccount, get_db
+from app.models.database import get_db
+from app.models.email_models import Email, EmailDraft, UserEmailAccount
 from app.models.user_models import User
 from app.services.smtp_service import smtp_service
 

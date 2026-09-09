@@ -8,7 +8,8 @@ from sqlalchemy import and_, or_, select
 
 from app.core.security import logger
 from app.models.campaign_models import Campaign, CampaignSequence, Lead, WarmupSchedule
-from app.models.database import AsyncSessionLocal, UserEmailAccount
+from app.models.database import AsyncSessionLocal
+from app.models.email_models import UserEmailAccount
 from app.services.smtp_service import SMTPService
 from app.tasks.async_runner import run_async
 from app.tasks.celery_app import celery_app as celery

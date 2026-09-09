@@ -10,7 +10,7 @@ from typing import Any, Dict
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, String, Text
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class SharedInbox(Base):

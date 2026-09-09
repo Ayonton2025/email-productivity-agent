@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import DECIMAL, JSON, Column, DateTime, ForeignKey, Index, Integer, String
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class AIUsageUnit(Base):

@@ -372,7 +372,7 @@ async def execute_workflow(
 
         email = None
         if email_id:
-            from app.models.database import Email
+            from app.models.email_models import Email
 
             email_result = await db.execute(
                 select(Email).where(and_(Email.id == email_id, Email.user_id == current_user.id))

@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import DECIMAL, JSON, Boolean, Column, DateTime, ForeignKey, Integer, String
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class OutboundAddOn(Base):

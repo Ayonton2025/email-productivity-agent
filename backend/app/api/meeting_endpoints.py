@@ -12,7 +12,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
-from app.models.database import Email, get_db
+from app.models.database import get_db
+from app.models.email_models import Email
 from app.models.meeting_models import MeetingRecord
 from app.models.user_models import User
 from app.services.advanced_features_service import AdvancedFeaturesService

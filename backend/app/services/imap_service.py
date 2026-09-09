@@ -17,7 +17,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decrypt_credential
-from app.models.database import Email, User, UserEmailAccount
+from app.models.email_models import Email, UserEmailAccount
+from app.models.user_models import User
 from app.services.auto_reply_service import AutoReplyService
 from app.services.email_ai_processing_service import process_emails_ai
 from app.services.email_attachment_integration import email_attachment_integration

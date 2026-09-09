@@ -32,7 +32,8 @@ from app.api.billing.schemas import (
 from app.core.config import settings
 from app.core.security import get_current_user, logger
 from app.models.billing_models import CREDIT_PACK_PRICING_USD, SUBSCRIPTION_PLANS, PaymentTransaction
-from app.models.database import User, get_db
+from app.models.database import get_db
+from app.models.user_models import User
 from app.services.billing_service import CreditService, FeatureGatingService, PaymentService, SubscriptionService
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])

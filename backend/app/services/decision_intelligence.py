@@ -21,7 +21,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.commitment_models import Commitment, Opportunity, Risk
-from app.models.database import Email
+from app.models.email_models import Email
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService
 

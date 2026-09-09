@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.contact_models import Company, Contact, ContactInteraction
-from app.models.database import Email
+from app.models.email_models import Email
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService
 

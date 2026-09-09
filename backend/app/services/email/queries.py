@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.core.exceptions import EmailPersistenceError
-from app.models.database import Email
+from app.models.email_models import Email
 
 logger = structlog.get_logger(__name__)
 
@@ -129,7 +129,7 @@ class EmailQueriesMixin:
         """Return active, sync-enabled `UserEmailAccount` rows."""
         try:
             db = session or self.db
-            from app.models.database import UserEmailAccount
+            from app.models.email_models import UserEmailAccount
 
             result = await db.execute(
                 select(UserEmailAccount)
