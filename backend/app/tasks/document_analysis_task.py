@@ -87,7 +87,7 @@ class DocumentAnalysisTaskHandler:
         async with AsyncSessionLocal() as session:
             try:
                 # Get all attachments for email
-                from app.models.database import Email
+                from app.models.email_models import Email
 
                 email = await session.get(Email, email_id)
                 if not email:
@@ -170,7 +170,7 @@ if CELERY_AVAILABLE:
 
             async def run_batch():
                 async with AsyncSessionLocal() as session:
-                    from app.models.database import Email
+                    from app.models.email_models import Email
 
                     # Get all attachments
                     email = await session.get(Email, email_id)

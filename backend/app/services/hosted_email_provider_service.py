@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import encrypt_credential, logger
-from app.models.database import UserEmailAccount
+from app.models.email_models import UserEmailAccount
 from app.models.hosted_email_models import HostedMailboxProvisioning
 
 LOCAL_PART_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$")

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.database import get_db
-from app.models.email_provider_models import EmailProviderConfig
+from app.models.provider_models import EmailProviderConfig
 from app.services.email_provider_service import EmailProviderService
 
 router = APIRouter()

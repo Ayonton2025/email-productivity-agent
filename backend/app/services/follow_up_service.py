@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import logger
-from app.models.database import Email, UserEmailAccount
+from app.models.email_models import Email, UserEmailAccount
 from app.models.phase1_models import FollowUpExecution, FollowUpPolicy
 from app.services.llm_orchestration_service import llm_service
 from app.services.smtp_service import smtp_service

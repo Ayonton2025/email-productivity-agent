@@ -15,8 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import encrypt_credential, get_current_user
-from app.models.database import Email, EmailProviderConfig, UserEmailAccount, get_db
+from app.models.database import get_db
 from app.models.document_models import EmailAttachment
+from app.models.email_models import Email, UserEmailAccount
+from app.models.provider_models import EmailProviderConfig
 from app.models.user_models import User
 from app.services.email_provider_service import EmailProviderService
 from app.services.gmail_sync_service import sync_gmail_inbox

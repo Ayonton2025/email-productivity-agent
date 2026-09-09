@@ -8,6 +8,75 @@ permissions:
   contents: read
 
 jobs:
+  backend-quality:
+    name: Backend Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install backend tooling
+        run: python -m pip install --upgrade --disable-pip-version-check --no-input -r requirements-tooling.txt
+      - name: Install backend dependencies
+        run: python -m pip install --disable-pip-version-check --no-input -r requirements-lock.txt
+      - name: Check installed dependency compatibility
+        run: python -m pip check
+      - name: Run pytest with whole-application coverage
+        run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
+      - name: Check maintained-domain coverage
+        run: >-
+          python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils
+          --cov=app.services.email_service --cov=app.services.email --cov=app.services.mock_email_loader
+          --cov=app.services.llm_orchestration_service --cov=app.services.model_registry
+          --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50 -q
+      - name: Check security-boundary coverage
+        run: >-
+          python -m pytest tests/test_api_schema_contract.py tests/test_input_validation.py
+          tests/test_security_middleware.py --cov=app.api.schemas --cov=app.core.input_validation
+          --cov-report=term-missing --cov-fail-under=90 -q
+      - name: Run ruff check
+        run: python -m ruff check .
+      - name: Run ruff format check
+        run: python -m ruff format --check .
+      - name: Run mypy
+        run: python -m mypy
+      - name: Run Bandit
+        run: python -m bandit -c pyproject.toml -r app --severity-level medium
+      - name: Audit Python dependencies
+        run: python -m pip_audit
+
+  frontend-quality:
+    name: Frontend Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Run frontend tests with coverage
+        run: npm run test:coverage
+      - name: Run frontend lint
+        run: npm run lint
+      - name: Run frontend format check
+        run: npm run format:check
+      - name: Run frontend typecheck
+        run: npm run typecheck
+      - name: Build frontend
+        run: npm run build
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+
   fresh-clone:
     strategy:
       fail-fast: false

@@ -16,7 +16,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.database import UserEmailAccount
+from app.models.email_models import UserEmailAccount
 from app.models.hosted_email_models import HostedEmailSendLog
 from app.services.llm_orchestration_service import llm_service
 

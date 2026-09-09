@@ -107,7 +107,7 @@ async def test_prompt(
     try:
         from sqlalchemy import select
 
-        from app.models.database import PromptTemplate
+        from app.models.prompt_models import PromptTemplate
 
         prompt_service = PromptService(db)
         llm_service = LLMService()
@@ -172,7 +172,7 @@ async def get_user_email_accounts_simple(
     try:
         from sqlalchemy import select
 
-        from app.models.user_models import UserEmailAccount
+        from app.models.email_models import UserEmailAccount
 
         result = await db.execute(
             select(UserEmailAccount)
@@ -195,7 +195,7 @@ async def connect_gmail_simple(
 ):
     """Connect Gmail account"""
     try:
-        from app.models.user_models import UserEmailAccount
+        from app.models.email_models import UserEmailAccount
         from app.services.email_provider_service import EmailProviderService
 
         email_provider_service = EmailProviderService()

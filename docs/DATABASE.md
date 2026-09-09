@@ -46,3 +46,33 @@ The SQLAlchemy models and migrations are authoritative for columns and constrain
 - Production should use point-in-time recovery, encrypted backups and regularly tested restores.
 - Attachment storage requires an independent backup and retention policy.
 - Customer deletion must cover messages, attachments, logs, sync history and derived AI data.
+
+## Canonical model ownership
+
+Every mapped class uses `app.models.base.Base`. Import models from their owning
+module; import sessions and initialization from `app.models.database`.
+
+| Module in `backend/app/models` | Responsibility |
+|---|---|
+| `base.py` | Shared declarative base and metadata |
+| `user_models.py` | User, password helpers and verification/reset tokens |
+| `email_models.py` | UserEmailAccount, Email and EmailDraft |
+| `prompt_models.py` | PromptTemplate |
+| `provider_models.py` | EmailProviderConfig and SyncHistory |
+| `system_models.py` | SystemSetting |
+| Other domain model modules | Their existing domain tables, using the same Base |
+| `database.py` | Engine, session factory, initialization and session dependency |
+
+`register_models()` in `models/__init__.py` explicitly loads all domain mappings;
+`init_db()` calls it before creating tables. Importing domain models alone does
+not initialize the database engine. Register a new domain module here when adding
+one. Historical imports from `database.py`, `email_provider_models.py`, and
+`user_models.UserEmailAccount` remain aliases of the canonical classes.
+
+Phase 3 preserves the existing canonical schema. The regression snapshot in
+`backend/tests/fixtures/model_schema.json` fingerprints all 58 tables from commit
+`20d3a1d`, including PostgreSQL/SQLite DDL, indexes and Python defaults. A deliberate
+future schema change must review that baseline alongside its migration; do not
+regenerate the snapshot merely to make a failing test pass.
+
+See [Phase 3 verification](PHASE_3_VERIFICATION.md) for consolidation checks.

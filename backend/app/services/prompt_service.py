@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.database import PromptTemplate
+from app.models.prompt_models import PromptTemplate
 
 logger = logging.getLogger(__name__)
 

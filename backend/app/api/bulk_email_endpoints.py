@@ -14,7 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.websocket_manager import connection_manager
 from app.core.security import get_current_user
-from app.models.database import Email, User, get_db
+from app.models.database import get_db
+from app.models.email_models import Email
+from app.models.user_models import User
 
 logger = logging.getLogger(__name__)
 

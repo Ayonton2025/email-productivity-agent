@@ -5,7 +5,8 @@ AI and intelligence processing background tasks
 from sqlalchemy import select
 
 from app.core.security import logger
-from app.models.database import AsyncSessionLocal, Email
+from app.models.database import AsyncSessionLocal
+from app.models.email_models import Email
 from app.services.llm_orchestration_service import llm_service
 from app.tasks.async_runner import run_async
 from app.tasks.celery_app import celery_app as celery

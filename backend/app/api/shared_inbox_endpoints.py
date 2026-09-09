@@ -15,7 +15,8 @@ from app.core.config import settings
 from app.core.security import get_current_user
 from app.models.billing_models import SUBSCRIPTION_PLANS, Subscription
 from app.models.collaboration_models import SharedInbox, SharedInboxEmail, SharedInboxMember
-from app.models.database import Email, get_db
+from app.models.database import get_db
+from app.models.email_models import Email
 from app.models.user_models import User
 from app.services.billing_service import FeatureGatingService
 

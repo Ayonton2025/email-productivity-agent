@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import Email
+from app.models.email_models import Email
 from app.models.workflow_models import Workflow, WorkflowExecution, WorkflowStep
 from app.services.auto_reply_service import AutoReplyService
 from app.services.email_service import EmailService

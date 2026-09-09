@@ -14,7 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
-from app.models.database import User, UserEmailAccount, get_db
+from app.models.database import get_db
+from app.models.email_models import UserEmailAccount
+from app.models.user_models import User
 from app.services.gmail_ingestion_service import GmailIngestionService
 from app.services.multi_provider_service import EmailProvider, MultiProviderService
 

@@ -18,6 +18,13 @@ A full-stack email productivity platform with AI assistance, multi-provider emai
 - Node.js 24 and npm
 - Docker Desktop with Compose v2 for the isolated stack
 
+### Clone the repository
+
+```bash
+git clone https://github.com/Ayonton2025/email-productivity-agent.git
+cd email-productivity-agent
+```
+
 ### Offline development
 
 The default local path requires no provider accounts. It uses SQLite and deterministic mock billing, AI, email, FX, and GeoIP services.
@@ -37,13 +44,15 @@ docker compose -f docker-compose.test.yml down
 
 ```powershell
 Set-Location backend
-python -m venv .venv
+Copy-Item ..\.env.example .env
+py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 ```
 
-Use `source .venv/bin/activate` instead on macOS or Linux. The lockfile is the
+On macOS/Linux, use `cp ../.env.example .env`, `python3.11 -m venv .venv`,
+and `source .venv/bin/activate` instead. The lockfile is the
 single supported install input for a clean checkout; do not install the runtime
 and development manifests in addition to it.
 
@@ -54,7 +63,7 @@ Set-Location backend
 python -m uvicorn app.main:app --reload
 ```
 
-`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. `requirements-tooling.txt` pins patched packaging tools. Fresh-clone verification installs the tooling pins before the application lockfile.
+`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. `requirements-tooling.txt` pins patched packaging tools. Fresh-clone verification installs the tooling pins before the application lockfile and runs `pip check`. The runtime manifest mirrors `pyproject.toml` and uses the lockfile as constraints. See [dependency installation and update modes](docs/DEVELOPMENT.md#dependency-policy).
 
 ### Local frontend installation
 
@@ -77,7 +86,8 @@ The frontend runs at `http://localhost:3000`.
 
 ### Fresh-clone verification
 
-From the repository root, run the platform-specific verification script. It
+Start from a new clone without copying `.env`, `.venv`, or `node_modules` from
+an existing checkout. From its root, run the platform-specific verification script. It
 creates a temporary Python 3.11 environment, installs the committed backend
 lockfile, runs the backend suite and quality checks, performs `npm ci`, and
 then runs the frontend suite, lint, formatting, typecheck, and production
@@ -96,7 +106,9 @@ bash scripts/verify-fresh-clone.sh
 ```
 
 This is the canonical clean-checkout verification command. It requires Python
-3.11, Node.js 24, and npm; it does not require Docker or provider credentials.
+3.11, Node.js 24, and npm; it does not require Docker, an `.env` file, or provider
+credentials. Dependency installation and security audits require internet access;
+application tests use mock providers.
 
 Run backend checks from `backend/`:
 
@@ -122,7 +134,9 @@ npm run build
 npm audit --audit-level=high
 ```
 
-The GitHub Actions workflow runs these checks on every push and pull request. Dependabot checks both Python and npm dependencies weekly.
+The GitHub Actions workflow exposes each check in the Backend Quality and
+Frontend Quality jobs on every push and pull request. Separate Windows and Linux
+fresh-clone jobs retain the complete verification scripts. Dependabot checks both Python and npm dependencies weekly.
 
 Coverage uses two complementary measurements. The whole-application 31% ratchet reports every API, task, and external-provider integration so legacy coverage cannot regress. A separate 50% maintained-domain gate covers core infrastructure, models, utilities, email processing, LLM orchestration, and the model and prompt registries. The security-critical validation boundary retains its stricter 90% gate. Tests use deterministic mocks and in-memory SQLite; they do not contact customer mailboxes, payment processors, or AI providers.
 

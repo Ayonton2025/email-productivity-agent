@@ -34,14 +34,14 @@ docker compose -f docker-compose.test.yml down
 Run these commands from `backend/`:
 
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv  # Windows: py -3.11 -m venv .venv
 ```
 
 Activate the environment (`.venv/Scripts/activate` on Windows or
 `source .venv/bin/activate` on macOS/Linux), then run:
 
 ```bash
-python -m pip install --upgrade pip
+python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 python -m uvicorn app.main:app --reload
 ```
@@ -54,8 +54,9 @@ Run backend checks:
 
 ```bash
 python -m pytest tests --cov=app --cov-report=term-missing
-python -m ruff check app tests
-python -m mypy app
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy
 ```
 
 ## Local frontend
@@ -80,23 +81,72 @@ production build, then removes the temporary backend environment.
 
 ## Dependency policy
 
-- `backend/pyproject.toml` documents package metadata, Python compatibility,
-  tool configuration, and dependency groups.
-- `backend/requirements.txt` is the reviewed direct dependency list.
-- `backend/requirements-lock.txt` is the exact installation input used by the
-  backend image.
+- `backend/pyproject.toml` is the source of truth for direct runtime dependencies,
+  development extras and backend package metadata. The package version remains
+  `1.0.0`, matching the frontend package metadata; runtime `APP_VERSION` is a
+  separate configurable application label. Release versioning is a later phase.
+- `backend/requirements.txt` mirrors the runtime versions and extras. It applies
+  `requirements-lock.txt` as constraints so transitive versions stay reproducible
+  without installing development tools into a runtime-only environment.
+- `backend/requirements-dev.txt` includes the runtime file and mirrors the `dev`
+  extra, keeping development tools separate from runtime requirements.
+- `backend/requirements-lock.txt` pins the tested runtime/development environment.
+  Docker and the full verification runner install it directly.
+- `backend/requirements-tooling.txt` pins packaging tools separately.
 - `frontend/package-lock.json` is installed with `npm ci`.
 
-After changing Python dependencies, rebuild a clean Python 3.11 virtual
-environment and regenerate the lock snapshot:
+From a fresh Python 3.11 environment in `backend/`, install the tooling first:
 
 ```bash
-python -m pip install -r requirements.txt
-python -m pip freeze --local > requirements-lock.txt
+python -m pip install --upgrade -r requirements-tooling.txt
 ```
 
-Review the resulting diff and run all checks before committing it. Do not run
-the freeze command from a global Python environment.
+Choose one installation mode:
+
+```bash
+# Runtime only (the requirements file applies the committed constraints)
+python -m pip install -r requirements.txt
+
+# Runtime plus development tools
+python -m pip install -r requirements-dev.txt
+
+# Editable package with development tools and the same constraints
+python -m pip install --no-build-isolation -c requirements-lock.txt -e ".[dev]"
+```
+
+`--no-build-isolation` uses the packaging tools installed above. After installation,
+run `python -m pip check`. For development modes, also run
+`python -m pytest tests/test_dependency_manifests.py -q` and the full backend checks.
+Tests reject manifest drift in names, versions, extras and markers, duplicate
+requirements, incompatible lock pins, and build-tool inconsistencies.
+
+### Intentional dependency updates
+
+Change direct dependencies in both pyproject.toml and the matching requirements
+file. Do not promote every transitive lock entry into a direct dependency.
+
+To resolve an updated graph, use another fresh Python 3.11 environment with the
+pinned packaging tools. Install the editable development extra without the old
+constraints only when intentionally updating the lock. Generate a candidate file
+instead of overwriting the reviewed lockfile:
+
+```bash
+python -m pip install --no-build-isolation -e ".[dev]"
+python -m pip check
+python -c "import pathlib, subprocess, sys; pathlib.Path('requirements-lock.next.txt').write_bytes(subprocess.check_output([sys.executable, '-m', 'pip', 'freeze', '--exclude-editable', '--exclude', 'pip', '--exclude', 'setuptools', '--exclude', 'wheel']))"
+```
+
+This includes development dependencies and excludes the local editable path and
+separately pinned build tools. Review the candidate against the committed lock;
+resolve on Windows and Linux and preserve platform markers for platform-specific
+packages. A freeze from only one platform is not a complete cross-platform lock.
+Then validate fresh installs, tests and audits before replacing the lockfile.
+Never generate the snapshot from a global or reused development environment.
+
+Pip documents the distinction between requirements and
+[constraints](https://pip.pypa.io/en/stable/user_guide/#constraints-files), and
+[`pip check`](https://pip.pypa.io/en/stable/cli/pip_check/) validates installed
+dependency compatibility.
 
 ## Mock-mode contract
 

@@ -11,7 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
-from app.models.database import SyncHistory, User, get_db
+from app.models.database import get_db
+from app.models.provider_models import SyncHistory
+from app.models.user_models import User
 from app.services.sync_history_service import SyncHistoryService
 
 logger = logging.getLogger(__name__)

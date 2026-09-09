@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.database import Email, EmailDraft
+from app.models.email_models import Email, EmailDraft
 from app.services.enhanced_llm_service import EnhancedLLMService
 
 logger = logging.getLogger(__name__)

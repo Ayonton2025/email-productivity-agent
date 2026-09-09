@@ -16,7 +16,8 @@ import sys
 
 from sqlalchemy import select, text
 
-from app.models.database import AsyncSessionLocal, User, init_db
+from app.models.database import AsyncSessionLocal, init_db
+from app.models.user_models import User
 
 logger = logging.getLogger(__name__)
 

@@ -128,7 +128,7 @@ async def get_analytics(
     try:
         from sqlalchemy import and_, func, select
 
-        from app.models.database import Email
+        from app.models.email_models import Email
 
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 

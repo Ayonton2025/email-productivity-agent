@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
 
 from app.core.exceptions import EmailPersistenceError
-from app.models.database import EmailDraft
+from app.models.email_models import EmailDraft
 
 logger = structlog.get_logger(__name__)
 

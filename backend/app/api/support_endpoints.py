@@ -12,7 +12,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
-from app.models.database import Email, EmailDraft, get_db
+from app.models.database import get_db
+from app.models.email_models import Email, EmailDraft
 from app.models.user_models import User
 
 router = APIRouter(prefix="/support", tags=["support"])

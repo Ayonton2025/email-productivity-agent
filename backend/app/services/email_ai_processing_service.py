@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.database import Email
+from app.models.email_models import Email
 from app.services.decision_intelligence import DecisionIntelligenceService
 from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService

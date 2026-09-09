@@ -12,7 +12,7 @@ from sqlalchemy.future import select
 
 from app.core.exceptions import EmailDataLoadError, EmailPersistenceError
 from app.core.monitoring import capture_exception
-from app.models.database import Email
+from app.models.email_models import Email
 
 logger = structlog.get_logger(__name__)
 
@@ -239,7 +239,7 @@ class EmailProcessingMixin:
             db = session or self.db
             from datetime import datetime
 
-            from app.models.database import UserEmailAccount
+            from app.models.email_models import UserEmailAccount
 
             result = await db.execute(select(UserEmailAccount).where(UserEmailAccount.id == account_id))
             account = result.scalar_one_or_none()

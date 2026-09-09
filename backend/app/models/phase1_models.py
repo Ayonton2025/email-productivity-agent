@@ -23,7 +23,7 @@ from sqlalchemy import (
     Text,
 )
 
-from app.models.database import Base
+from app.models.base import Base
 
 
 class UserDigestPreference(Base):
