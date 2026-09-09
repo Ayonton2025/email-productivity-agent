@@ -108,7 +108,7 @@ docstring-code-format = true
 
 [tool.mypy]
 python_version = "3.11"
-files = ["app/core", "app/api/schemas.py"]
+files = ["app/core", "app/api/schemas"]
 ignore_missing_imports = true
 follow_imports = "skip"
 warn_unused_configs = true

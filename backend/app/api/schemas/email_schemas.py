@@ -1,10 +1,3 @@
-"""
-API Request/Response Validation Schemas
-
-Defines Pydantic models for strict input validation across all API endpoints.
-Ensures data integrity and provides automatic OpenAPI documentation.
-"""
-
 from datetime import datetime
 from enum import Enum
 from typing import List, Literal, Optional
@@ -13,33 +6,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.input_validation import ValidatedRequestModel
 
-
-def validate_password_complexity(value: str) -> str:
-    if not any(character.isupper() for character in value):
-        raise ValueError("Password must contain uppercase letter")
-    if not any(character.islower() for character in value):
-        raise ValueError("Password must contain lowercase letter")
-    if not any(character.isdigit() for character in value):
-        raise ValueError("Password must contain digit")
-    if not any(character in "!@#$%^&*()_+-=[]{}|;:,.<>?" for character in value):
-        raise ValueError("Password must contain special character")
-    return value
-
-
-class EmailCategory(str, Enum):
-    """Valid email categories"""
-
-    WORK = "work"
-    PERSONAL = "personal"
-    NEWSLETTER = "newsletter"
-    PROMOTIONAL = "promotional"
-    SOCIAL = "social"
-    OTHER = "other"
-
-
-# ============================================================================
-# EMAIL ENDPOINTS
-# ============================================================================
+from .common import EmailCategory
 
 
 class EmailBase(ValidatedRequestModel):
@@ -72,68 +39,6 @@ class EmailResponse(EmailBase):
         from_attributes = True
 
 
-# ============================================================================
-# AUTHENTICATION ENDPOINTS
-# ============================================================================
-
-
-class LoginRequest(ValidatedRequestModel):
-    """Login request schema"""
-
-    email: EmailStr = Field(..., description="User email address")
-    password: str = Field(..., min_length=1, max_length=72, description="User password")
-
-
-class RegisterRequest(ValidatedRequestModel):
-    """User registration request schema"""
-
-    email: EmailStr = Field(..., description="User email address")
-    full_name: str = Field(..., min_length=2, max_length=255, description="Full name")
-    password: str = Field(
-        ...,
-        min_length=12,
-        max_length=72,
-        description="Password (12-72 chars, including uppercase, lowercase, number, and special character)",
-    )
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value: str) -> str:
-        return validate_password_complexity(value)
-
-
-class ForgotPasswordRequest(ValidatedRequestModel):
-    email: EmailStr
-
-
-class ResetPasswordRequest(ValidatedRequestModel):
-    token: str = Field(..., min_length=16, max_length=4096)
-    new_password: str = Field(..., min_length=12, max_length=72)
-
-    @field_validator("new_password")
-    @classmethod
-    def validate_new_password(cls, value: str) -> str:
-        return validate_password_complexity(value)
-
-
-class PromptCreateRequest(ValidatedRequestModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = Field(default=None, max_length=2000)
-    template: str = Field(..., min_length=1, max_length=100000)
-    category: str = Field(..., min_length=1, max_length=100)
-    is_active: bool = True
-    metadata: dict = Field(default_factory=dict)
-
-
-class PromptUpdateRequest(ValidatedRequestModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
-    description: Optional[str] = Field(default=None, max_length=2000)
-    template: Optional[str] = Field(default=None, min_length=1, max_length=100000)
-    category: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    is_active: Optional[bool] = None
-    metadata: Optional[dict] = None
-
-
 class DraftCreateRequest(ValidatedRequestModel):
     subject: str = Field(..., min_length=1, max_length=1000)
     body: str = Field(default="", max_length=100000)
@@ -158,30 +63,6 @@ class DraftUpdateRequest(ValidatedRequestModel):
     @classmethod
     def blank_recipient_is_none(cls, value: object) -> object:
         return None if value == "" else value
-
-
-class AgentProcessRequest(ValidatedRequestModel):
-    email_id: str = Field(..., min_length=1, max_length=255)
-    prompt_type: str = Field(..., min_length=1, max_length=100)
-    custom_prompt: Optional[str] = Field(default=None, min_length=1, max_length=100000)
-    system_prompt: Optional[str] = Field(default=None, min_length=1, max_length=255)
-
-
-class AgentChatRequest(ValidatedRequestModel):
-    message: str = Field(..., min_length=1, max_length=100000)
-
-
-class TokenResponse(BaseModel):
-    """Token response schema"""
-
-    access_token: str = Field(..., description="JWT access token")
-    token_type: str = Field(default="bearer", description="Token type")
-    expires_in: int = Field(..., description="Token expiration in seconds")
-
-
-# ============================================================================
-# EMAIL ACCOUNT ENDPOINTS
-# ============================================================================
 
 
 class EmailAccountRequest(ValidatedRequestModel):
@@ -210,11 +91,6 @@ class EmailAccountResponse(BaseModel):
     status: str
     last_sync: Optional[datetime] = None
     total_emails: int
-
-
-# ============================================================================
-# BULK OPERATIONS ENDPOINTS
-# ============================================================================
 
 
 class BulkEmailActionRequest(ValidatedRequestModel):
@@ -255,11 +131,6 @@ class BulkDeleteRequest(BulkEmailActionRequest):
     soft_delete: bool = Field(default=True, description="Soft delete or permanent delete")
 
 
-# ============================================================================
-# SEARCH ENDPOINTS
-# ============================================================================
-
-
 class SearchRequest(ValidatedRequestModel):
     """Search request schema"""
 
@@ -283,11 +154,6 @@ class AdvancedSearchRequest(ValidatedRequestModel):
     has_attachments: Optional[bool] = Field(None, description="Has attachments")
     is_unread_only: bool = Field(default=False, description="Only unread emails")
     limit: int = Field(default=50, ge=1, le=500, description="Results per page")
-
-
-# ============================================================================
-# SYNC HISTORY ENDPOINTS
-# ============================================================================
 
 
 class SyncHistoryResponse(BaseModel):
@@ -314,38 +180,3 @@ class SyncStatsResponse(BaseModel):
     avg_emails_per_sync: float
     last_sync_time: Optional[datetime] = None
     last_sync_status: Optional[str] = None
-
-
-# ============================================================================
-# SHARED RESPONSE SCHEMAS
-# ============================================================================
-
-
-class HealthResponse(BaseModel):
-    """Health check response"""
-
-    status: str = Field(..., description="healthy, degraded, or unhealthy")
-    service: str = Field(default="bylix-email-platform")
-    version: str
-    timestamp: datetime
-    dependencies: dict = Field(default_factory=dict, description="Status of dependencies")
-
-
-class ErrorResponse(BaseModel):
-    """Standard error response"""
-
-    status: str = Field(default="error")
-    code: str = Field(..., description="Error code")
-    message: str = Field(..., description="Error message")
-    details: Optional[dict] = Field(None, description="Additional error details")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-
-class PaginatedResponse(BaseModel):
-    """Generic paginated response wrapper"""
-
-    data: List[dict]
-    total: int
-    offset: int
-    limit: int
-    has_more: bool

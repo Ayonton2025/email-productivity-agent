@@ -4,7 +4,7 @@ This document explains the Pydantic schema validation system and how to apply it
 
 ## Overview
 
-All API endpoints now have **strict input validation** using Pydantic BaseModel schemas defined in `backend/app/api/schemas.py`. This provides:
+All API endpoints now have **strict input validation** using Pydantic BaseModel schemas defined in `backend/app/api/schemas/`. This provides:
 
 - ✅ **Type Safety**: FastAPI validates request data types automatically
 - ✅ **Input Constraints**: min/max values, length limits, regex patterns
@@ -444,3 +444,30 @@ print(f"Validated email: {request.email}")
 - [FastAPI Request Body](https://fastapi.tiangolo.com/tutorial/body/)
 - [FastAPI Response Models](https://fastapi.tiangolo.com/tutorial/response_model/)
 - [EmailStr Validation](https://docs.pydantic.dev/latest/#use-of-optional-and-typing-union)
+
+
+## Schema ownership after Phase 4
+
+Existing `from app.api.schemas import ...` imports remain supported through explicit
+package exports. New schema code belongs in its domain module:
+
+- `auth_schemas.py`: registration, login, password reset and token responses.
+- `email_schemas.py`: messages, accounts, drafts, bulk operations, search and sync.
+- `prompt_schemas.py` and `agent_schemas.py`: prompt and agent request contracts.
+- `common.py`: shared responses and the email category enumeration.
+- `ai_schemas.py`: classification, actions, sentiment, summaries, relationships and
+  workspace assistant requests/responses.
+
+The former `schemas.py` module is replaced by this package; there is no competing
+module with the same name. Mypy checks the package, and the existing schema
+coverage command continues to target `app.api.schemas`.
+
+AI routes remain in `api/ai_endpoints.py`. Workspace orchestration and quota
+accounting live in `services/workspace_assistant_service.py`, signed preview
+confirmation in `services/workspace_confirmation.py`, and persistence of confirmed
+drafts in `services/workspace_execution.py`. Authentication remains at the route
+boundary; tenant IDs and the request session are passed to these services.
+
+The Phase 4 API snapshot fingerprints paths and schema components from commit
+`ee7a77e`. Intentional API changes must review those contracts before updating
+`backend/tests/fixtures/phase4_openapi.json`.

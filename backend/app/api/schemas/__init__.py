@@ -1,0 +1,66 @@
+"""Public schema imports retained for existing API callers."""
+
+from .agent_schemas import AgentChatRequest, AgentProcessRequest
+from .auth_schemas import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+    TokenResponse,
+    validate_password_complexity,
+)
+from .common import EmailCategory, ErrorResponse, HealthResponse, PaginatedResponse
+from .email_schemas import (
+    AdvancedSearchRequest,
+    BulkCategorizeRequest,
+    BulkDeleteRequest,
+    BulkEmailActionRequest,
+    BulkFlagRequest,
+    BulkMarkReadRequest,
+    DraftCreateRequest,
+    DraftUpdateRequest,
+    EmailAccountRequest,
+    EmailAccountResponse,
+    EmailBase,
+    EmailRequest,
+    EmailResponse,
+    GmailConnectionRequest,
+    SearchRequest,
+    SyncHistoryResponse,
+    SyncStatsResponse,
+)
+from .prompt_schemas import PromptCreateRequest, PromptUpdateRequest
+
+__all__ = [
+    "EmailCategory",
+    "HealthResponse",
+    "ErrorResponse",
+    "PaginatedResponse",
+    "validate_password_complexity",
+    "LoginRequest",
+    "RegisterRequest",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest",
+    "TokenResponse",
+    "EmailBase",
+    "EmailRequest",
+    "EmailResponse",
+    "DraftCreateRequest",
+    "DraftUpdateRequest",
+    "EmailAccountRequest",
+    "GmailConnectionRequest",
+    "EmailAccountResponse",
+    "BulkEmailActionRequest",
+    "BulkMarkReadRequest",
+    "BulkFlagRequest",
+    "BulkCategorizeRequest",
+    "BulkDeleteRequest",
+    "SearchRequest",
+    "AdvancedSearchRequest",
+    "SyncHistoryResponse",
+    "SyncStatsResponse",
+    "PromptCreateRequest",
+    "PromptUpdateRequest",
+    "AgentProcessRequest",
+    "AgentChatRequest",
+]
