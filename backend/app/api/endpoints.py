@@ -1,5 +1,5 @@
-import logging
 from datetime import datetime
+from time import perf_counter
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
@@ -16,6 +16,7 @@ from app.api.schemas import (
 )
 
 # Import the proper authentication dependency
+from app.core.logging import get_logger
 from app.core.security import get_current_user
 from app.models.database import get_db
 from app.models.user_models import User
@@ -24,7 +25,7 @@ from app.services.llm_service import LLMService
 from app.services.prompt_service import PromptService
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # ========== PROTECTED ENDPOINTS (using proper JWT auth) ==========
 
@@ -40,8 +41,10 @@ async def get_user_inbox(
     db: AsyncSession = Depends(get_db),
 ):
     """Get user's inbox emails (requires authentication)"""
+    started = perf_counter()
+    log_context = {"user_id": str(current_user.id), "operation": "get_user_inbox"}
     try:
-        logger.info(f"📧 [get_user_inbox] Fetching emails for user: {current_user.id}")
+        logger.info("inbox_fetch_started", **log_context)
 
         email_service = EmailService(db)
 
@@ -51,7 +54,6 @@ async def get_user_inbox(
 
         # Use user-specific method to get only current user's emails
         emails = await email_service.get_user_emails(user_id=current_user.id, limit=limit, offset=offset)
-        logger.info(f"📧 [get_user_inbox] Found {len(emails)} emails")
 
         filtered_emails = emails
 
@@ -75,16 +77,25 @@ async def get_user_inbox(
         elif sort_by == "sender":
             filtered_emails.sort(key=lambda x: x.get("sender", ""))
 
-        logger.info(f"✅ [get_user_inbox] Returning {len(filtered_emails)} filtered emails")
+        logger.info(
+            "inbox_fetch_completed",
+            **log_context,
+            fetched_count=len(emails),
+            result_count=len(filtered_emails),
+            duration_ms=round((perf_counter() - started) * 1000, 2),
+        )
         return filtered_emails
 
-    except Exception as e:
-        logger.error(f"❌ [get_user_inbox] Error getting user inbox: {e}")
-        import traceback
-
-        logger.info(f"❌ [get_user_inbox] Stack trace: {traceback.format_exc()}")
-        # Return empty array instead of crashing to allow frontend to work
-        return []
+    except Exception as exc:
+        # Exception messages/chains can contain email data and SQL parameters.
+        logger.error(
+            "get_user_inbox_failed",
+            **log_context,
+            error_type=type(exc).__name__,
+            duration_ms=round((perf_counter() - started) * 1000, 2),
+            exc_info=False,
+        )
+        raise HTTPException(status_code=500, detail="Unable to retrieve inbox") from None
 
 
 @router.get("/prompts/my", response_model=List[Dict[str, Any]])

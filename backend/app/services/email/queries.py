@@ -65,7 +65,7 @@ class EmailQueriesMixin:
     async def get_user_emails(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get emails for a specific user"""
         try:
-            logger.info(f"📧 [EmailService] Getting emails for user: {user_id}")
+            logger.info("user_email_query_started", user_id=str(user_id), operation="get_user_emails")
 
             result = await self.db.execute(
                 select(Email)
@@ -76,12 +76,24 @@ class EmailQueriesMixin:
             )
             emails = result.scalars().all()
 
-            logger.info(f"📧 [EmailService] Found {len(emails)} emails in database")
+            logger.info(
+                "user_email_query_completed",
+                user_id=str(user_id),
+                operation="get_user_emails",
+                result_count=len(emails),
+            )
 
             return [email.to_dict() for email in emails]
 
         except SQLAlchemyError as exc:
-            logger.exception("email_list_query_failed", operation="get_user_emails", user_id=user_id)
+            # Do not serialize database exception messages or SQL parameters into logs.
+            logger.error(
+                "email_list_query_failed",
+                operation="get_user_emails",
+                user_id=str(user_id),
+                error_type=type(exc).__name__,
+                exc_info=False,
+            )
             raise EmailPersistenceError("Unable to retrieve user emails") from exc
 
     async def get_email_by_id(self, email_id: str, user_id: str = None) -> Optional[Dict[str, Any]]:
