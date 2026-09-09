@@ -1,5 +1,5 @@
 aiosmtplib==5.1.2
-aiosqlite==0.19.0
+aiosqlite==0.22.1
 alembic==1.12.1
 amqp==5.3.1
 annotated-doc==0.0.5
