@@ -63,7 +63,7 @@ Set-Location backend
 python -m uvicorn app.main:app --reload
 ```
 
-`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. `requirements-tooling.txt` pins patched packaging tools. Fresh-clone verification installs the tooling pins before the application lockfile.
+`requirements.txt` declares runtime dependencies, `requirements-dev.txt` declares local test and quality tools, and `requirements-lock.txt` pins the complete reproducible CI environment. `requirements-tooling.txt` pins patched packaging tools. Fresh-clone verification installs the tooling pins before the application lockfile and runs `pip check`. The runtime manifest mirrors `pyproject.toml` and uses the lockfile as constraints. See [dependency installation and update modes](docs/DEVELOPMENT.md#dependency-policy).
 
 ### Local frontend installation
 

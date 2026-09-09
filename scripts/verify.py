@@ -29,6 +29,7 @@ def main():
         backend = ROOT / "backend"
         run([python, "-m", "pip", "install", "--upgrade", "--disable-pip-version-check", "--no-input", "-r", "requirements-tooling.txt"], backend)
         run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "-r", "requirements-lock.txt"], backend)
+        run([python, "-m", "pip", "check"], backend)
         checks = [
             ["ruff", "check", "."], ["ruff", "format", "--check", "."], ["mypy"],
             ["pytest", "tests", "--cov=app", "--cov-report=term-missing", "--cov-fail-under=31", "-q"],

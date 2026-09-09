@@ -1,86 +1,44 @@
+# Direct runtime dependencies; keep versions and extras in sync with pyproject.toml.
+# Constraints preserve tested transitive versions without installing development tools.
+-c requirements-lock.txt
+
 fastapi==0.141.1
 uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
-aiosqlite==0.19.0
-asyncpg==0.29.0
-
-# Pydantic
+alembic==1.12.1
 pydantic==2.13.4
 pydantic-settings==2.14.2
-
-# AI Libraries - Google Gemini for cost optimization
-# Pin to a known-good version to avoid deep dependency resolution during builds
-google-generativeai==0.8.6
-google-ai-generativelanguage==0.6.15
+python-dotenv==1.2.2
+aiosqlite==0.19.0
+asyncpg==0.29.0
 httpx==0.25.2
-openai==1.3.0
-
-# Uploads / Forms
+redis==5.0.1
+celery==5.3.4
 python-multipart==0.0.32
-
-# WebSockets
-websockets==12.0
-
-# Utilities
-python-dateutil==2.8.2
-
-# Google + Outlook Integrations
-# Pin google-api-core to avoid deep dependency resolution loops
+email-validator==2.1.0.post1
+PyJWT==2.13.0
+passlib[bcrypt,argon2]==1.7.4
+bcrypt==4.0.1
+cryptography==50.0.0
+requests==2.33.0
+google-generativeai==0.8.6
+openai==1.3.0
+anthropic==0.7.4
+google-auth==2.56.3
 google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.2.0
 google-api-python-client==2.108.0
-google-api-core==2.28.1
 msal==1.38.0
-
-# HTTP
-requests==2.33.0
-
-# JWT Auth
-PyJWT==2.13.0
-
-# Password Hashing
-bcrypt==4.0.1
-passlib[bcrypt,argon2]==1.7.4
-argon2-cffi==23.1.0
-
-python-dotenv==1.2.2
-email-validator==2.1.0.post1
-
-# IMAP/SMTP Email
 imapclient==2.3.1
 aiosmtplib==5.1.2
-
-# Document parsing (Phase 4 attachments/document analysis)
+stripe==13.1.2
 pypdf==6.16.1
 python-docx==1.1.2
 openpyxl==3.1.5
 python-pptx==0.6.23
-
-# Encryption - AES-256 for credential storage
-cryptography==50.0.0
-
-# Migrations
-alembic==1.12.1
-
-# Task Queue and Scheduling
-celery==5.3.4
-redis==5.0.1
-
-# LLM: Add Anthropic client (keeps backwards compatibility)
-anthropic==0.7.4
-
-# Pin protobuf and proto-plus to stable versions to avoid large source builds and OOM during image builds
-# Updated proto-plus to satisfy google-ai-generativelanguage dependency (>=1.22.3)
-proto-plus==1.25.0
-protobuf==5.29.6
-
-# Timezone handling
+python-dateutil==2.8.2
 pytz==2023.3
-# (If you need timezone support, add zoneinfo or python-dateutil as required)
-
-# Additional utilities
 pydantic-extra-types==2.3.0
-stripe==13.1.2
 sentry-sdk[fastapi]==2.35.1
 slowapi==0.1.9
 structlog==25.4.0

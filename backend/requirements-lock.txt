@@ -131,6 +131,7 @@ tzdata==2026.3
 uritemplate==4.2.0
 urllib3==2.7.0
 uvicorn==0.24.0
+uvloop==0.22.1; sys_platform != "win32" and sys_platform != "cygwin" and platform_python_implementation != "PyPy"
 vine==5.1.0
 watchfiles==1.2.0
 wcwidth==0.8.2
