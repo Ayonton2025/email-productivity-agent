@@ -22,14 +22,14 @@
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.288.0",
-    "react": "^18.2.0",
+    "react": "^19.2.8",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
-    "@types/react": "^18.2.0",
+    "@types/react": "^19.2.18",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "@vitest/coverage-v8": "3.2.7",
