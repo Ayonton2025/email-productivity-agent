@@ -3,12 +3,13 @@ from datetime import datetime
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest
 from app.core.config import settings
+from app.core.request_logging import bind_authenticated_user
 from app.core.security import create_access_token, verify_token
 from app.models.database import get_db
 from app.models.user_models import User
@@ -28,7 +29,9 @@ def _is_super_admin_email(email: Optional[str]) -> bool:
 
 # Dependency to get current user
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: AsyncSession = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ) -> User:
     try:
         token = credentials.credentials
@@ -71,6 +74,7 @@ async def get_current_user(
                 detail="User account is inactive",
             )
 
+        bind_authenticated_user(str(user.id), request)
         logger.info(f"✅ [get_current_user] User authenticated: {user.email}")
         return user
 

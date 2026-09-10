@@ -20,6 +20,7 @@ if not logger.handlers:
 
 # Import settings to use the same SECRET_KEY
 from app.core.config import settings
+from app.core.request_logging import bind_authenticated_user
 
 # Security configuration - use the SAME secret key from config
 SECRET_KEY = settings.SECRET_KEY
@@ -172,7 +173,7 @@ def safe_json_parse(json_str: str) -> Optional[dict]:
 
 
 # ============== AUTH DEPENDENCIES ==============
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -189,7 +190,9 @@ async def _lazy_get_db():
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: AsyncSession = Depends(_lazy_get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(_lazy_get_db),
+    request: Request = None,
 ):
     """
     FastAPI dependency to verify JWT token and return User model.
@@ -241,6 +244,7 @@ async def get_current_user(
                 detail="User account is inactive",
             )
 
+        bind_authenticated_user(str(user.id), request)
         return user
     except HTTPException:
         raise
