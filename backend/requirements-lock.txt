@@ -57,6 +57,7 @@ huggingface_hub==1.28.0
 idna==3.19
 IMAPClient==2.3.1
 iniconfig==2.3.0
+Jinja2==3.1.6
 kombu==5.6.2
 limits==5.8.0
 license-expression==30.4.4

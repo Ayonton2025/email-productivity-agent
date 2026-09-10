@@ -25,7 +25,21 @@ Start with `docker compose ps`, the API `/health` and `/ready` endpoints, and th
 
 ## Sentry has no events
 
-Set `SENTRY_DSN`, use a non-test environment, restart the API, and call the protected `/debug/error` endpoint as a super-admin. Verify outbound HTTPS is allowed. The route is deliberately unavailable when Sentry is not configured.
+Set `SENTRY_DSN` and restart the API: `main.py` calls
+`monitoring.initialize_monitoring()` during application import. Verify outbound
+HTTPS is allowed. `SENTRY_TRACES_SAMPLE_RATE` controls performance tracing; its
+zero default does not disable error capture. With an empty DSN, monitoring is disabled.
+
+For a controlled smoke test, use an isolated development/test environment with
+`DEBUG=true`, then call `/debug/error`. This unauthenticated debug-only route
+raises an intentional exception. It returns 404 whenever `DEBUG=false`, regardless
+of DSN configuration, and is excluded from OpenAPI. Keep `DEBUG=false` on public
+production deployments. A 500 response alone does not prove Sentry delivery;
+confirm the event in your configured project.
+
+Repository tests verify application startup wiring and real SDK exception capture
+using an in-memory transport. They do not contact a hosted Sentry project or verify
+production credentials, egress or dashboard ingestion.
 
 ## Tests or formatting fail
 
