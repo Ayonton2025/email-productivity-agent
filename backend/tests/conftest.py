@@ -23,6 +23,9 @@ os.environ["ENCRYPTION_KEY"] = "test-encryption-key-at-least-32-characters"
 os.environ["DEBUG"] = "false"
 os.environ["ENVIRONMENT"] = "test"
 os.environ["LOG_LEVEL"] = "WARNING"
+# Monitoring tests opt in with mocked SDK calls or an in-memory transport.
+os.environ["SENTRY_DSN"] = ""
+os.environ["SENTRY_TRACES_SAMPLE_RATE"] = "0"
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 if str(BACKEND_ROOT) not in sys.path:

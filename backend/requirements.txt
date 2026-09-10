@@ -40,5 +40,7 @@ python-dateutil==2.8.2
 pytz==2023.3
 pydantic-extra-types==2.3.0
 sentry-sdk[fastapi]==2.35.1
+# Required when the pinned Sentry SDK instruments Starlette templates.
+Jinja2==3.1.6
 slowapi==0.1.9
 structlog==25.4.0

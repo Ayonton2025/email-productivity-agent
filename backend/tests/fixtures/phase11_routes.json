@@ -1,0 +1,618 @@
+{
+  "legacy": [
+    {
+      "path": "/emails/my-inbox",
+      "name": "get_user_inbox",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_user_inbox_emails_my_inbox_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts/my",
+      "name": "get_user_prompts",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_user_prompts_prompts_my_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts/{prompt_id}/test",
+      "name": "test_prompt",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "test_prompt_prompts__prompt_id__test_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/system-prompts",
+      "name": "get_system_prompts",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_system_prompts_system_prompts_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/sync",
+      "name": "sync_user_emails",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "sync_user_emails_emails_sync_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/email-accounts",
+      "name": "get_user_email_accounts_simple",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_user_email_accounts_simple_email_accounts_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/email-accounts/gmail",
+      "name": "connect_gmail_simple",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "connect_gmail_simple_email_accounts_gmail_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/debug/email-accounts",
+      "name": "debug_email_accounts",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "debug_email_accounts_debug_email_accounts_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/emails",
+      "name": "get_emails",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_emails_emails_get",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/load-mock",
+      "name": "load_mock_emails",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "load_mock_emails_emails_load_mock_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/load-mock-if-empty",
+      "name": "load_mock_emails_if_empty",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "load_mock_emails_if_empty_emails_load_mock_if_empty_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/{email_id}",
+      "name": "get_email",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_email_emails__email_id__get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/{email_id}/category",
+      "name": "update_email_category",
+      "methods": [
+        "PUT"
+      ],
+      "operation_id": "update_email_category_emails__email_id__category_put",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts",
+      "name": "get_prompts",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_prompts_prompts_get",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts",
+      "name": "create_prompt",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "create_prompt_prompts_post",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts/{prompt_id}",
+      "name": "update_prompt",
+      "methods": [
+        "PUT"
+      ],
+      "operation_id": "update_prompt_prompts__prompt_id__put",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/prompts/{prompt_id}",
+      "name": "delete_prompt",
+      "methods": [
+        "DELETE"
+      ],
+      "operation_id": "delete_prompt_prompts__prompt_id__delete",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/drafts",
+      "name": "get_drafts",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_drafts_drafts_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/drafts",
+      "name": "create_draft",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "create_draft_drafts_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/drafts/{draft_id}",
+      "name": "update_draft",
+      "methods": [
+        "PUT"
+      ],
+      "operation_id": "update_draft_drafts__draft_id__put",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/drafts/{draft_id}",
+      "name": "delete_draft",
+      "methods": [
+        "DELETE"
+      ],
+      "operation_id": "delete_draft_drafts__draft_id__delete",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/emails/{email_id}/generate-reply",
+      "name": "generate_email_reply",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "generate_email_reply_emails__email_id__generate_reply_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/agent/process",
+      "name": "process_with_agent",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "process_with_agent_agent_process_post",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/agent/chat",
+      "name": "chat_with_agent",
+      "methods": [
+        "POST"
+      ],
+      "operation_id": "chat_with_agent_agent_chat_post",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/agent/status",
+      "name": "get_agent_status",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "get_agent_status_agent_status_get",
+      "dependencies": [
+        {
+          "call": "app.core.security.get_current_user",
+          "dependencies": [
+            {
+              "call": "fastapi.security.http.HTTPBearer",
+              "dependencies": []
+            },
+            {
+              "call": "app.core.security._lazy_get_db",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/ws/agent",
+      "name": "websocket_agent",
+      "methods": [
+        "WEBSOCKET"
+      ],
+      "operation_id": null,
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/health/db",
+      "name": "health_db",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "health_db_health_db_get",
+      "dependencies": [
+        {
+          "call": "app.models.database.get_db",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "path": "/health/ai",
+      "name": "health_ai",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "health_ai_health_ai_get",
+      "dependencies": []
+    },
+    {
+      "path": "/info",
+      "name": "api_info",
+      "methods": [
+        "GET"
+      ],
+      "operation_id": "api_info_info_get",
+      "dependencies": []
+    }
+  ],
+  "direct_application_routes_sha256": "9a05a51e3cdd1ea286e5921c168f8057d083dd1be5e8e5fc7c311f07a23c1310"
+}
