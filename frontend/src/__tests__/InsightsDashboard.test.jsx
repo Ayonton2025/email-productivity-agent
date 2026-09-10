@@ -18,7 +18,7 @@ vi.mock('../services/api', () => ({
 }))
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   insightsApi.getAnalytics.mockResolvedValue({ data: { email_statistics: { total_emails: 42 } } })
   insightsApi.getRisks.mockResolvedValue({ data: [{ id: 11, title: 'Contract risk', severity: 'critical' }] })
   insightsApi.getOpportunities.mockResolvedValue({
@@ -38,11 +38,14 @@ beforeEach(() => {
   })
 })
 
-describe('Insights Dashboard extraction', () => {
+describe('Insights Dashboard', () => {
   it('loads overview data and renders each extracted tab with working detail navigation', async () => {
     render(<InsightsDashboard />)
     expect(screen.getByRole('status', { name: 'Loading insights' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Insights Dashboard' })).toBeInTheDocument()
+    for (const name of ['Overview', 'Risks', 'Opportunities', 'Deadlines', 'Relationships']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    }
     expect(insightsApi.getAnalytics).toHaveBeenCalledWith(30)
     expect(insightsApi.getDeadlines).toHaveBeenCalledWith(7)
     expect(screen.getByText('42')).toBeInTheDocument()
@@ -125,4 +128,21 @@ describe('Insights Dashboard extraction', () => {
     }
     expect(screen.getByText('No contacts found')).toBeInTheDocument()
   })
+  it.each(['getAnalytics', 'getRisks', 'getOpportunities', 'getDeadlines', 'getRelationships'])(
+    'retains the last successful data and selected tab when %s fails during refresh',
+    async (method) => {
+      render(<InsightsDashboard />)
+      await screen.findByText('Recent Risks')
+      fireEvent.click(screen.getByRole('button', { name: 'Risks' }))
+      insightsApi[method].mockRejectedValueOnce(new Error('private failure details'))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load insights')
+      expect(screen.getByRole('heading', { name: 'All Risks' })).toBeInTheDocument()
+      expect(screen.getByText('Contract risk')).toBeInTheDocument()
+      expect(screen.queryByText('private failure details')).not.toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+      await screen.findByRole('heading', { name: 'All Risks' })
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    }
+  )
 })
