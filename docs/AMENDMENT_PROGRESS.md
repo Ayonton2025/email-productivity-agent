@@ -17,6 +17,7 @@ The repository-specific phase sequence in `draft.docx` is the active plan. Phase
 | 11 | Domain API routers and WebSocket import fix | `fecda6a`, pushed | [Phase 11](PHASE_11_VERIFICATION.md) |
 | 12 | Gmail ingestion extraction and regression fixes | Implementation complete; focused tests and quality gates passed; one unrelated full-suite model-import test remains failing; ready to commit and push | [Phase 12](PHASE_12_VERIFICATION.md) |
 | 13 | Testing strategy and trustworthy verification | Explicit focused/full/compatibility/hosted verification layers; slow model-import gate named separately; ready for validation | [Phase 13](PHASE_13_VERIFICATION.md) |
+| 14-15 | Fresh clone and verification script | Genuine clean clone passed backend/frontend gates; npm audit remediation applied and verified; ready to commit and push | [Phases 14-15](PHASE_14_15_VERIFICATION.md) |
 
 ## Outstanding verification and follow-up
 
@@ -25,3 +26,4 @@ The repository-specific phase sequence in `draft.docx` is the active plan. Phase
 - Phase 11 Windows/mounted-filesystem monitoring subprocess timeouts passed when checked from container-native source storage; see that report for the distinction.
 - Remaining architecture/security follow-up is recorded in the Phase 10–12 reports. No all-green release or production-safety claim is made.
 - Phase 13's remaining platform-specific model-import result and hosted checks are recorded in [the Phase 13 report](PHASE_13_VERIFICATION.md); no all-green release claim is made.
+- Phases 14-15 fresh-clone results and the corrected frontend audit are recorded in [the Phases 14-15 report](PHASE_14_15_VERIFICATION.md); hosted CI and production integrations remain separate checks.
