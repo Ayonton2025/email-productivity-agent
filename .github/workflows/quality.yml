@@ -26,10 +26,10 @@ jobs:
       - name: Check installed dependency compatibility
         run: python -m pip check
       - name: Run pytest with whole-application coverage
-        run: python -m pytest tests --cov=app --cov-report=term-missing --cov-fail-under=31 -q
+        run: python -m pytest tests -m "not slow" --cov=app --cov-report=term-missing --cov-fail-under=31 -q
       - name: Check maintained-domain coverage
         run: >-
-          python -m pytest tests --cov=app.core --cov=app.models --cov=app.utils
+          python -m pytest tests -m "not slow" --cov=app.core --cov=app.models --cov=app.utils
           --cov=app.services.email_service --cov=app.services.email --cov=app.services.mock_email_loader
           --cov=app.services.llm_orchestration_service --cov=app.services.model_registry
           --cov=app.services.prompt_registry --cov-report=term-missing --cov-fail-under=50 -q
@@ -38,6 +38,8 @@ jobs:
           python -m pytest tests/test_api_schema_contract.py tests/test_input_validation.py
           tests/test_security_middleware.py --cov=app.api.schemas --cov=app.core.input_validation
           --cov-report=term-missing --cov-fail-under=90 -q
+      - name: Check cold model compatibility
+        run: python -m pytest tests/test_model_compatibility.py -m slow -q
       - name: Run ruff check
         run: python -m ruff check .
       - name: Run ruff format check

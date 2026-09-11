@@ -2,6 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.schema import CreateIndex, CreateTable
 
@@ -66,6 +67,7 @@ def test_legacy_imports_share_canonical_classes_and_metadata():
     assert all(len(classes) == 1 for classes in classes_by_table.values())
 
 
+@pytest.mark.slow
 def test_cold_model_import_order_has_no_duplicate_registry_or_database_side_effect():
     import os
     import subprocess
@@ -90,6 +92,7 @@ assert len(Base.registry.mappers) == len(Base.metadata.tables) == 58
             env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
             capture_output=True,
             text=True,
-            timeout=120,
+            # Cold imports can exceed two minutes on Windows mounted workspaces.
+            timeout=300,
         )
         assert result.returncode == 0, result.stderr

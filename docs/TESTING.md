@@ -4,11 +4,13 @@
 
 Tests cover request contracts, authentication, billing, email services, architecture boundaries, security middleware, exceptions, health/readiness, manifest drift and frontend user flows. CI repeats tests, formatting, lint, typing, security audits and isolated Docker startup, HTTP, test-container and teardown checks on pushes and pull requests.
 
-The Quality workflow exposes backend tests, all three coverage gates, Ruff,
-mypy, Bandit and pip-audit as named steps in **Backend Quality**. **Frontend
-Quality** exposes npm installation, tests with coverage, lint, formatting,
-typecheck, build and audit. The separate **fresh-clone** matrix continues to run
-the full verification scripts on Windows and Linux. A failed gate fails its job.
+The Quality workflow exposes backend tests, all three coverage gates, the slow
+cold-model compatibility check, Ruff, mypy, Bandit and pip-audit as named steps
+in **Backend Quality**. **Frontend Quality** exposes npm installation, tests with
+coverage, lint, formatting, typecheck, build and audit. The separate
+**fresh-clone** matrix continues to run the full verification scripts on Windows
+and Linux. A failed gate fails its job; slow compatibility checks are separate
+so their platform-sensitive startup cost cannot obscure ordinary test results.
 
 ## Canonical clean-install checks
 
@@ -23,6 +25,7 @@ source .venv/bin/activate  # Windows PowerShell: ./.venv/Scripts/Activate.ps1
 python -m pip install --upgrade -r requirements-tooling.txt
 python -m pip install -r requirements-lock.txt
 python -m pytest -q
+python -m pytest tests/test_model_compatibility.py -m slow -q
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy
@@ -46,6 +49,20 @@ The maintained-domain scope identifies code expected to be deterministic in loca
 Utility tests cover safe parsing, email/header validation, active-content sanitization, URL allowlists, nested JSON contracts, priority scoring, formatting boundaries, and asynchronous retry behavior. Email and LLM tests use in-memory SQLite and mocked providers to verify duplicate detection, typed failures, cache hits, provider fallback, and missing-provider responses.
 
 Local formatting is enforced through `.pre-commit-config.yaml`. After installing `pre-commit`, enable it once with `pre-commit install`; the hooks run Ruff, ESLint and Prettier using the committed configuration.
+
+## Verification interpretation
+
+Use the narrowest check that matches the change first, then run the complete
+quality gates before publication. Focused tests establish behavior for the
+touched slice; coverage gates measure maintained-scope regression risk; lint,
+typing and security checks inspect different failure classes. The cold-model
+check is intentionally a separate compatibility contract because it starts
+fresh Python processes and may take substantially longer on mounted Windows
+workspaces.
+
+Local passes do not prove hosted CI, live provider delivery, Sentry ingestion,
+or deployment behavior. Record those outcomes separately, and do not call a
+branch release-ready while a named hosted or deployment gate is unresolved.
 
 ## Frontend
 
