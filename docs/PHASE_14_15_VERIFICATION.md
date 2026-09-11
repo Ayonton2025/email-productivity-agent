@@ -27,14 +27,18 @@ the upgrade, while the genuine clean clone passed all 156 tests with the same
 Vitest 5 lockfile. No tests were changed to mask that local mounted-workspace
 variance; the clean clone is the Phase 14 result.
 
+audit failed only on the pre-remediation dependency set and was rerun
 ## Verification script
 
 `scripts/verify.py` was retained and run from the fresh clone. Its backend
 quality gates passed: dependency compatibility, Ruff, formatting, mypy, whole
 application coverage, maintained-domain coverage, security-boundary coverage,
-Bandit, and pip-audit. The frontend gates passed through build; its final npm
-audit failed only on the pre-remediation dependency set and was rerun
-successfully after the Vitest/js-yaml update.
+Bandit, and pip-audit. The first run reached the frontend gates and failed only
+at npm audit on the pre-remediation dependency set. The corrected frontend
+dependency set was then independently rerun through audit, tests, lint,
+typecheck, and build with all gates passing. The final duplicate full verifier
+run was stopped while reinstalling dependencies after those successful checks;
+it is not represented as a green `verify.py` exit.
 
 The final source checkout rerun recorded these frontend statuses:
 

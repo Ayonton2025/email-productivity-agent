@@ -15,9 +15,9 @@ The repository-specific phase sequence in `draft.docx` is the active plan. Phase
 | 9 | Dashboard/tab behavior tests | `35beb11`, pushed | [Phase 9](PHASE_9_VERIFICATION.md) |
 | 10 | Prioritized oversized-file review | `d66502d`, pushed; future refactors explicitly scheduled | [Phase 10](PHASE_10_VERIFICATION.md) |
 | 11 | Domain API routers and WebSocket import fix | `fecda6a`, pushed | [Phase 11](PHASE_11_VERIFICATION.md) |
-| 12 | Gmail ingestion extraction and regression fixes | Implementation complete; focused tests and quality gates passed; one unrelated full-suite model-import test remains failing; ready to commit and push | [Phase 12](PHASE_12_VERIFICATION.md) |
-| 13 | Testing strategy and trustworthy verification | Explicit focused/full/compatibility/hosted verification layers; slow model-import gate named separately; ready for validation | [Phase 13](PHASE_13_VERIFICATION.md) |
-| 14-15 | Fresh clone and verification script | Genuine clean clone passed backend/frontend gates; npm audit remediation applied and verified; ready to commit and push | [Phases 14-15](PHASE_14_15_VERIFICATION.md) |
+| 12 | Gmail ingestion extraction and regression fixes | Implemented, validated, committed as `c34b0d2`, and pushed | [Phase 12](PHASE_12_VERIFICATION.md) |
+| 13 | Testing strategy and trustworthy verification | Implemented, validated, committed as `af0d5e0`, and pushed | [Phase 13](PHASE_13_VERIFICATION.md) |
+| 14-15 | Fresh clone and verification script | Clean-clone gates passed; frontend audit remediation committed as `44d8a54` and pushed | [Phases 14-15](PHASE_14_15_VERIFICATION.md) |
 
 ## Outstanding verification and follow-up
 
