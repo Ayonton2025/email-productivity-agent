@@ -21,7 +21,7 @@
     "axios": "^1.20.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
-    "lucide-react": "^0.288.0",
+    "lucide-react": "^1.43.0",
     "react": "^19.2.8",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.2"
