@@ -75,6 +75,9 @@ include = ["app*"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--strict-markers --disable-warnings"
+markers = [
+  "slow: compatibility or integration checks that can take longer than the unit suite",
+]
 
 [tool.coverage.run]
 source = ["app"]
