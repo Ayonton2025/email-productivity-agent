@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ContactSalesForm from './ContactSalesForm'
+import BackgroundCanvas from './BackgroundCanvas'
+import { useScrollY } from '../../hooks/useScrollY'
 import {
   ArrowRight,
   Check,
@@ -24,60 +26,7 @@ const LandingPage = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const [showContactForm, setShowContactForm] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    let animationId
-
-    const resizeCanvas = () => {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-    }
-
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
-
-    let time = 0
-    const drawAnimation = () => {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)'
-      ctx.lineWidth = 1
-
-      for (let i = 0; i < 5; i++) {
-        const x = Math.sin(time * 0.001 + i) * 100 + canvas.width / 2 + scrollY * 0.1
-        const y = Math.cos(time * 0.0008 + i) * 100 + canvas.height / 2
-
-        ctx.beginPath()
-        ctx.arc(
-          x,
-          y,
-          (i === 0 ? 50 : 30) + Math.sin(time * (i === 0 ? 0.002 : 0.003) + i) * (i === 0 ? 20 : 15),
-          0,
-          Math.PI * 2
-        )
-        ctx.stroke()
-      }
-
-      time += 1
-      animationId = requestAnimationFrame(drawAnimation)
-    }
-
-    drawAnimation()
-    return () => cancelAnimationFrame(animationId)
-  }, [scrollY])
+  const scrollY = useScrollY()
 
   const plans = [
     {
@@ -174,10 +123,9 @@ const LandingPage = () => {
 
   const handleContactSales = () => setShowContactForm(true)
   const handleDashboard = () => navigate('/')
-
   return (
     <div className="landing-page">
-      <canvas ref={canvasRef} className="bg-canvas"></canvas>
+      <BackgroundCanvas scrollY={scrollY} />
 
       <header className="landing-header">
         <div className="header-content">
@@ -271,7 +219,6 @@ const LandingPage = () => {
               Detect urgency, identify high-value contacts, flag deadlines, and sort by impact instead of chronology.
             </p>
           </div>
-
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.08}px)` }}>
             <div className="feature-icon">
               <MessageSquare size={32} />
@@ -279,7 +226,6 @@ const LandingPage = () => {
             <h3>Context-Aware AI Composition</h3>
             <p>Draft replies that mirror your tone, reference history, and adapt communication style dynamically.</p>
           </div>
-
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.06}px)` }}>
             <div className="feature-icon">
               <Workflow size={32} />
@@ -287,7 +233,6 @@ const LandingPage = () => {
             <h3>Workflow Orchestration</h3>
             <p>Route invoices to finance, contracts to legal, leads to CRM, and tasks to teams automatically.</p>
           </div>
-
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.07}px)` }}>
             <div className="feature-icon">
               <BarChart3 size={32} />
@@ -295,7 +240,6 @@ const LandingPage = () => {
             <h3>Operational Intelligence Dashboard</h3>
             <p>Track response latency, communication bottlenecks, thread risk, and opportunity signals in one view.</p>
           </div>
-
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.05}px)` }}>
             <div className="feature-icon">
               <Users size={32} />
@@ -305,7 +249,6 @@ const LandingPage = () => {
               Bylix learns behavior patterns over time so routing, ranking, and drafting become increasingly precise.
             </p>
           </div>
-
           <div className="feature-card" style={{ transform: `translateY(${scrollY * 0.09}px)` }}>
             <div className="feature-icon">
               <Shield size={32} />

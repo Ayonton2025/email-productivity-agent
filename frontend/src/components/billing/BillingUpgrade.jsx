@@ -1,56 +1,11 @@
-const fallbackPlans = [
-  {
-    id: 'personal',
-    name: 'Free',
-    price: 0,
-    period: '/day',
-    features: ['50 AI credits/day', '1 email account'],
-    cta: 'Current Plan',
-    highlighted: false,
-    disabled: false,
-    perks: [],
-  },
-  {
-    id: 'plus',
-    name: 'Plus',
-    price: 12,
-    period: '/month',
-    features: ['1,500 AI credits/month', '3 email accounts'],
-    cta: 'Upgrade to Plus',
-    highlighted: true,
-    disabled: false,
-    perks: [],
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    price: 29,
-    period: '/month',
-    features: ['5,000 AI credits/month', 'Unlimited accounts'],
-    cta: 'Upgrade to Professional',
-    highlighted: false,
-    disabled: false,
-    perks: [],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: null,
-    period: 'Custom',
-    features: ['Enterprise features'],
-    cta: 'Contact Sales',
-    highlighted: false,
-    disabled: false,
-    perks: [],
-  },
-]
 import { logger } from '../../utils/logger.js'
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Zap, Star, TrendingUp, AlertCircle, Loader, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { initiateUpgrade, getAvailablePlans, getAvailablePaymentMethods } from '../../services/paymentService'
+import { initiateUpgrade, getAvailablePaymentMethods } from '../../services/paymentService'
 import { useSubscription } from '../../hooks/useSubscription'
+import { useBillingPlans } from '../../hooks/useBillingPlans'
 import './BillingUpgrade.css'
 
 /**
@@ -69,7 +24,7 @@ const BillingUpgrade = () => {
 
   const [showDebugInfo, setShowDebugInfo] = useState(false)
   const [backendStatus, setBackendStatus] = useState('checking')
-  const [plans, setPlans] = useState([])
+  const plans = useBillingPlans()
   const [showMethodsModal, setShowMethodsModal] = useState(false)
   const [paymentMethods, setPaymentMethods] = useState([])
   const [selectedMethod, setSelectedMethod] = useState('card')
@@ -104,33 +59,6 @@ const BillingUpgrade = () => {
     }
 
     checkBackendHealth()
-  }, [])
-
-  useEffect(() => {
-    const loadPlans = async () => {
-      try {
-        const data = await getAvailablePlans()
-        const serverPlans = Object.entries(data?.plans || {}).map(([id, plan]) => ({
-          id,
-          name: plan.name || id,
-          price: typeof plan.price === 'number' ? plan.price : null,
-          period: plan.billing_cycle === 'monthly' ? '/month' : plan.billing_cycle === 'annual' ? '/year' : '',
-          description: plan.description || '',
-          features: Object.entries(plan.features || {})
-            .filter(([, enabled]) => Boolean(enabled))
-            .map(([feature]) => feature.replace(/_/g, ' ')),
-          cta: id === 'enterprise' ? 'Contact Sales' : `Upgrade to ${plan.name || id}`,
-          highlighted: id === 'professional',
-          disabled: false,
-          perks: [],
-        }))
-        setPlans(serverPlans.length ? serverPlans : fallbackPlans)
-      } catch (err) {
-        logger.warn('Failed to load plans from backend, using fallback plans', err)
-        setPlans(fallbackPlans)
-      }
-    }
-    loadPlans()
   }, [])
 
   useEffect(() => {
