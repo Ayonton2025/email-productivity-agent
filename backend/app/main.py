@@ -2,7 +2,6 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-import sentry_sdk
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -28,12 +27,6 @@ from app.core.router_loader import register_routers
 from app.core.security_middleware import register_security_middleware
 from app.models.database import AsyncSessionLocal, init_db
 from app.services.prompt_service import PromptService
-
-if settings.SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
-        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
-    )
 
 initialize_monitoring()
 
