@@ -96,9 +96,7 @@ async def process_email_ai(db: AsyncSession, email: Email) -> None:
     action_prompt = await prompts.get_active_prompt("action_extraction")
 
     email_content = (
-        f"From: {email.sender}\n"
-        f"Subject: {email.subject}\n"
-        f"Body: {(email.body_text or email.body_html or '')[:8000]}"
+        f"From: {email.sender}\nSubject: {email.subject}\nBody: {(email.body_text or email.body_html or '')[:8000]}"
     )
 
     # Run in parallel; each call has its own fallback behavior in LLMService.

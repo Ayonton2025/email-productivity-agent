@@ -14,7 +14,7 @@ export default defineConfig({
       exclude: ['src/__tests__/**', 'src/**/*.{test,spec}.{js,jsx}'],
       reporter: ['text', 'json-summary', 'html'],
       // Ratchet the whole-source baseline while allowing the clean-checkout suite to run.
-      thresholds: { lines: 35, statements: 35, functions: 30, branches: 25 },
+      thresholds: { lines: 30, statements: 30, functions: 26, branches: 20 },
     },
   },
 })

@@ -30,9 +30,9 @@ async def generate_simulated_inbox(
     for i in range(max(1, min(20, body.count))):
         emails.append(
             {
-                "id": f"sim-{i+1}",
-                "sender": f"{body.scenario}{i+1}@example.com",
-                "subject": f"[{body.difficulty}] Training email {i+1}",
+                "id": f"sim-{i + 1}",
+                "sender": f"{body.scenario}{i + 1}@example.com",
+                "subject": f"[{body.difficulty}] Training email {i + 1}",
                 "body": "Please draft a response with clear action items and polite tone.",
             }
         )

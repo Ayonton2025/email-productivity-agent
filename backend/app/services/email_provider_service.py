@@ -101,7 +101,7 @@ class EmailProviderService:
 
         except HttpError as error:
             logger.error(f"❌ Gmail HTTP error: {error}")
-            logger.error(f'❌ Error details: {error.content if hasattr(error, "content") else "N/A"}')
+            logger.error(f"❌ Error details: {error.content if hasattr(error, 'content') else 'N/A'}")
             return False
         except Exception as e:
             logger.error(f"❌ Gmail token validation error: {type(e).__name__}: {e}")

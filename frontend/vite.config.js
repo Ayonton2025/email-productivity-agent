@@ -48,10 +48,13 @@ export default defineConfig({
     target: 'es2017', // Updated to ES2017 for better compatibility
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['lucide-react'],
-          utils: ['date-fns', 'clsx'],
+        manualChunks: (moduleId) => {
+          if (moduleId.includes('node_modules/react') || moduleId.includes('node_modules/react-dom')) {
+            return 'vendor'
+          }
+          if (moduleId.includes('node_modules/lucide-react')) return 'ui'
+          if (moduleId.includes('node_modules/date-fns') || moduleId.includes('node_modules/clsx')) return 'utils'
+          return undefined
         },
       },
     },

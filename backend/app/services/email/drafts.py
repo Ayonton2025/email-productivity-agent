@@ -57,7 +57,7 @@ class EmailDraftsMixin:
                     "subject": f"Re: {email.get('subject', 'Your email')}",
                     "body": f"""Dear {sender_name},
 
-Thank you for your email regarding "{email.get('subject', 'this matter')}".
+Thank you for your email regarding "{email.get("subject", "this matter")}".
 
 I have received your message and will review it carefully. Please expect a response within 24-48 hours.
 
