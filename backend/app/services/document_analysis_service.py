@@ -4,18 +4,17 @@ Handles AI-powered analysis of email attachments with tiered access
 """
 
 import json
-import logging
 from io import BytesIO
 from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import logger
+from app.core.logging import get_logger
 from app.models.document_models import DocumentAnalysis, EmailAttachment
 from app.services.llm_orchestration_service import LLMOrchestrationService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Optional dependencies for document processing
 try:

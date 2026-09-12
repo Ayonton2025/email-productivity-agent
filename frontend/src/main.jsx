@@ -1,7 +1,15 @@
 import ToastProvider from './components/shared/ToastProvider'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import * as Sentry from '@sentry/react'
 import App from './App.jsx'
+
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    tracesSampleRate: Number(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE || 0),
+  })
+}
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { API_BASE_URL } from './services/api'
 import { logger } from './utils/logger'
