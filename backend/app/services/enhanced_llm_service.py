@@ -141,14 +141,14 @@ class EnhancedLLMService:
         }
 
         prompt = f"""
-        Generate an email reply with the following tone: {tone_descriptions.get(tone, 'professional')}
+        Generate an email reply with the following tone: {tone_descriptions.get(tone, "professional")}
         
         Original Email:
-        From: {original_email.get('sender', 'Unknown')}
-        Subject: {original_email.get('subject', 'No Subject')}
-        Body: {original_email.get('body', '')}
+        From: {original_email.get("sender", "Unknown")}
+        Subject: {original_email.get("subject", "No Subject")}
+        Body: {original_email.get("body", "")}
         
-        Additional Context: {self._format_email_context(context) if context else 'No additional context'}
+        Additional Context: {self._format_email_context(context) if context else "No additional context"}
         
         Please provide a well-structured reply that:
         1. Appropriately addresses all points from the original email
@@ -197,15 +197,15 @@ class EnhancedLLMService:
         return f"""
         Email Analysis Request:
         
-        Sender: {email_data.get('sender', 'Unknown')}
-        Subject: {email_data.get('subject', 'No Subject')}
-        Date: {email_data.get('timestamp', 'Unknown')}
-        Body: {email_data.get('body', '')}
+        Sender: {email_data.get("sender", "Unknown")}
+        Subject: {email_data.get("subject", "No Subject")}
+        Date: {email_data.get("timestamp", "Unknown")}
+        Body: {email_data.get("body", "")}
         
         Additional Metadata:
-        - Provider: {email_data.get('provider', 'unknown')}
-        - Priority: {email_data.get('priority', 'unknown')}
-        - Category: {email_data.get('category', 'uncategorized')}
+        - Provider: {email_data.get("provider", "unknown")}
+        - Priority: {email_data.get("priority", "unknown")}
+        - Category: {email_data.get("category", "uncategorized")}
         """
 
     def _format_email_context(self, emails: List[Dict[str, Any]]) -> str:
@@ -215,7 +215,7 @@ class EnhancedLLMService:
 
         context_str = "Email Context:\n\n"
         for i, email in enumerate(emails[:5]):  # Limit context to 5 recent emails
-            context_str += f"Email {i+1}:\n"
+            context_str += f"Email {i + 1}:\n"
             context_str += f"From: {email.get('sender', 'Unknown')}\n"
             context_str += f"Subject: {email.get('subject', 'No Subject')}\n"
             context_str += f"Date: {email.get('timestamp', 'Unknown')}\n"

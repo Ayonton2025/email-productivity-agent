@@ -44,9 +44,7 @@ class DecisionIntelligenceService:
         results = {"commitments": [], "risks": [], "opportunities": []}
 
         email_content = (
-            f"From: {email.sender}\n"
-            f"Subject: {email.subject}\n"
-            f"Body: {(email.body_text or email.body_html or '')[:8000]}"
+            f"From: {email.sender}\nSubject: {email.subject}\nBody: {(email.body_text or email.body_html or '')[:8000]}"
         )
 
         # Extract all in parallel

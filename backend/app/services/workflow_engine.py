@@ -93,7 +93,7 @@ class WorkflowEngine:
 Email:
 From: {email.sender}
 Subject: {email.subject}
-Body: {(email.body_text or email.body_html or '')[:2000]}
+Body: {(email.body_text or email.body_html or "")[:2000]}
 
 Respond with only "yes" or "no"."""
 

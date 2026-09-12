@@ -10,9 +10,6 @@ import {
   BarChart3,
   Workflow,
   Users,
-  Github,
-  Linkedin,
-  Twitter,
   ChevronDown,
   Play,
   Shield,
@@ -502,15 +499,9 @@ const LandingPage = () => {
             </div>
             <p>The AI-powered Email Intelligence Platform for modern teams.</p>
             <div className="social-links">
-              <a href="#">
-                <Twitter size={20} />
-              </a>
-              <a href="#">
-                <Linkedin size={20} />
-              </a>
-              <a href="#">
-                <Github size={20} />
-              </a>
+              <a href="#">Twitter</a>
+              <a href="#">LinkedIn</a>
+              <a href="#">GitHub</a>
             </div>
           </div>
 

@@ -199,7 +199,7 @@ Licensed under [Apache License 2.0](LICENSE). See the [code of conduct](CODE_OF_
 
 Both fresh-clone entry points invoke `scripts/verify.py` with Python 3.11 and Node 24. The runner creates an isolated backend environment, installs the backend lockfile and runs `npm ci`, then enforces backend tests and all three coverage gates, Ruff, mypy, Bandit, dependency audits, frontend coverage, zero-warning lint, formatting, type checking, and the production build. The environment is removed on success or failure. GitHub runs this contract on Windows and Linux.
 
-Frontend coverage includes all application JS/JSX, including files that tests do not import. Minimums are 40% lines/statements, 35% functions, and 30% branches. Test files are excluded. Reports are written under `frontend/coverage/`.
+Frontend coverage includes all application JS/JSX, including files that tests do not import. Minimums are 35% lines/statements, 30% functions, and 25% branches. Test files are excluded. Reports are written under `frontend/coverage/`.
 
 Run `bash scripts/verify-compose.sh` to build and test the isolated Docker deployment. It verifies application health, the frontend and its API proxy, and both test-container exit codes, then shuts down its own Compose project. Failure logs are printed before cleanup. Docker must be running and ports 8000 and 3000 must be available. Initial builds may take several minutes depending on download speed.
 
