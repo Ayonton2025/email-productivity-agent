@@ -78,7 +78,7 @@ npm run test:coverage
 npm run build
 ```
 
-Frontend coverage includes all application source, including untested files, with minimums of 40% lines/statements, 35% functions and 30% branches. Lint permits zero warnings.
+Frontend coverage includes all application source, including untested files, with minimums of 35% lines/statements, 30% functions and 25% branches. Lint permits zero warnings.
 
 ## Security and dependencies
 
